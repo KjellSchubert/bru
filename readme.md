@@ -72,6 +72,10 @@ Requirements:
   crashes at runtime
 * the tool should be easy to install, e.g. 'python3:pip install bru' would be
   desirable, especially since build tools like gyp already depend on Python(2).
+* do we want support for debug vs release builds? Probably.
+* do we want support for /MT vs /MD, static vs dynamic lib builds? Yes.
+* do we want support for project-specific configurations beyond debug/release?
+  Probably. E.g. for SSE2 vs non-SSE builds.
 
 Example for what the tool does:
 
