@@ -1,5 +1,13 @@
 {
     "homepage" : "http://www.zlib.net/",
     "url" : "http://zlib.net/zlib-1.2.8.tar.gz",
-    "md5" : "44d667c142d7cda120332623eab69f40"
+    "md5" : "44d667c142d7cda120332623eab69f40",
+    
+    "make_command": "cd zlib-1.2.8; ./configure; make teststatic",
+
+    # these are glob expressions for picking up build results:
+    "artifacts": {
+      "includes" : ["zlib-1.2.8/*.h"],
+      "libraries" : ["zlib-1.2.8/zlib.a"]
+    }
 }
