@@ -76,6 +76,12 @@ Requirements:
 * do we want support for /MT vs /MD, static vs dynamic lib builds? Yes.
 * do we want support for project-specific configurations beyond debug/release?
   Probably. E.g. for SSE2 vs non-SSE builds.
+* do we want support for different OS versions? Some Windows libraries do
+  things like #if WINVER > 0x400, see 
+  [here](http://blogs.msdn.com/b/oldnewthing/archive/2007/04/11/2079137.aspx).
+  Note that this identifies the (minimum) target OS for cross-compilation, not 
+  the compiler's host OS. So depending on what you set WINVER to during compilation
+  you can end up with different binaries with different functionality.
 
 Example for what the tool does:
 

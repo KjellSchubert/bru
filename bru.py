@@ -95,6 +95,42 @@ class Chdir:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
+class GlobGroup:
+    """ represents the mapping of local build files to normalized tar file names
+        for a group of one or more files matching a glob expression 
+    """
+    def __init__(self, local_root_dir, glob_expr, tar_root_dir):
+        self.local_root_dir = local_root_dir
+        self.tar_root_dir = tar_root_dir
+        self.glob_expr = glob_expr
+
+
+def new_glob_group(glob_group_jso):
+    """ argument glob_group_jso has a 'glob' expr as well as other props that
+        specify how to tar local files and map them into the tar file.
+        This file name mapping is desirable to end up with consistent tar
+        files for includes (e.g. containing ./include/boost/regex/foo.h)
+        for all the diverse builds we have to run. 
+    """
+    glob_expr = glob_group_jso['glob_expr']
+    local_root_dir = glob_group_jso['local_root_dir'] 
+    tar_root_dir = glob_group_jso['tar_root_dir']
+    return GlobGroup(local_root_dir, glob_expr, tar_root_dir)
+
+def tar_glob_group(tar, module_dir, glob_group):
+    joined_build_root = os.path.join(module_dir, glob_group.local_root_dir);
+    build_files = glob.glob(os.path.join(joined_build_root, glob_group.glob_expr))
+    if len(build_files) == 0:
+        raise ValueError("no matches for {} in dir {}".format(
+          glob_group.glob_expr,
+          joined_build_root))
+    for build_file in build_files:
+        common_prefix = os.path.commonprefix([build_file, joined_build_root])
+        relative_path = os.path.relpath(build_file, common_prefix)
+        tar_file = os.path.join(glob_group.tar_root_dir, relative_path)
+        print("  adding {}".format(tar_file))
+        tar.add(build_file, arcname = tar_file)
+
 def main():
 
     bru_modules_root = "./bru_modules"
@@ -131,15 +167,21 @@ def main():
                 raise ValueError("build failed with error code {}".format(error_code))
         touch(make_done_file)
 
-    # now zip up build artifacts: includes, libraries, ...
+    # now archive groups of build artifacts: includes, libraries, ...
     artifacts = formula['artifacts']
-    for artifact_type, glob_exprs in artifacts.items():
-      files = []
-      for glob_expr in glob_exprs:
-        expr_files = glob.glob(os.path.join(module_dir, glob_expr))
-        files += expr_files
-      print("artifacts for type={} are {}: ".format(artifact_type, str(files)))
-       
+    for artifact_type, glob_groups in artifacts.items(): # e.g. type='include'
+        artifact_tar_file_name = os.path.join(module_dir, artifact_type + ".tar.gz")
+        print("writing " + artifact_tar_file_name)
+        with tarfile.open(artifact_tar_file_name, "w:gz") as tar:
+            for glob_group in glob_groups:
+                # each glob group covers a *.h or some such glob expression, with
+                # local fs root and tar root in case you want to name the artifact
+                # files differently then they end up in the local build.
+                tar_glob_group(tar, module_dir, new_glob_group(glob_group))
+
+        # upload tar files to the Artifactory server with enough information to 
+        # not violate ODR when linking in the future.
+        # todo
 
 if __name__ == "__main__":
     main()

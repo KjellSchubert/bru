@@ -5,9 +5,23 @@
     
     "make_command": "cd zlib-1.2.8; ./configure; make teststatic",
 
-    # these are glob expressions for picking up build results:
+    # these are glob expressions for archiving up build results:
     "artifacts": {
-      "includes" : ["zlib-1.2.8/*.h"],
-      "libraries" : ["zlib-1.2.8/zlib.a"]
+      "include" : [
+         {
+           # note that zlib #includes "zconf.h", not "zlib/zconf.h",
+           # so sadly zlib files will have to end up in the root of
+           # the include path search file list. Unlike boost which
+           # has the decency to #include its headers as "boost/regex/foo.h"
+           "local_root_dir" : "zlib-1.2.8",
+           "glob_expr" : "*.h",
+           "tar_root_dir" : ""
+         }],
+      "lib" : [
+         { 
+           "local_root_dir" : "zlib-1.2.8",
+           "glob_expr" : "libz.a",
+           "tar_root_dir" : ""
+         }]
     }
 }

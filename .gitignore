@@ -1,1 +1,4 @@
 .c9/
+__pycache__
+bru_modules
+*.swp
