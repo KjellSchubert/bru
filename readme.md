@@ -30,6 +30,15 @@ here. Similar projects:
   dependency chains of C++ libs, probably not easily. There are bindings for
   several C++ projects on npmjs.org/, e.g. https://www.npmjs.org/package/cryptopp 
   or https://www.npmjs.org/package/node-icu-charset-detector.
+* travis.ci skips dependency downloads for C++ projects, but you can inject
+  a shell script that pulls deps, see 
+  [here](http://docs.travis-ci.com/user/languages/cpp/)
+* in beta stage, looks very promising: [biicode](https://www.biicode.com)
+* work in progress?: 
+  [C++ builds with Gradle](http://www.gradleware.com/video/creating-a-world-class-cc-build-system-in-gradle-2/),
+  see also blog entry [here](http://blog.biicode.com/file-based-cpp-dependency-manager/). 
+  At this point biicode lacks many of the deps we need, and it's not clear to
+  me how to get our deps in there.
 
 Requirements:
 
