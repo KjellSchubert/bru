@@ -1,0 +1,23 @@
+# boost-config appears to be a library that all/most boost libs depend on,
+# e.g. boost-regex does. 
+{
+    
+    "homepage" : "http://www.boost.org/",
+    "url" : "https://github.com/boostorg/config/archive/boost-1.57.0.tar.gz",
+    #"md5" : "?",
+   
+    # It's a header-only library, so nothing to make here.
+    # Note that ./configure does a lot of things, but is this necessary?
+    # We'll see...
+    "make_command": "",
+
+    # these are glob expressions for archiving up build results:
+    "artifacts": {
+      "include" : [
+         {
+           "local_root_dir" : "config-boost-1.57.0/include",
+           "glob_expr" : "**/*.hpp;**/**/*.hpp",
+           "tar_root_dir" : ""
+         }]
+    }
+}

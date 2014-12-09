@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import itertools
 import urllib.request
 import urllib.parse # python 2 urlparse
 import os
@@ -40,14 +41,19 @@ def drop_hash_comments(file):
     lines_without_comments = (drop_hash_comment(line) for line in lines)
     return "".join(lines_without_comments)
 
-def load_formula(module, version):
-    """ E.g. to load recipe for module='zlib' version='1.2.8' """
+def load_formula(module_name, module_version):
+    """ E.g. to load recipe for module_name='zlib' module_version='1.2.8' """
     # Recipes will be downloaded from some server some day (e..g  from github
     # directly).
-    with open('library/zlib/1.2.8.bru') as bru_file:
+    bru_file_name = os.path.join('./library', module_name, module_version + ".bru")
+    with open(bru_file_name) as bru_file:
         json_without_hash_comments = drop_hash_comments(bru_file)
-        #print(json_without_hash_comments)
-        bru_dict = json.loads(json_without_hash_comments)
+        try:
+            bru_dict = json.loads(json_without_hash_comments)
+        except Exception as err:
+            print("error parsing json in {}: {}".format(bru_file_name, err))
+            print(json_without_hash_comments)
+            raise
     return bru_dict 
 
 def url2filename(url):
@@ -99,10 +105,11 @@ class GlobGroup:
     """ represents the mapping of local build files to normalized tar file names
         for a group of one or more files matching a glob expression 
     """
-    def __init__(self, local_root_dir, glob_expr, tar_root_dir):
+    def __init__(self, local_root_dir, glob_exprs, tar_root_dir):
+        assert isinstance(glob_exprs, list) # multiple glob exprs
         self.local_root_dir = local_root_dir
         self.tar_root_dir = tar_root_dir
-        self.glob_expr = glob_expr
+        self.glob_exprs = glob_exprs
 
 
 def new_glob_group(glob_group_jso):
@@ -112,17 +119,20 @@ def new_glob_group(glob_group_jso):
         files for includes (e.g. containing ./include/boost/regex/foo.h)
         for all the diverse builds we have to run. 
     """
-    glob_expr = glob_group_jso['glob_expr']
+    glob_exprs = glob_group_jso['glob_expr'].split(';')
     local_root_dir = glob_group_jso['local_root_dir'] 
     tar_root_dir = glob_group_jso['tar_root_dir']
-    return GlobGroup(local_root_dir, glob_expr, tar_root_dir)
+    return GlobGroup(local_root_dir, glob_exprs, tar_root_dir)
 
 def tar_glob_group(tar, module_dir, glob_group):
     joined_build_root = os.path.join(module_dir, glob_group.local_root_dir);
-    build_files = glob.glob(os.path.join(joined_build_root, glob_group.glob_expr))
+    build_file_lists = [
+        glob.glob(os.path.join(joined_build_root, glob_expr))
+        for glob_expr in glob_group.glob_exprs]
+    build_files = list(itertools.chain(*build_file_lists))
     if len(build_files) == 0:
         raise ValueError("no matches for {} in dir {}".format(
-          glob_group.glob_expr,
+          glob_group.glob_exprs,
           joined_build_root))
     for build_file in build_files:
         common_prefix = os.path.commonprefix([build_file, joined_build_root])
@@ -131,12 +141,10 @@ def tar_glob_group(tar, module_dir, glob_group):
         print("  adding {}".format(tar_file))
         tar.add(build_file, arcname = tar_file)
 
-def main():
+def get_dependency(module_name, module_version):
 
     bru_modules_root = "./bru_modules"
     os.makedirs(bru_modules_root, exist_ok=True)
-    module_name = 'zlib'
-    module_version = '0.2.8'
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
     os.makedirs(module_dir, exist_ok=True)
     formula = load_formula(module_name, module_version)
@@ -182,6 +190,14 @@ def main():
         # upload tar files to the Artifactory server with enough information to 
         # not violate ODR when linking in the future.
         # todo
+
+def main():
+    with open('bru.json', 'r') as package_file:
+        package_jso = json.loads(drop_hash_comments(package_file))
+    for module_name, version_matcher in package_jso['dependencies'].items():
+        module_version = version_matcher # todo: allow for npm-style version specs (e.g. '4.*')
+        print('processing dependency {} version {}'.format(module_name, version_matcher))
+        get_dependency(module_name, module_version)
 
 if __name__ == "__main__":
     main()
