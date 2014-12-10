@@ -7,7 +7,8 @@
     #"boost-exception" : "1.57.0"
     #"boost-throw_exception" : "1.57.0"
     #"boost-regex-icu" : "1.57.0"
-    "zlib" : "1.2.8"
+    "boost-smart_ptr" : "1.57.0"
+    #"zlib" : "1.2.8"
     #"icu4c" : "54.1"
   },
   "dev-dependencies" : {

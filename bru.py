@@ -141,15 +141,12 @@ def tar_glob_group(tar, module_dir, glob_group):
         print("  adding {}".format(tar_file))
         tar.add(build_file, arcname = tar_file)
 
-def get_dependency(module_name, module_version):
-
-    bru_modules_root = "./bru_modules"
-    os.makedirs(bru_modules_root, exist_ok=True)
+def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
+    """ downloads tar.gz or zip file as given by zip_url, then unpacks it
+        under bru_modules_root """
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
     os.makedirs(module_dir, exist_ok=True)
-    formula = load_formula(module_name, module_version)
 
-    zip_url = formula['url']
     zip_file = os.path.join(module_dir, url2filename(zip_url))
     if not os.path.exists(zip_file):
         zip_file_temp = zip_file + ".tmp"
@@ -161,6 +158,17 @@ def get_dependency(module_name, module_version):
         print("extracting {}".format(zip_file))
         extract_file(zip_file, module_dir)
         touch(extract_done_file)
+
+    return module_dir
+
+def get_dependency(module_name, module_version):
+
+    bru_modules_root = "./bru_modules"
+    formula = load_formula(module_name, module_version)
+
+    zip_url = formula['url']
+    module_dir = unpack_dependency(bru_modules_root, 
+                                   module_name, module_version, zip_url)
 
     # todo: convert into platform-independant make, e.g. via gyp,
     #       or at least call makes on a platform-dependant fashion
