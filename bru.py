@@ -4,6 +4,7 @@ import json
 import itertools
 import urllib.request
 import urllib.parse # python 2 urlparse
+import re
 import os
 import os.path
 import tarfile
@@ -41,11 +42,7 @@ def drop_hash_comments(file):
     lines_without_comments = (drop_hash_comment(line) for line in lines)
     return "".join(lines_without_comments)
 
-def load_formula(module_name, module_version):
-    """ E.g. to load recipe for module_name='zlib' module_version='1.2.8' """
-    # Recipes will be downloaded from some server some day (e..g  from github
-    # directly).
-    bru_file_name = os.path.join('./library', module_name, module_version + ".bru")
+def load_bru_file(bru_file_name):
     with open(bru_file_name) as bru_file:
         json_without_hash_comments = drop_hash_comments(bru_file)
         try:
@@ -55,6 +52,13 @@ def load_formula(module_name, module_version):
             print(json_without_hash_comments)
             raise
     return bru_dict 
+
+def load_formula(module_name, module_version):
+    """ E.g. to load recipe for module_name='zlib' module_version='1.2.8' """
+    # Recipes will be downloaded from some server some day (e..g  from github
+    # directly).
+    bru_file_name = os.path.join('./library', module_name, module_version + ".bru")
+    return load_bru_file(bru_file_name)
 
 def url2filename(url):
     """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz """
@@ -76,12 +80,84 @@ def extract_file(path, to_directory):
         opener, mode = tarfile.open, 'r:gz'
     elif path.endswith('.tar.bz2') or path.endswith('.tbz'):
         opener, mode = tarfile.open, 'r:bz2'
+    elif path.endswith('.tar.xz') or path.endswith('.txz'):
+        opener, mode = tarfile.open, 'r:xz'
     else: 
         raise ValueError("Could not extract {} as no appropriate extractor is found".format(path))
     
     with opener(path, mode) as file:
         file.extractall(to_directory)
         file.close()
+
+class TwoComponentPath:
+    """ Used to represent artifacts in tar files, like #include files which
+        in the extracted tar are under some root_dir like .../include and
+        are named with multiple path comonents underneath, e.g. boost/regex/foo.h
+    """
+
+    def __init__(self, root_dir, path):
+        self.root_dir = root_dir
+        self.path = path
+    def get_full_path(self):
+        return os.path.join(self.root_dir, self.path)
+
+# See http://stackoverflow.com/questions/161755/how-would-you-implement-ant-style-patternsets-in-python-to-select-groups-of-file
+# The drawback of glob.glob("**/*.http") is that it will find hpp files 
+# exactly one level deep, unlike an Ant-style fileset include glob which
+# searches recursively. A recursive Ant-style glob is more convenient
+# to specify filesets of boost #includes for example, so this here
+# supports ant-style glob syntax also if you specify a ant:**/*.hpp
+# glob_expr.
+# Initially I wanted to reuse https://pypi.python.org/pypi/formic but
+# this doesn't support python3 yet.
+def ant_glob(local_root_dir, glob_expr):
+    # we only support a small subset of ant's glob expr syntax: 
+    # only **/*.{extension}
+    if glob_expr == "**/*":
+        is_matching = lambda filename: True
+    else:
+        match = re.match('^\\*\\*\\/\\*(\\.[a-z0-9_]+)$', glob_expr)
+        if match != None:
+            raise Exception("expected format **/*.{ext} or **/* for ant: glob expressions")
+        extension = match.group(1)  # e.g. '.hpp'
+        is_matching = lambda filename: filename.endswith(extension)
+    
+    # now simply recursively collect files with the given extension under
+    # the local_root_dir
+    for root, dirs, files in os.walk(local_root_dir):
+        for file in files:
+            if is_matching(file):
+                yield os.path.join(root, file)
+    
+# Can handle either python-style or ant style glob exprs:
+def do_glob(local_root_dir, glob_expr):
+    ant_glob_prefix = 'ant:'
+    if glob_expr.startswith(ant_glob_prefix):
+        expr = glob_expr[len(ant_glob_prefix):]
+        return ant_glob(local_root_dir, expr)
+    else:
+        return glob.glob(os.path.join(local_root_dir, glob_expr))
+
+def get_files_from_glob_exprs(tar_root, glob_exprs):
+    """ param glob_exprs is the glob expression pointing to e.g. include
+        files in the module's tar file, the glob expr is relative to the
+        tar_root dir, which is the dir into which the tar was unpacked.
+
+        Returns pairs of files names: root_dir plus include path, where
+        the include path is the file name as it's expected to be used 
+        in #include statements, so for example for boost #includes it
+        should return pairs ('boost-regex/..../1.57.0', 'boost/regex/foo.hpp')
+    """
+    files = []
+    for glob_expr in glob_exprs:
+        local_root_dir = os.path.join(tar_root, glob_expr['local_root_dir'])
+        exprs = glob_expr['glob_expr'].split(';') # semi-colon separated
+        for expr in exprs:
+            matches = do_glob(local_root_dir, expr)
+            for match in matches:
+                files += [TwoComponentPath(local_root_dir, 
+                           os.path.relpath(match, start=local_root_dir))]
+    return files
 
 def touch(file_name, times=None):
     # http://stackoverflow.com/questions/1158076/implement-touch-using-python
