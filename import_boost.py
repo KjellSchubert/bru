@@ -54,7 +54,7 @@ def import_boost(boost_lib, version):
     assert os.path.exists(os.path.join(tar_content_dir, "include"))
     print("downloaded " + boost_lib + " to " + tar_content_dir)
 
-    bru_file_content = OrderedDict([
+    formula = OrderedDict([
         ("homepage", "http://www.boost.org/"),
         ("url", "https://github.com/boostorg/" + boost_lib 
                 + "/archive/boost-1.57.0.tar.gz"),
@@ -80,21 +80,11 @@ def import_boost(boost_lib, version):
         })
     ])
 
-    # one of the most basic things to know about a module is which
-    # include files it comes with: e.g. for boost you're supposed
-    # to #include "boost/regex/foo.h", not #include "regex/foo.h"
-    # or #include "foo.h".
-    include_files = bru.get_files_from_glob_exprs(
-        tar_root_dir, bru_file_content['artifacts']['include'])
-    assert len(include_files) > 0   # there's no boost lib without #includes
-    bru_file_content['includes'] = [
-        two_component_path.path for two_component_path in include_files]
-
     # most boost libs are #include only, some like regex do have a src dir
     # though and need to be compiled.
     if os.path.exists(os.path.join(tar_content_dir, "src")):
         print("boost module " + boost_lib + " has a src/ dir")
-        bru_file_content['artifacts']['lib'] = [
+        formula['artifacts']['lib'] = [
             OrderedDict([
                 ("local_root_dir", boost_lib + "-boost-" + version + "/lib"),
                 ("glob_expr", "*.a;*.lib;*.so;*.dll"),
@@ -113,17 +103,8 @@ def import_boost(boost_lib, version):
     if not os.path.isdir(library_root):
       raise Exception("expected to run script in repo root with " + libary_root + " dir")
     
-    bru_module_dir = os.path.join(library_root, bru_module_name)
-    bru_file_name = os.path.join(bru_module_dir, version + ".bru")
-    force_regeneration = True
-    if os.path.exists(bru_file_name) and not force_regeneration:
+    if not bru.save_formula(formula):
         print("not moddifying existing " + bru_file_name)
-        return
-
-    os.makedirs(bru_module_dir, exist_ok=True)
-    with open(bru_file_name, 'w') as bru_file:
-        bru_file.write(json.dumps(bru_file_content, indent = 4))
-        print("created " + bru_file_name)
 
 def main():
     parser = argparse.ArgumentParser()

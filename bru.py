@@ -2,6 +2,7 @@
 
 import json
 import itertools
+import collections
 import urllib.request
 import urllib.parse # python 2 urlparse
 import re
@@ -46,7 +47,8 @@ def load_bru_file(bru_file_name):
     with open(bru_file_name) as bru_file:
         json_without_hash_comments = drop_hash_comments(bru_file)
         try:
-            bru_dict = json.loads(json_without_hash_comments)
+            bru_dict = json.loads(json_without_hash_comments,
+                                  object_pairs_hook=collections.OrderedDict)
         except Exception as err:
             print("error parsing json in {}: {}".format(bru_file_name, err))
             print(json_without_hash_comments)
@@ -58,7 +60,25 @@ def load_formula(module_name, module_version):
     # Recipes will be downloaded from some server some day (e..g  from github
     # directly).
     bru_file_name = os.path.join('./library', module_name, module_version + ".bru")
-    return load_bru_file(bru_file_name)
+    formula = load_bru_file(bru_file_name)
+    assert formula['module'] == module_name and formula['version'] == module_version
+    return formula
+
+def save_formula(formula):
+    """ param formula is the same dict as returned by load_formula,
+        so should be an OrderedDict.
+        Return False if file wasn't overwritten because it exists
+        and force_overwrite = False.
+    """
+    module_name = formula['module']
+    module_version = formula['version']
+    bru_module_dir = os.path.join('./library', module_name)
+    bru_file_name = os.path.join(bru_module_dir, module_version + ".bru")
+    os.makedirs(bru_module_dir, exist_ok=True)
+    with open(bru_file_name, 'w') as bru_file:
+        bru_file.write(json.dumps(formula, indent = 4))
+        print("created " + bru_file_name)
+    return True # did save
 
 def url2filename(url):
     """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz """
@@ -117,8 +137,9 @@ def ant_glob(local_root_dir, glob_expr):
         is_matching = lambda filename: True
     else:
         match = re.match('^\\*\\*\\/\\*(\\.[a-z0-9_]+)$', glob_expr)
-        if match != None:
-            raise Exception("expected format **/*.{ext} or **/* for ant: glob expressions")
+        if match == None:
+            raise Exception("expected format **/*.{ext} or **/* for ant: glob expressions, got "
+                            + glob_expr)
         extension = match.group(1)  # e.g. '.hpp'
         is_matching = lambda filename: filename.endswith(extension)
     
@@ -237,14 +258,20 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
 
     return module_dir
 
+def unpack_module(formula):
+    if not 'module' in formula or not 'version' in formula:
+        print(json.dumps(formula, indent=4))
+        raise Exception('missing module & version')
+    module = formula['module']
+    version = formula['version']
+    zip_url = formula['url']
+    return unpack_dependency("./bru_modules", module, version, zip_url)
+
 def get_dependency(module_name, module_version):
 
     bru_modules_root = "./bru_modules"
     formula = load_formula(module_name, module_version)
-
-    zip_url = formula['url']
-    module_dir = unpack_dependency(bru_modules_root, 
-                                   module_name, module_version, zip_url)
+    module_dir = unpack_module(formula)
 
     # todo: convert into platform-independant make, e.g. via gyp,
     #       or at least call makes on a platform-dependant fashion
