@@ -46,7 +46,7 @@ def drop_hash_comments(file):
 # json (or pythen dicts) with hash comments is what gyp uses alrdy, so I
 # made *.bru the same format.
 def load_json_with_hash_comments(filename):
-    with open(json_file_name) as json_file:
+    with open(filename) as json_file:
         json_without_hash_comments = drop_hash_comments(json_file)
         try:
             jso = json.loads(json_without_hash_comments,
@@ -61,16 +61,18 @@ def save_json(filename, jso):
     """ note this will lose hash comments atm. We could preserve them, is not 
         urgent though imo. Does implicit mkdir -p. 
         Param jso ('java script object') is a dict or OrderedDict """
-    os.makedirs(module_dir, exist_ok=True)
+    dirname = os.path.dirname(filename)
+    if len(dirname) > 0:
+        os.makedirs(dirname, exist_ok=True)
     with open(filename, 'w') as json_file:
         json_file.write(json.dumps(jso, indent = 4))
-        print("saved " + file_name)
+        print("saved " + filename)
 
 
 def load_from_library(module_name, module_version, ext):
     """ ext e.g. '.bru' or '.gyp' """
     json_file_name = os.path.join('./library', module_name, module_version + ext)
-    jso = load_json_with_hash_comments(filename)
+    jso = load_json_with_hash_comments(json_file_name)
     return jso
 
 def load_formula(module_name, module_version):
@@ -301,29 +303,16 @@ def unpack_module(formula):
     zip_url = formula['url']
     return unpack_dependency("./bru_modules", module, version, zip_url)
 
-def define_resolved_dependencies(gyp, formula, resolved_dependencies):
+def get_gyp_dependencies(gyp, formula, resolved_dependencies):
     """ Param gyp is a *.gyp file content, so a dict. 
         Param formula is the formula belonging to the gyp, so a list
         of module deps with desired versions.
         Param resolved_dependencies is a superset of the deps in formula
         with recursively resolved module versions (after resolving conflicts).
     """
-    for target in gyp['targets']:
-
-        if 'dependencies' in target:
-            # There should be no such prop in the library/.../*.gyp file.
-            print('WARNING: replacing 'dependencies' in ", rel_gyp_file_path)
-
-        # 
-        target['dependencies'] = [
-        ]
 
 
-def get_dependency(module_name, module_version, resolved_dependencies):
-    """
-        Param resolved_dependencies is a superset of the deps in formula
-        with recursively resolved module versions (after resolving conflicts).
-    """
+def get_dependency(module_name, module_version):
     bru_modules_root = "./bru_modules"
     formula = load_formula(module_name, module_version)
     module_dir = unpack_module(formula)
@@ -342,6 +331,42 @@ def get_dependency(module_name, module_version, resolved_dependencies):
                     raise ValueError("build failed with error code {}".format(error_code))
             touch(make_done_file)
 
+def compute_resolved_dependencies(formula, resolved_dependencies):
+    """ param formula is the formula with a bunch of desired(!) dependencies
+        which after conflict resolution across the whole set of diverse deps
+        may be required to pull a different version for that module for not
+        violate the ODR. But which of course risks not compiling the module
+        (but which hopefully will compile & pass tests anyway).
+        Param resolved_dependencies is this global modulename-to-version map
+        computed across the whole bru.json dependency list.
+        Returns the subset of deps for the formula, using the resolved_dependencies
+    """
+    # so let's project resolved_deps to the subset of deps needed by this
+    # formula here:
+    if not 'dependencies' in formula:
+        return {}  # no deps
+    deps = {}
+    for module_name in formula['dependencies'].keys():
+        assert module_name in resolved_dependencies # otherwise the resolver failed
+        resolved_version = resolved_dependencies[module_name]
+        deps[module_name] = resolved_version
+
+    # now convert this into the format that *.gyp:dependencies expects:
+    # a list of relative paths to gyp files:
+    gyp_deps = []
+    for module_name, version in deps.items():
+        # relative gyp file path should look like "../boost-regex/1.57.0.gyp"
+        rel_gypfile_path = os.path.join('..', module_name, version + ".gyp")
+        gyp_deps.append(rel_gypfile_path + ":*") # depend on all targets in gyp
+
+    return gyp_deps
+
+def copy_gyp(formula, resolved_dependencies):
+    """
+        Param resolved_dependencies is a superset of the deps in formula
+        with recursively resolved module versions (after resolving conflicts).
+    """
+
     # If the module has a gyp file then let's copy it into ./bru_modules/$module,
     # so next to the unpacked tar.gz, which is where the gyp file's relative 
     # paths expect include_dirs and source files and such.
@@ -355,28 +380,23 @@ def get_dependency(module_name, module_version, resolved_dependencies):
     # Note that the gyp file in the ./library does not contain 'dependencies'
     # property yet, we add this property now (to not have the same redundant deps
     # both in *.bru and *.gyp in the ./library dir)
-    rel_gyp_file_path = os.path.join(module_name, module_version + ".gyp")
+    module_name = formula['module']
+    assert module_name in resolved_dependencies
+    resolved_version = resolved_dependencies[module_name]
+    rel_gyp_file_path = os.path.join(module_name, resolved_version + ".gyp")
     gyp = load_json_with_hash_comments(os.path.join('library', rel_gyp_file_path))
-    define_resolved_dependencies(gyp, formula, resolved_dependencies)
+    gyp_dependencies = compute_resolved_dependencies(
+                            formula, resolved_dependencies)
+    for target in gyp['targets']:
+
+        if 'dependencies' in target:
+            # There should be no such prop in the library/.../*.gyp file.
+            print('WARNING: replacing "dependencies" in ', rel_gyp_file_path)
+
+        # 
+        target['dependencies'] = gyp_dependencies
+        
     save_json(os.path.join('bru_modules', rel_gyp_file_path), gyp)
-
-    return
-    # todo: remove:
-    # now archive groups of build artifacts: includes, libraries, ...
-    artifacts = formula['artifacts']
-    for artifact_type, glob_groups in artifacts.items(): # e.g. type='include'
-        artifact_tar_file_name = os.path.join(module_dir, artifact_type + ".tar.gz")
-        print("writing " + artifact_tar_file_name)
-        with tarfile.open(artifact_tar_file_name, "w:gz") as tar:
-            for glob_group in glob_groups:
-                # each glob group covers a *.h or some such glob expression, with
-                # local fs root and tar root in case you want to name the artifact
-                # files differently then they end up in the local build.
-                tar_glob_group(tar, module_dir, new_glob_group(glob_group))
-
-        # upload tar files to the Artifactory server with enough information to 
-        # not violate ODR when linking in the future.
-        # todo
 
 def resolve_conflicts(dependencies):
     """ takes a dict of modules and version matchers and recursively finds
@@ -425,10 +445,14 @@ def main():
     with open('bru.json', 'r') as package_file:
         package_jso = json.loads(drop_hash_comments(package_file))
     recursive_deps = resolve_conflicts(package_jso['dependencies'])
+    resolved_dependencies = dict((module, version) 
+        for (module, version, requestor) in recursive_deps)
     for module_name, module_version, requestor in recursive_deps:
         print('processing dependency {} version {} requested by {}'
               .format(module_name, module_version, requestor))
+        formula = load_formula(module_name, module_version)
         get_dependency(module_name, module_version)
+        copy_gyp(formula, resolved_dependencies)
 
     # todo: clean up unused module dependencies from /bru_modules?
 

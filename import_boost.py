@@ -2,6 +2,21 @@
 
 # Helper file for pulling all modules of modularized Boost from
 # github separately, which is a few dozen modules.
+#
+# WARNING: after I started generating a *.gyp file for each 
+# modularized boost lib it turned out that gyp complained about
+# dependency cycles between boost libs, and gyp refuses to generate
+# makefiles between modules with circular deps (even with
+# gyp --no-circular-check). Any modularization effort that ends up
+# with dep cycles seems like a fail to me, I wonder what criterions
+# where used for boost modularization :( In any case: we could
+# auto-merge each cluster of circular dependent libs (choosing the
+# conceptually highest-level cluster member's module name as the name
+# for the cluster), e.g. 
+#    http://lists.boost.org/Archives/boost/2014/06/214634.php
+# suggests that the number of circular modules in boost is small.
+# Also see dep graps at 
+#    http://www.steveire.com/boost/after-edge-removal-june-14/range.png
 
 import argparse
 import json

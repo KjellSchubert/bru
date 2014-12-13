@@ -1,27 +1,37 @@
 {
-    "homepage" : "http://www.zlib.net/",
-    "url" : "http://zlib.net/zlib-1.2.8.tar.gz",
-    "md5" : "44d667c142d7cda120332623eab69f40",
-    
+    "homepage": "http://www.zlib.net/",
+    "url": "http://zlib.net/zlib-1.2.8.tar.gz",
+    "md5": "44d667c142d7cda120332623eab69f40",
+    "module": "zlib",
+    "version": "1.2.8",
     "make_command": "cd zlib-1.2.8; ./configure; make teststatic",
-
-    # these are glob expressions for archiving up build results:
     "artifacts": {
-      "include" : [
-         {
-           # note that zlib #includes "zconf.h", not "zlib/zconf.h",
-           # so sadly zlib files will have to end up in the root of
-           # the include path search file list. Unlike boost which
-           # has the decency to #include its headers as "boost/regex/foo.h"
-           "local_root_dir" : "zlib-1.2.8",
-           "glob_expr" : "*.h",
-           "tar_root_dir" : ""
-         }],
-      "lib" : [
-         { 
-           "local_root_dir" : "zlib-1.2.8",
-           "glob_expr" : "libz.a",
-           "tar_root_dir" : ""
-         }]
-    }
+        "include": [
+            {
+                "local_root_dir": "zlib-1.2.8",
+                "glob_expr": "*.h",
+                "tar_root_dir": ""
+            }
+        ],
+        "lib": [
+            {
+                "local_root_dir": "zlib-1.2.8",
+                "glob_expr": "libz.a",
+                "tar_root_dir": ""
+            }
+        ]
+    },
+    "includes": [
+        "crc32.h",
+        "deflate.h",
+        "gzguts.h",
+        "inffast.h",
+        "inffixed.h",
+        "inflate.h",
+        "inftrees.h",
+        "trees.h",
+        "zconf.h",
+        "zlib.h",
+        "zutil.h"
+    ]
 }
