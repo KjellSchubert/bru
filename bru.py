@@ -43,42 +43,76 @@ def drop_hash_comments(file):
     lines_without_comments = (drop_hash_comment(line) for line in lines)
     return "".join(lines_without_comments)
 
-def load_bru_file(bru_file_name):
-    with open(bru_file_name) as bru_file:
-        json_without_hash_comments = drop_hash_comments(bru_file)
+# json (or pythen dicts) with hash comments is what gyp uses alrdy, so I
+# made *.bru the same format.
+def load_json_with_hash_comments(filename):
+    with open(json_file_name) as json_file:
+        json_without_hash_comments = drop_hash_comments(json_file)
         try:
-            bru_dict = json.loads(json_without_hash_comments,
+            jso = json.loads(json_without_hash_comments,
                                   object_pairs_hook=collections.OrderedDict)
+            return jso
         except Exception as err:
-            print("error parsing json in {}: {}".format(bru_file_name, err))
+            print("error parsing json in {}: {}".format(json_file_name, err))
             print(json_without_hash_comments)
             raise
-    return bru_dict 
+
+def save_json(filename, jso):
+    """ note this will lose hash comments atm. We could preserve them, is not 
+        urgent though imo. Does implicit mkdir -p. 
+        Param jso ('java script object') is a dict or OrderedDict """
+    os.makedirs(module_dir, exist_ok=True)
+    with open(filename, 'w') as json_file:
+        json_file.write(json.dumps(jso, indent = 4))
+        print("saved " + file_name)
+
+
+def load_from_library(module_name, module_version, ext):
+    """ ext e.g. '.bru' or '.gyp' """
+    json_file_name = os.path.join('./library', module_name, module_version + ext)
+    jso = load_json_with_hash_comments(filename)
+    return jso
 
 def load_formula(module_name, module_version):
     """ E.g. to load recipe for module_name='zlib' module_version='1.2.8' """
     # Recipes will be downloaded from some server some day (e..g  from github
     # directly).
-    bru_file_name = os.path.join('./library', module_name, module_version + ".bru")
-    formula = load_bru_file(bru_file_name)
+    formula = load_from_library(module_name, module_version, '.bru')
     assert formula['module'] == module_name and formula['version'] == module_version
     return formula
+
+def load_gyp(formula):
+    """ to load the gyp file associated with a formula """
+    gyp = load_from_library(formula['module'], formula['version'], '.gyp')
+    assert 'targets' in gyp # otherwise it's not a (or is an empty) gyp file
+    return gyp
+
+def get_module_dir(formula):
+    module_name = formula['module']
+    module_version = formula['version']
+    module_dir = os.path.join('./library', module_name)
+    return module_dir
+
+def save_to_library(formula, jso, ext):
+    """ param jso is the dict or OrderedDict to save, which can by the
+        forumula itself, or a gyp file, or ... """
+    module_version = formula['version']
+    module_dir = get_module_dir(formula)
+    file_name = os.path.join(module_dir, module_version + ext)
+    save_json(file_name, jso)
+    #print("not modifying existing " + bru_file_name)
+
 
 def save_formula(formula):
     """ param formula is the same dict as returned by load_formula,
         so should be an OrderedDict.
-        Return False if file wasn't overwritten because it exists
-        and force_overwrite = False.
     """
-    module_name = formula['module']
-    module_version = formula['version']
-    bru_module_dir = os.path.join('./library', module_name)
-    bru_file_name = os.path.join(bru_module_dir, module_version + ".bru")
-    os.makedirs(bru_module_dir, exist_ok=True)
-    with open(bru_file_name, 'w') as bru_file:
-        bru_file.write(json.dumps(formula, indent = 4))
-        print("created " + bru_file_name)
-    return True # did save
+    save_to_library(formula, formula, '.bru')
+
+def save_gyp(formula, gyp):
+    """ param is a dict representing gyp file content """
+    save_to_library(formula, gyp, '.gyp')
+    
 
 def url2filename(url):
     """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz """
@@ -267,25 +301,67 @@ def unpack_module(formula):
     zip_url = formula['url']
     return unpack_dependency("./bru_modules", module, version, zip_url)
 
-def get_dependency(module_name, module_version):
+def define_resolved_dependencies(gyp, formula, resolved_dependencies):
+    """ Param gyp is a *.gyp file content, so a dict. 
+        Param formula is the formula belonging to the gyp, so a list
+        of module deps with desired versions.
+        Param resolved_dependencies is a superset of the deps in formula
+        with recursively resolved module versions (after resolving conflicts).
+    """
+    for target in gyp['targets']:
 
+        if 'dependencies' in target:
+            # There should be no such prop in the library/.../*.gyp file.
+            print('WARNING: replacing 'dependencies' in ", rel_gyp_file_path)
+
+        # 
+        target['dependencies'] = [
+        ]
+
+
+def get_dependency(module_name, module_version, resolved_dependencies):
+    """
+        Param resolved_dependencies is a superset of the deps in formula
+        with recursively resolved module versions (after resolving conflicts).
+    """
     bru_modules_root = "./bru_modules"
     formula = load_formula(module_name, module_version)
     module_dir = unpack_module(formula)
 
-    # todo: convert into platform-independant make, e.g. via gyp,
-    #       or at least call makes on a platform-dependant fashion
-    # todo: sanitize make_commands
-    make_command = formula['make_command']
-    make_done_file = zip_file + ".make_done"
-    if not os.path.exists(make_done_file):
-        with Chdir(module_dir):
-            print("building via '{}' ...".format(make_command))
-            error_code = os.system(make_command)
-            if error_code != 0:
-                raise ValueError("build failed with error code {}".format(error_code))
-        touch(make_done_file)
+    # make_command should only be used if we're too lazy to provide a 
+    # gyp file for a module.
+    if 'make_command' in formula:
+        make_command = formula['make_command']
+        make_done_file = zip_file + ".make_done"
+        if not os.path.exists(make_done_file):
+            with Chdir(module_dir):
+                # todo: pick a make command depending on host OS
+                print("building via '{}' ...".format(make_command))
+                error_code = os.system(make_command)
+                if error_code != 0:
+                    raise ValueError("build failed with error code {}".format(error_code))
+            touch(make_done_file)
 
+    # If the module has a gyp file then let's copy it into ./bru_modules/$module,
+    # so next to the unpacked tar.gz, which is where the gyp file's relative 
+    # paths expect include_dirs and source files and such.
+    # Not all modules need a gyp file, but a gyp file allows specifying upstream
+    # module dependencies, whereas a ./configure; make might have easily overlooked
+    # dependencies that result in harder-to-reproduce builds (unless you build
+    # on only one single machine in your organization).
+    # Actually even for modules build via make_command we need a gyp file to 
+    # specify include paths and module libs via all|direct_dependent_settings. 
+    #
+    # Note that the gyp file in the ./library does not contain 'dependencies'
+    # property yet, we add this property now (to not have the same redundant deps
+    # both in *.bru and *.gyp in the ./library dir)
+    rel_gyp_file_path = os.path.join(module_name, module_version + ".gyp")
+    gyp = load_json_with_hash_comments(os.path.join('library', rel_gyp_file_path))
+    define_resolved_dependencies(gyp, formula, resolved_dependencies)
+    save_json(os.path.join('bru_modules', rel_gyp_file_path), gyp)
+
+    return
+    # todo: remove:
     # now archive groups of build artifacts: includes, libraries, ...
     artifacts = formula['artifacts']
     for artifact_type, glob_groups in artifacts.items(): # e.g. type='include'
@@ -302,13 +378,59 @@ def get_dependency(module_name, module_version):
         # not violate ODR when linking in the future.
         # todo
 
+def resolve_conflicts(dependencies):
+    """ takes a dict of modules and version matchers and recursively finds
+        all indirect deps. Then resolves version conflicts by picking the newer
+        of competing deps, or by picking the version that was requested by the module
+        closest to the root of the dependency tree (unsure still).
+    """
+    root_requestor = 'bru.json'
+    todo = [(module, version, root_requestor) for (module, version)
+            in dependencies.items()]
+    recursive_deps = collections.OrderedDict() 
+    for module_name, version_matcher, requestor in todo:
+        module_version = version_matcher # todo: allow for npm-style version specs (e.g. '4.*')
+        #print('resolving dependency {} version {} requested by {}'
+        #      .format(module_name, module_version, requestor))
+        if module_name in recursive_deps:
+            resolved = recursive_deps[module_name]
+            resolved_version = resolved['version']
+            if module_version != resolved_version:
+                winning_requestor = resolved['requestor']
+                print("WARNING: version conflict for {} requested by first {} and then {}"
+                      .format(module_name, winning_requestor, requestor))
+                # instead of just letting the 2nd and later requestors loose 
+                # the competition we could probably do something more sensible.
+                # todo?
+        else:
+            # this is the first time this module was requested, freeze that 
+            # chosen version:
+            formula = load_formula(module_name, module_version)
+            recursive_deps[module_name] = {
+                'version' : module_version, 
+                'requestor' : requestor
+            }
+
+            # then descend deeper into the dependency tree:
+            deps = formula['dependencies'] if  'dependencies' in formula else {}
+            child_requestor = module_name
+            todo += [(child_module, version, child_requestor) 
+                     for (child_module, version)
+                     in deps.items()]
+
+    return [(module, resolved['version'], resolved['requestor'])
+            for (module, resolved) in recursive_deps.items()]
+
 def main():
     with open('bru.json', 'r') as package_file:
         package_jso = json.loads(drop_hash_comments(package_file))
-    for module_name, version_matcher in package_jso['dependencies'].items():
-        module_version = version_matcher # todo: allow for npm-style version specs (e.g. '4.*')
-        print('processing dependency {} version {}'.format(module_name, version_matcher))
+    recursive_deps = resolve_conflicts(package_jso['dependencies'])
+    for module_name, module_version, requestor in recursive_deps:
+        print('processing dependency {} version {} requested by {}'
+              .format(module_name, module_version, requestor))
         get_dependency(module_name, module_version)
+
+    # todo: clean up unused module dependencies from /bru_modules?
 
 if __name__ == "__main__":
     main()

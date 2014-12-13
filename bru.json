@@ -6,9 +6,9 @@
     #"boost-assert" : "1.57.0"
     #"boost-exception" : "1.57.0"
     #"boost-throw_exception" : "1.57.0"
-    #"boost-regex-icu" : "1.57.0"
+    "boost-regex" : "1.57.0"
     #"boost-smart_ptr" : "1.57.0"
-    "llvm-libcxx" : "3.5.0"
+    #"llvm-libcxx" : "3.5.0"
     #"zlib" : "1.2.8"
     #"icu4c" : "54.1"
   },

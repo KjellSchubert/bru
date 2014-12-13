@@ -56,11 +56,12 @@ def import_boost(boost_lib, version):
 
     formula = OrderedDict([
         ("homepage", "http://www.boost.org/"),
-        ("url", "https://github.com/boostorg/" + boost_lib 
-                + "/archive/boost-1.57.0.tar.gz"),
+        ("url", "https://github.com/boostorg/{}/archive/boost-{}.tar.gz"\
+            .format(boost_lib, version)),
         ("module", bru_module_name),
         ("version", version),
 
+        # todo: rem?
         ("artifacts", {
             "include" : [
                 OrderedDict([
@@ -80,17 +81,51 @@ def import_boost(boost_lib, version):
         })
     ])
 
-    # most boost libs are #include only, some like regex do have a src dir
-    # though and need to be compiled.
-    if os.path.exists(os.path.join(tar_content_dir, "src")):
-        print("boost module " + boost_lib + " has a src/ dir")
-        formula['artifacts']['lib'] = [
-            OrderedDict([
-                ("local_root_dir", boost_lib + "-boost-" + version + "/lib"),
-                ("glob_expr", "*.a;*.lib;*.so;*.dll"),
-                ("tar_root_dir", "")
-          ])
+    # some boost libs have a src dir (e.g. boost-regex), but most don't. The 
+    # gyp target will need to know if the lib is #include-only or not:
+    include_dir = os.path.join(tar_content_dir, "include")
+    src_dir = os.path.join(tar_content_dir, "src")
+    assert os.path.exists(include_dir)
+    has_src_dir = os.path.exists(src_dir)
+
+    def get_dir_relative_to_gyp(path):
+        return os.path.relpath(path, start=tar_root_dir)
+
+    gyp_target =\
+        OrderedDict([
+            ('target_name', bru_module_name),
+            ('type', 'static_library' if has_src_dir else 'none'),
+            ('include_dirs', [ get_dir_relative_to_gyp(include_dir) ]),
+            # I wish I could use direct_dependent_settings here, but I cannot:
+            ('all_dependent_settings', {
+                'include_dirs' : [ get_dir_relative_to_gyp(include_dir) ]
+            })
+        ])
+    if has_src_dir:
+        gyp_target['sources'] = os.path.join(get_dir_relative_to_gyp(src_dir), "*.cpp")
+
+        def has_subdirs(dir):
+            for file in os.listdir(dir):
+                if os.path.isdir(os.path.join(dir, file)):
+                    return True
+            return False
+        # src_dir should be flat, otherwise we'd have to use a different
+        # 'sources' expression in the gyp file. One boost dir that violates 
+        # this is boost.context, with an asm subdir
+        libs_with_known_src_subdirs = [
+            'context',   # asm subdir
+            'coroutine', # posix and windows subdirs
+            'date_time', # posix_time
+            'locale',
+            'math',
+            'mpi',
+            'python',
+            'thread',
+            'wave',
         ]
+        assert not has_subdirs(src_dir) or boost_lib in libs_with_known_src_subdirs
+
+    gyp = { "targets": [ gyp_target ] }
 
     # here we could in theory also determine deps between boost modules
     # automatically by finding #include statements in cpp and hpp files, and
@@ -103,8 +138,8 @@ def import_boost(boost_lib, version):
     if not os.path.isdir(library_root):
       raise Exception("expected to run script in repo root with " + libary_root + " dir")
     
-    if not bru.save_formula(formula):
-        print("not moddifying existing " + bru_file_name)
+    bru.save_formula(formula)
+    bru.save_gyp(formula, gyp)
 
 def main():
     parser = argparse.ArgumentParser()

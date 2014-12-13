@@ -104,6 +104,17 @@ def get_latest_version_of(module):
     versions = get_all_versions('./library', module)
     return max((ModuleVersion(version_text) for version_text in versions)).version_text
 
+def get_include_files(include_dir):
+    """ returns relative paths for all #include files underneath this dir.
+        Since we can't be sure which extensions are include files and which
+        ones aren't we simply return all files underneath this dir 
+    """
+    for root, dirs, files in os.walk(include_dir):
+        for file in files:
+            filename = os.path.join(root, file)
+            include_file = os.path.relpath(filename, start=include_dir)
+            yield include_file
+
 def collect_includes(formula):
     """  one of the most basic things to know about a module is which
          include files it comes with: e.g. for boost you're supposed
@@ -118,19 +129,27 @@ def collect_includes(formula):
          rare though.
          This func here will modify the $formula in-place, adding the 
          list of #include files as an 'includes' property.
+         Returns a list of TwoComponentPath objects.
     """
-    if not 'module' in formula or not 'version' in formula:
-        print(json.dumps(formula, indent=4))
-        raise Exception('missing module & version')
+    gyp = bru.load_gyp(formula)
     module = formula['module']
     version = formula['version']
     tar_root_dir = os.path.join('./bru_modules', module, version)
-    include_files = bru.get_files_from_glob_exprs(
-        tar_root_dir, formula['artifacts']['include'])
-    assert len(include_files) > 0   # there's no boost lib without #includes
-    includes = [two_component_path.path for two_component_path in include_files]
-    includes.sort()
-    formula['includes'] = includes
+    # here we assume the gyp file is located in tar_root_dir
+
+    include_files = []
+    for target in gyp['targets']:
+        include_dirs = target['include_dirs']
+        for include_dir in include_dirs:
+            abs_include_dir = os.path.join(tar_root_dir, include_dir)
+            include_files += [bru.TwoComponentPath(abs_include_dir, include_file)
+                              for include_file 
+                              in get_include_files(abs_include_dir)]
+    #assert len(include_files) > 0   # there's no boost lib without #includes
+    if len(include_files) == 0:
+        # didn't create an ICU gyp file yet, looks painful to me
+        print("WARNING: no includes for module ", module)
+    return include_files
 
 class IncludeFileIndex:
     """ created from a list of modules, each of which has a set of #include
@@ -145,14 +164,11 @@ class IncludeFileIndex:
         for module in get_all_modules(library_path):
             for version in get_all_versions(library_path, module):
                 formula = bru.load_formula(module, version)
-                if not 'includes' in formula:
-
-                    # if the *.bru file doesn't include a list of #includes
-                    # yet then let's create that list now.
-                    bru.unpack_module(formula)
-                    collect_includes(formula)
-                    bru.save_formula(formula)
-                includes = formula['includes']
+                bru.unpack_module(formula)
+                includes = [two_component_path.path 
+                    for two_component_path in collect_includes(formula)]
+                includes.sort()
+                #print("includes for ", module, ": ", includes)
                 self._remember_includes(module, includes)
 
     def _remember_includes(self, module, includes):
@@ -168,7 +184,6 @@ class IncludeFileIndex:
             ambiguous """
         map = self.include2modules
         return map[included_file] if included_file in map else set() 
-            
 
 def get_modules_for_includes(included_files, include_file_index):
     """ given a set of included files return the set of modules that
@@ -186,10 +201,11 @@ def get_modules_for_includes(included_files, include_file_index):
         included_modules = included_modules.union(mods)
     return (included_modules, unknown_includes)
 
-def scan_deps(module, version, include_file_index):
+def scan_deps(formula, include_file_index):
     """ param module like "boost-asio", version like "1.57.0" """
     
-    formula = bru.load_formula(module, version)
+    module = formula['module']
+    version = formula['version']
     artifacts = formula['artifacts']
     include_globs = artifacts['include']
     src_globs = artifacts['src'] if 'src' in artifacts else [] 
@@ -237,18 +253,6 @@ def scan_deps(module, version, include_file_index):
     remove_if_exists(included_modules_from_cpp, module)
     remove_if_exists(included_modules_from_hpp, module)
 
-    # now add the computed dependencies to the formula, unless
-    # the formula alrdy epxlicitly lists deps:
-    if not 'hpp_dependencies' in formula:
-        def annotate_with_latest_version(modules):
-            dependency2version = OrderedDict()
-            for module in sorted(modules):
-                dependency2version[module] = get_latest_version_of(module)
-            return dependency2version
-        formula['hpp_dependencies'] = annotate_with_latest_version(included_modules_from_hpp)
-        formula['cpp_dependencies'] = annotate_with_latest_version(included_modules_from_cpp)
-        bru.save_formula(formula)
-
     return (included_modules_from_hpp, included_modules_from_cpp, 
             unknown_includes_hpp.union(unknown_includes_cpp))
 
@@ -285,10 +289,34 @@ def main():
             continue
         
         print("scanning module {} version {}".format(module, version))
-        (hpp_deps, cpp_deps, missing_includes) = scan_deps(module, version, index)
+        formula = bru.load_formula(module, version)
+        (hpp_deps, cpp_deps, missing_includes) = scan_deps(formula, index)
         print("hpp dependencies: ", hpp_deps)
-        print("(additional) cpp dependencies: ", cpp_deps)
-        print("missing includes: ", missing_includes)
+        if len(cpp_deps) > 0:
+            print("(additional) cpp dependencies: ", cpp_deps)
+        if len(missing_includes) > 0:
+            print("missing includes: ", missing_includes)
+
+        # now add the computed dependencies to the formula, unless
+        # the formula alrdy epxlicitly lists deps:
+        if not 'dependencies' in formula:
+            def annotate_with_latest_version(modules):
+                dependency2version = OrderedDict()
+                for module in sorted(modules):
+                    dependency2version[module] = get_latest_version_of(module)
+                return dependency2version
+
+            # remove deps we consider builtin, like C++ stdlib and C lib. 
+            # This here is kinda fuzzy and differs between OSs.
+            builtin_deps = set([
+                'llvm-libcxx'
+            ])
+            dependencies = hpp_deps.union(cpp_deps).difference(builtin_deps)
+
+            formula['dependencies'] = annotate_with_latest_version(dependencies)
+            print(formula)
+            bru.save_formula(formula)
+
         done_modules.add(module)
 
         if args.recursive:
