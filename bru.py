@@ -292,16 +292,23 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
         extract_file(zip_file, module_dir)
         touch(extract_done_file)
 
-    return module_dir
-
 def unpack_module(formula):
     if not 'module' in formula or not 'version' in formula:
         print(json.dumps(formula, indent=4))
         raise Exception('missing module & version')
     module = formula['module']
     version = formula['version']
-    zip_url = formula['url']
-    return unpack_dependency("./bru_modules", module, version, zip_url)
+    zip_urls = formula['url']
+    
+    # 'url' can be a single string or a list
+    if isinstance(zip_urls, str):
+        zip_urls = [zip_urls]
+
+    bru_modules_root = './bru_modules'
+    for zip_url in zip_urls:
+        unpack_dependency(bru_modules_root, module, version, zip_url)
+    module_dir = os.path.join(bru_modules_root, module, module)
+    return module_dir
 
 def get_gyp_dependencies(gyp, formula, resolved_dependencies):
     """ Param gyp is a *.gyp file content, so a dict. 

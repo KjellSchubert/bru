@@ -3,20 +3,12 @@
 # Helper file for pulling all modules of modularized Boost from
 # github separately, which is a few dozen modules.
 #
-# WARNING: after I started generating a *.gyp file for each 
-# modularized boost lib it turned out that gyp complained about
-# dependency cycles between boost libs, and gyp refuses to generate
-# makefiles between modules with circular deps (even with
-# gyp --no-circular-check). Any modularization effort that ends up
-# with dep cycles seems like a fail to me, I wonder what criterions
-# where used for boost modularization :( In any case: we could
-# auto-merge each cluster of circular dependent libs (choosing the
-# conceptually highest-level cluster member's module name as the name
-# for the cluster), e.g. 
-#    http://lists.boost.org/Archives/boost/2014/06/214634.php
-# suggests that the number of circular modules in boost is small.
-# Also see dep graps at 
-#    http://www.steveire.com/boost/after-edge-removal-june-14/range.png
+# To import all of boost and then build boost_regex run these cmds:
+#   >./import_boost.py all 1.57.0
+#   >./scan_deps.py boost* -r
+#   >./detect_cycles.py   # should not detect dependency cycles
+# Sadly this doesn't work as of today without generating plenty of module 
+# dependency cycles, see details below at fix_annoying_dependency_cycle().
 
 import argparse
 import json
@@ -24,6 +16,7 @@ import re
 import urllib.request
 import os
 import os.path
+import shutil
 import bru
 from collections import OrderedDict
 import pdb # only if you want to add pdb.set_trace()
@@ -117,7 +110,8 @@ def import_boost(boost_lib, version):
             })
         ])
     if has_src_dir:
-        gyp_target['sources'] = os.path.join(get_dir_relative_to_gyp(src_dir), "*.cpp")
+        gyp_target['sources'] = [ 
+            os.path.join(get_dir_relative_to_gyp(src_dir), "*.cpp") ]
 
         def has_subdirs(dir):
             for file in os.listdir(dir):
@@ -156,6 +150,88 @@ def import_boost(boost_lib, version):
     bru.save_formula(formula)
     bru.save_gyp(formula, gyp)
 
+# WARNING: after I started generating a *.gyp file for each 
+# modularized boost lib it turned out that gyp complained about
+# dependency cycles between boost libs, and gyp refuses to generate
+# makefiles between modules with circular deps (even with
+# gyp --no-circular-check). Any modularization effort that ends up
+# with dep cycles seems like a fail to me, I wonder what criterions
+# where used for boost modularization :( In any case: we could
+# auto-merge each cluster of circular dependent libs (choosing the
+# conceptually highest-level cluster member's module name as the name
+# for the cluster) if the number of dep cycles is small. See also 
+#    http://lists.boost.org/Archives/boost/2014/06/214634.php
+# for more details.
+# Also see dep graphs at 
+#    http://www.steveire.com/boost/after-edge-removal-june-14/range.png
+#    http://www.steveire.com/boost/deps-june-14/thread.png
+#    http://www.steveire.com/boost/deps-june-14/date_time.png
+#    http://www.steveire.com/boost/deps-june-14/regex.png
+# This indicates a serious problem with dependency cycles in modular boost!
+# E.g. you cant use boost-thread without also requiring the #includes
+# for boost-spirit. Which is not an intuitive or desirable dependency.
+# After I merged the partial mpl cycle the detect_cycles.py emitted another
+# set of cycles it hadn't mentioned the first time:
+#    ['boost-date_time', 'boost-serialization', 'boost-spirit', 'boost-pool', 'boost-thread']
+#    ['boost-graph', 'boost-bimap', 'boost-property_map', 'boost-mpi']
+#    ['boost-disjoint_sets', 'boost-graph', 'boost-graph_parallel']
+# So I guess atm the graph cycle detection script does not reliably emit
+# ALL cycles after all (since these weren't listed the 1st time I ran
+# the script).
+# After getting this set of cycles I'm thinking boost modularization
+# is a bit of a failure (or work in progress?) atm, and boost is a pretty 
+# monolithic lib as of 1.57.0 :(
+def fix_annoying_dependency_cycle(module_names, version):
+    """ merge all bru & gyp files together, making module_names[0] the
+        merge target """
+
+    print('merging dependency cycle:', module_names)
+    formulas = list(map(
+        lambda module_name: bru.load_formula(module_name, version), 
+        module_names))
+    gyps = list(map(
+        lambda formula: bru.load_gyp(formula),
+        formulas))
+
+    # first merge the *.bru files:
+    all_urls = []
+    for merge_source in formulas[0:]:
+        all_urls.append(merge_source['url']) # list of tgzs
+    target_formula = formulas[0]
+    target_formula['url'] = all_urls
+    bru.save_formula(target_formula)
+
+    # now merge the *.gyp files:
+    all_include_dirs = []
+    for gyp in gyps:
+        targets = gyp['targets']
+        assert len(targets) == 1
+        target = targets[0]
+        assert target['type'] == 'none' # it's an #include-only lib
+        all_include_dirs += target['include_dirs']
+    target_gyp = gyps[0]
+    merged_target = target_gyp['targets'][0]
+    merged_target['include_dirs'] = all_include_dirs
+    for dependent_settings in ['all_dependent_settings', 
+                               'direct_dependent_settings']:
+        if not dependent_settings in merged_target:
+            continue
+        settings_dict = merged_target[dependent_settings]
+        if not 'include_dirs' in settings_dict:
+            continue
+        settings_dict['include_dirs'] = all_include_dirs
+    bru.save_gyp(target_formula, target_gyp)
+
+    # now delete the merge source dir's *.gyp and *.bru files, or
+    # alternatively nuke the whole dir
+    for deleted_module in module_names[1:]:
+        def rmrf(deleted_dir):
+            print('deleting merged', deleted_dir)
+            shutil.rmtree(deleted_dir)
+        rmrf(os.path.join('library', deleted_module))
+        rmrf(os.path.join('bru_modules', deleted_module))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("module", help = "e.g. asio or 'all' to get all boost libs")
@@ -177,6 +253,15 @@ def main():
     if boost_lib == 'all':
         for boost_lib in all_boost_lib_names:
             import_boost(boost_lib, version)
+
+        # this cycle was detected by detect_cycles.py for 1.57. Maybe future
+        # boost versions won't suffer from that anymore, we'll see.
+        fix_annoying_dependency_cycle([
+                'boost-mpl', 
+                'boost-type_traits', 
+                'boost-typeof',
+                'boost-utility'],
+            version)
     else:
         assert boost_lib in all_boost_lib_names
         import_boost(boost_lib, version)

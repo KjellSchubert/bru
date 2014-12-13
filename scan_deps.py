@@ -230,31 +230,18 @@ def scan_deps(formula, include_file_index):
     # now we know what #include files are needed by the module let's 
     # automatically find out which (other) modules are providing these
     # includes:
-    included_modules_from_hpp, unknown_includes_hpp = get_modules_for_includes(
-        included_files_from_hpp, 
+    included_files = included_files_from_hpp.union(included_files_from_cpp)
+    included_modules, unknown_includes = get_modules_for_includes(
+        included_files, 
         include_file_index)
-
-    # explicitly compute the list of modules needed by cpp files only: these
-    # are only internal dependencies (which later the linker has to link 
-    # against, but which the compiler in downstream modules doesnt care about)
-    #
-    # WARNING: remember these sets of module dependencies are often overestimated,
-    # e.g. if you wrap an include in an #if defined(FOO) or #if 0 the #include
-    # statement will still be considered a valid potential #include!
-    included_modules_from_cpp, unknown_includes_cpp = get_modules_for_includes(
-        included_files_from_cpp, 
-        include_file_index)
-    included_modules_from_cpp = included_modules_from_cpp.difference(included_modules_from_hpp)
 
     # remove the obvious dep to the same module:
     def remove_if_exists(set, elem):
         if elem in set:
              set.remove(elem)
-    remove_if_exists(included_modules_from_cpp, module)
-    remove_if_exists(included_modules_from_hpp, module)
+    remove_if_exists(included_modules, module)
 
-    return (included_modules_from_hpp, included_modules_from_cpp, 
-            unknown_includes_hpp.union(unknown_includes_cpp))
+    return (included_modules, unknown_includes)
 
 def get_arg_modules(module, version):
     """ returns list of (module,version) tuples given cmdline args.
@@ -290,10 +277,8 @@ def main():
         
         print("scanning module {} version {}".format(module, version))
         formula = bru.load_formula(module, version)
-        (hpp_deps, cpp_deps, missing_includes) = scan_deps(formula, index)
-        print("hpp dependencies: ", hpp_deps)
-        if len(cpp_deps) > 0:
-            print("(additional) cpp dependencies: ", cpp_deps)
+        (deps, missing_includes) = scan_deps(formula, index)
+        print("dependencies: ", deps)
         if len(missing_includes) > 0:
             print("missing includes: ", missing_includes)
 
@@ -311,16 +296,16 @@ def main():
             builtin_deps = set([
                 'llvm-libcxx'
             ])
-            dependencies = hpp_deps.union(cpp_deps).difference(builtin_deps)
+            deps = deps.difference(builtin_deps)
 
-            formula['dependencies'] = annotate_with_latest_version(dependencies)
+            formula['dependencies'] = annotate_with_latest_version(deps)
             print(formula)
             bru.save_formula(formula)
 
         done_modules.add(module)
 
         if args.recursive:
-            direct_dependency_modules = list(item for item in hpp_deps.union(cpp_deps))
+            direct_dependency_modules = list(item for item in deps)
             todo_module_version += ((module, get_latest_version_of(module)) 
                                    for module in direct_dependency_modules)
 
