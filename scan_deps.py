@@ -134,18 +134,18 @@ def collect_includes(formula):
     gyp = bru.load_gyp(formula)
     module = formula['module']
     version = formula['version']
-    tar_root_dir = os.path.join('./bru_modules', module, version)
-    # here we assume the gyp file is located in tar_root_dir
+    gyp_root_dir = os.path.join('./bru_modules', module)
+    # here we assume the gyp file is located in gyp_root_dir
 
     include_files = []
     for target in gyp['targets']:
         include_dirs = target['include_dirs']
         for include_dir in include_dirs:
-            abs_include_dir = os.path.join(tar_root_dir, include_dir)
+            abs_include_dir = os.path.join(gyp_root_dir, include_dir)
             include_files += [bru.TwoComponentPath(abs_include_dir, include_file)
                               for include_file 
                               in get_include_files(abs_include_dir)]
-    #assert len(include_files) > 0   # there's no boost lib without #includes
+    #assert len(include_files) > 0, "missing includes for " + module
     if len(include_files) == 0:
         # didn't create an ICU gyp file yet, looks painful to me
         print("WARNING: no includes for module ", module)
@@ -201,24 +201,56 @@ def get_modules_for_includes(included_files, include_file_index):
         included_modules = included_modules.union(mods)
     return (included_modules, unknown_includes)
 
+def find_includes(include_root_dir):
+    includes = []
+    for root, dirs, files in os.walk(include_root_dir):
+        for file in files:
+            include_file = os.path.join(root, file)
+            # could also make it a TwoComponentPath here
+            includes.append(include_file)
+    return includes
+
 def scan_deps(formula, include_file_index):
     """ param module like "boost-asio", version like "1.57.0" """
     
     module = formula['module']
     version = formula['version']
-    artifacts = formula['artifacts']
-    include_globs = artifacts['include']
-    src_globs = artifacts['src'] if 'src' in artifacts else [] 
-                # empty if header-only lib
-
     bru_modules = "./bru_modules"
-    tar_root = os.path.join(bru_modules, module, version)
-    include_files = bru.get_files_from_glob_exprs(tar_root, include_globs)
-    src_files = bru.get_files_from_glob_exprs(tar_root, src_globs)
+    gyp_root = os.path.join(bru_modules, module) # paths in gyp are rel to that
+    tar_root = os.path.join(gyp_root, version)
+
+    # We need to know where are the hpp and cpp files for this module.
+    # If the module comes with a gyp file then we could extract the 
+    # 'include_dirs' and 'sources' file libs (or glob expr lists) from
+    # it, though (e.g. for zlib) this requires taking 'copies' actions
+    # into account (or executing the 'copies' action). 
+    # We could also heuristically search for cpp and hpp files, but
+    # this won't work too well (e.g. it'll add dependencies only needed
+    # for tests)
+    gyp = bru.load_gyp(formula)
+    include_files = []
+    src_files = []
+    for target in gyp['targets']:
+        if 'include_dirs' in target:
+            for include_dir in target['include_dirs']:
+                # any file could be included, not just *.hpp and *.h
+                include_files += find_includes(
+                                  os.path.join(gyp_root, include_dir))
+        if 'sources' in target:
+            for src_filename in target['sources']:
+                # src_filename could be glob expr or file, but is always
+                # relative to gyp_root
+                src_files += glob.glob(os.path.join(gyp_root, src_filename))
+
+    def abbreviate_list(elems):
+        prefix = elems[:min(5, len(elems))]
+        return prefix
+    print('include_files:',abbreviate_list(include_files))
+    print('src files:', abbreviate_list(src_files))
 
     def get_included_files(cpp_files):
         return set(itertools.chain.from_iterable(
-                      get_includes_from_cpp(file.get_full_path()) 
+                      get_includes_from_cpp(file) 
                       for file in include_files))
 
     included_files_from_hpp = get_included_files(include_files)

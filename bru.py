@@ -53,7 +53,7 @@ def load_json_with_hash_comments(filename):
                                   object_pairs_hook=collections.OrderedDict)
             return jso
         except Exception as err:
-            print("error parsing json in {}: {}".format(json_file_name, err))
+            print("error parsing json in {}: {}".format(filename, err))
             print(json_without_hash_comments)
             raise
 
@@ -114,12 +114,28 @@ def save_formula(formula):
 def save_gyp(formula, gyp):
     """ param is a dict representing gyp file content """
     save_to_library(formula, gyp, '.gyp')
-    
+   
+def split_all(path):
+    (head, tail) = os.path.split(path)
+    if len(head) > 0 and len(tail):
+        return split_all(head) + [tail]
+    else:
+        return [path]
 
 def url2filename(url):
-    """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz """
+    """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz,
+        and http://boost.../foo/1.57.0.tgz to foo_1.57.0.tgz"""
     path =  urllib.parse.urlparse(url).path
-    return os.path.basename(path)
+    if path.startswith('/'):
+        path = path[1:]
+    components = split_all(path)
+    
+    # only because of boost's nameing scheme and because modularized boost
+    # requires downloading several targzs into the same module dir I set
+    # this to 3. Otherwise 1 would be fine. Infinity would be OK also.
+    combined_component_count = 5
+    
+    return "_".join(components[-combined_component_count:])
 
 def wget(url, filename):
     """ typically to download tar.gz or zip """
@@ -194,27 +210,6 @@ def do_glob(local_root_dir, glob_expr):
         return ant_glob(local_root_dir, expr)
     else:
         return glob.glob(os.path.join(local_root_dir, glob_expr))
-
-def get_files_from_glob_exprs(tar_root, glob_exprs):
-    """ param glob_exprs is the glob expression pointing to e.g. include
-        files in the module's tar file, the glob expr is relative to the
-        tar_root dir, which is the dir into which the tar was unpacked.
-
-        Returns pairs of files names: root_dir plus include path, where
-        the include path is the file name as it's expected to be used 
-        in #include statements, so for example for boost #includes it
-        should return pairs ('boost-regex/..../1.57.0', 'boost/regex/foo.hpp')
-    """
-    files = []
-    for glob_expr in glob_exprs:
-        local_root_dir = os.path.join(tar_root, glob_expr['local_root_dir'])
-        exprs = glob_expr['glob_expr'].split(';') # semi-colon separated
-        for expr in exprs:
-            matches = do_glob(local_root_dir, expr)
-            for match in matches:
-                files += [TwoComponentPath(local_root_dir, 
-                           os.path.relpath(match, start=local_root_dir))]
-    return files
 
 def touch(file_name, times=None):
     # http://stackoverflow.com/questions/1158076/implement-touch-using-python

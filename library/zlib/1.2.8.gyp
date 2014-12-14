@@ -16,7 +16,7 @@
                     "files": [
                         "1.2.8/zlib-1.2.8/zlib.h",
                         "1.2.8/zlib-1.2.8/zconf.h"
-                    ],
+                    ]
                 },
                 {
                     # from ZLIB_PRIVATE_HDRS
@@ -32,8 +32,7 @@
                         "1.2.8/zlib-1.2.8/inftrees.h",
                         "1.2.8/zlib-1.2.8/trees.h",
                         "1.2.8/zlib-1.2.8/zutil.h"
-                    ],
-                    
+                    ]
                 }
             ],
 

@@ -68,25 +68,6 @@ def import_boost(boost_lib, version):
             .format(boost_lib, version)),
         ("module", bru_module_name),
         ("version", version),
-
-        # todo: rem?
-        ("artifacts", {
-            "include" : [
-                OrderedDict([
-                    ("local_root_dir", boost_lib + "-boost-" + version + "/include"),
-
-                    # note that **/*.h searches more than one level, being an
-                    # Ant-style glob, not a Python-glob-style glob.
-                    # Initially I had a pattern 'ant:**/*.hpp' here, but
-                    # boost-compatibility has #include names like 'ctime', without
-                    # a *.h or *.hpp extension.
-                    ("glob_expr", "ant:**/*"),
-
-                    ("tar_root_dir", "")
-                ])
-            ],
-            # dont need lib dir for header-only libs
-        })
     ])
 
     # some boost libs have a src dir (e.g. boost-regex), but most don't. The 
@@ -97,7 +78,7 @@ def import_boost(boost_lib, version):
     has_src_dir = os.path.exists(src_dir)
 
     def get_dir_relative_to_gyp(path):
-        return os.path.relpath(path, start=tar_root_dir)
+        return os.path.relpath(path, start=os.path.dirname(tar_root_dir))
 
     gyp_target =\
         OrderedDict([
@@ -256,7 +237,7 @@ def main():
 
         # this cycle was detected by detect_cycles.py for 1.57. Maybe future
         # boost versions won't suffer from that anymore, we'll see.
-        if False:
+        if True:
             fix_annoying_dependency_cycle([
                     'boost-mpl', 
                     'boost-type_traits', 
