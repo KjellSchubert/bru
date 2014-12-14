@@ -256,12 +256,13 @@ def main():
 
         # this cycle was detected by detect_cycles.py for 1.57. Maybe future
         # boost versions won't suffer from that anymore, we'll see.
-        fix_annoying_dependency_cycle([
-                'boost-mpl', 
-                'boost-type_traits', 
-                'boost-typeof',
-                'boost-utility'],
-            version)
+        if False:
+            fix_annoying_dependency_cycle([
+                    'boost-mpl', 
+                    'boost-type_traits', 
+                    'boost-typeof',
+                    'boost-utility'],
+                version)
     else:
         assert boost_lib in all_boost_lib_names
         import_boost(boost_lib, version)

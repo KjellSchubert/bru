@@ -1,0 +1,4 @@
+# install via pip install -r requirements.txt
+--allow-unverified python-graph-core # see https://pip.pypa.io/en/1.1/requirements.html
+--allow-external python-graph-core
+python-graph-core >= 1.8

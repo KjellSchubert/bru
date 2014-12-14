@@ -80,9 +80,11 @@ def main():
         print("no cycles detected, good")
         return
 
-    print('cycles found:\n  ', "\n  ".join(
-        map(
-            lambda modulelist: str(modulelist),
+    cycle_member_count = sum(len(cycle) for cycle in cycles)
+    print(len(cycles), 'cycles found with', cycle_member_count, 'members:\n  ', 
+        "\n  ".join(
+            map(
+                lambda modulelist: str(modulelist),
             cycles)))
 
     # if cycles were found then merge them
