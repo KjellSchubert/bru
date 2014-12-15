@@ -11,6 +11,7 @@ import os.path
 import tarfile
 import zipfile
 import glob
+import argparse
 import pdb # only if you want to add pdb.set_trace()
 
 class Formula:
@@ -333,7 +334,7 @@ def get_dependency(module_name, module_version):
                     raise ValueError("build failed with error code {}".format(error_code))
             touch(make_done_file)
 
-def compute_resolved_dependencies(formula, resolved_dependencies):
+def compute_resolved_dependencies(formula, target, resolved_dependencies):
     """ param formula is the formula with a bunch of desired(!) dependencies
         which after conflict resolution across the whole set of diverse deps
         may be required to pull a different version for that module for not
@@ -343,25 +344,52 @@ def compute_resolved_dependencies(formula, resolved_dependencies):
         computed across the whole bru.json dependency list.
         Returns the subset of deps for the formula, using the resolved_dependencies
     """
-    # so let's project resolved_deps to the subset of deps needed by this
-    # formula here:
-    if not 'dependencies' in formula:
-        return {}  # no deps
-    deps = {}
-    for module_name in formula['dependencies'].keys():
-        assert module_name in resolved_dependencies # otherwise the resolver failed
-        resolved_version = resolved_dependencies[module_name]
-        deps[module_name] = resolved_version
 
-    # now convert this into the format that *.gyp:dependencies expects:
-    # a list of relative paths to gyp files:
-    gyp_deps = []
-    for module_name, version in deps.items():
-        # relative gyp file path should look like "../boost-regex/1.57.0.gyp"
-        rel_gypfile_path = os.path.join('..', module_name, version + ".gyp")
-        gyp_deps.append(rel_gypfile_path + ":*") # depend on all targets in gyp
+    # this here's the module we want to resolve deps for now:
+    module = formula['module']
+    version = formula['version']
 
-    return gyp_deps
+    # iterate over all target and their deps, fill in resolved versions
+    target_name = target['target_name']
+    resolved_target_deps = []
+
+    def map_dependency(dep):
+        bru_prefix = "bru:"
+        if not dep.startswith(bru_prefix):
+            return dep
+        # process the "bru:" protocol:
+        upstream_module = dep[len(bru_prefix):]
+        if not upstream_module in resolved_dependencies:
+            raise Exception("module {} listed in {}/{}.gyp's target '{}'"
+                " not found. Add it to {}/{}.bru:dependencies"
+                .format(
+                    upstream_module, module, version, target_name,
+                    module, version
+                ))
+        return resolved_dependencies[upstream_module]
+    return list(map(map_dependency, target['dependencies']))
+
+def compute_sources(formula, target):
+    """ gyp does not support glob expression or wildcards in 'sources', this
+        here turns these glob expressions into a list of source files 
+    """
+    def is_glob_expr(source):
+        return '*' in source or source.startswith('ant:')
+    sources = []
+    gyp_target_dir = os.path.join('bru_modules', formula['module']) # that is
+        # the dir the gyp file for this module is being stored in, so paths
+        # in the gyp file are interpreted relative to that
+    for source in target['sources']:
+        if is_glob_expr(source):
+            matching_sources = [os.path.relpath(filename, start=gyp_target_dir)
+                                for filename in 
+                                do_glob(gyp_target_dir, source)]
+            assert len(matching_sources) > 0, "no matches for glob " + source
+            sources += matching_sources
+        else:
+            # source os a flat file name (relative to gyp parent dir)
+            sources.append(source)
+    return sources
 
 def copy_gyp(formula, resolved_dependencies):
     """
@@ -387,18 +415,45 @@ def copy_gyp(formula, resolved_dependencies):
     resolved_version = resolved_dependencies[module_name]
     rel_gyp_file_path = os.path.join(module_name, resolved_version + ".gyp")
     gyp = load_json_with_hash_comments(os.path.join('library', rel_gyp_file_path))
-    gyp_dependencies = compute_resolved_dependencies(
-                            formula, resolved_dependencies)
+    gyp_target_file = os.path.join('bru_modules', rel_gyp_file_path)
     for target in gyp['targets']:
 
         if 'dependencies' in target:
-            # There should be no such prop in the library/.../*.gyp file.
-            print('WARNING: replacing "dependencies" in ', rel_gyp_file_path)
-
-        # 
-        target['dependencies'] = gyp_dependencies
-        
-    save_json(os.path.join('bru_modules', rel_gyp_file_path), gyp)
+            # Initially I thought there should be no such prop in the 
+            # library/.../*.gyp file because these deps will be filled in with
+            # resolved deps from the *.bru file. But then I ran into two 
+            # problems:
+            #   a) I wanted for example zlib tests to build via gyp also
+            #      (espcially since zlib is being built via gyp target alrdy
+            #      anyway), so the gyp test target should depend on the lib
+            #      target.
+            #   b) often test targets need to pull in additional module deps 
+            #      that the module (without its tests) does not depend on, for
+            #      example tests often depend on googletest or googlemock, 
+            #      whereas the main module does not.
+            # So now a *.bru file lists the union of dependencies for all
+            # targets in a gyp file, while each target depends explicitly
+            # lists dependencies as "bru:googletest". Could also support a 
+            # format like "bru:googletest:1.7.0" but then the *.gyp file
+            # and *.bru file dependency lists would be redundant. Todo: move
+            # dependency lists from *.bru to *.gyp file altogether? Maybe...
+            target['dependencies'] = compute_resolved_dependencies(
+                                     formula, target, resolved_dependencies)
+    
+        # Sanity check: verify the 'sources' prop doesn't contain glob exprs
+        # or wildcards: initially I though gyp was ok with 
+        #    "sources" : ".../src/*.cc"
+        # in *.gyp files because at first glance this 'compiled', but it 
+        # turned out gyp just silently compiled zero source files in that case.
+        #
+        # Alternatively we could expand these wildcards now, drawback of that
+        # is that the files in ./library are not really *.gyp files anymore,
+        # and should probably be called *.gyp.in or *.gyp-bru or something 
+        # like that.
+        if 'sources' in target:
+            target['sources'] = compute_sources(formula, target)
+    
+    save_json(gyp_target_file, gyp)
 
 def resolve_conflicts(dependencies):
     """ takes a dict of modules and version matchers and recursively finds
@@ -443,8 +498,10 @@ def resolve_conflicts(dependencies):
     return [(module, resolved['version'], resolved['requestor'])
             for (module, resolved) in recursive_deps.items()]
 
-def main():
-    with open('bru.json', 'r') as package_file:
+def cmd_install():
+    bru_filename = 'bru.json'
+    print('reading', bru_filename)
+    with open(bru_filename, 'r') as package_file:
         package_jso = json.loads(drop_hash_comments(package_file))
     recursive_deps = resolve_conflicts(package_jso['dependencies'])
     resolved_dependencies = dict((module, version) 
@@ -457,6 +514,31 @@ def main():
         copy_gyp(formula, resolved_dependencies)
 
     # todo: clean up unused module dependencies from /bru_modules?
+
+def cmd_test():
+    # You alrdy can run tests for upstream deps via these cmds, here
+    # for example for running zlib tests:
+    #   >bru install
+    #   >cd bru_modules/zlib
+    #   >gyp *.gyp --depth=.
+    #   >make
+    #   >out/Default/zlib_test
+    # This command here is supposed to automate these steps.
+    raise Exception('todo')
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", help = "install | test")
+    args = parser.parse_args()
+    cmd2fun = {
+        'install': cmd_install,
+        'test': cmd_test
+    }
+    cmd = args.command
+    if not cmd in cmd2fun:
+        raise Exception("unknown command {}, chose install | test".format(cmd))
+    cmd2fun[cmd]()
+    
 
 if __name__ == "__main__":
     main()
