@@ -334,7 +334,7 @@ def get_dependency(module_name, module_version):
                     raise ValueError("build failed with error code {}".format(error_code))
             touch(make_done_file)
 
-def compute_resolved_dependencies(formula, target, resolved_dependencies):
+def verify_resolved_dependencies(formula, target, resolved_dependencies):
     """ param formula is the formula with a bunch of desired(!) dependencies
         which after conflict resolution across the whole set of diverse deps
         may be required to pull a different version for that module for not
@@ -354,11 +354,18 @@ def compute_resolved_dependencies(formula, target, resolved_dependencies):
     resolved_target_deps = []
 
     def map_dependency(dep):
-        bru_prefix = "bru:"
-        if not dep.startswith(bru_prefix):
+        """ param dep is a gyp file dependency, so either a local dep to a local
+            target like 'zlib' or a cross-module dep like '../boost-regex/...'.
+            There should be no other kinds of gyp deps in use """
+        
+        # detect the regexes as written by scan_deps.py: references into
+        # a sibling module within ./bru_modules.
+        bru_regex = "^../([^/]+)/([^/]+)\\.gyp:(.+)"
+        match = re.match(bru_regex, dep)
+        if match == None:
             return dep
-        # process the "bru:" protocol:
-        upstream_module = dep[len(bru_prefix):]
+        upstream_module = match.group(1)
+        upstream_targets = match.group(2)
         if not upstream_module in resolved_dependencies:
             raise Exception("module {} listed in {}/{}.gyp's target '{}'"
                 " not found. Add it to {}/{}.bru:dependencies"
@@ -415,7 +422,6 @@ def copy_gyp(formula, resolved_dependencies):
     resolved_version = resolved_dependencies[module_name]
     rel_gyp_file_path = os.path.join(module_name, resolved_version + ".gyp")
     gyp = load_json_with_hash_comments(os.path.join('library', rel_gyp_file_path))
-    gyp_target_file = os.path.join('bru_modules', rel_gyp_file_path)
     for target in gyp['targets']:
 
         if 'dependencies' in target:
@@ -437,8 +443,7 @@ def copy_gyp(formula, resolved_dependencies):
             # format like "bru:googletest:1.7.0" but then the *.gyp file
             # and *.bru file dependency lists would be redundant. Todo: move
             # dependency lists from *.bru to *.gyp file altogether? Maybe...
-            target['dependencies'] = compute_resolved_dependencies(
-                                     formula, target, resolved_dependencies)
+            verify_resolved_dependencies(formula, target, resolved_dependencies)
     
         # Sanity check: verify the 'sources' prop doesn't contain glob exprs
         # or wildcards: initially I though gyp was ok with 
@@ -453,7 +458,15 @@ def copy_gyp(formula, resolved_dependencies):
         if 'sources' in target:
             target['sources'] = compute_sources(formula, target)
     
+    # note that library/boost-regex/1.57.0.gyp is being copied to 
+    # bru_modules/boost-regex/boost-regex.gyp here (with some minor 
+    # transformations that were applied, e.g. expanding wildcards)
+    gyp_target_file = os.path.join('bru_modules', module_name, module_name + ".gyp")
     save_json(gyp_target_file, gyp)
+
+    # this file is only saved for human reader's sake atm:
+    save_json(os.path.join('bru_modules', module_name, 'bru-version.json'),
+        {'version': resolved_version})
 
 def resolve_conflicts(dependencies):
     """ takes a dict of modules and version matchers and recursively finds
@@ -512,6 +525,11 @@ def cmd_install():
         formula = load_formula(module_name, module_version)
         get_dependency(module_name, module_version)
         copy_gyp(formula, resolved_dependencies)
+    
+    #for module, version, requestor in recursive_deps:
+    #    for ext in ['bru', 'gyp']:
+    #        print("git add -f library/{}/{}.{}".format(module, version, ext))
+
 
     # todo: clean up unused module dependencies from /bru_modules?
 

@@ -139,6 +139,8 @@ def collect_includes(formula):
 
     include_files = []
     for target in gyp['targets']:
+        if not 'include_dirs' in target:
+           continue # e.g. target zlib:zlib_test doesn't need include_dirs 
         include_dirs = target['include_dirs']
         for include_dir in include_dirs:
             abs_include_dir = os.path.join(gyp_root_dir, include_dir)
@@ -333,6 +335,24 @@ def main():
             formula['dependencies'] = annotate_with_latest_version(deps)
             print(formula)
             bru.save_formula(formula)
+
+        # also add the deps to the gyp in a sloppy & ad-hoc way for now:
+        # this works sort of ok for modules with a single target only (e.g.
+        # the boost modules after boost_import.py): add the all found
+        # deps to the first gyp target's dependencies.
+        if len(deps) > 0:
+            gyp = bru.load_gyp(formula)
+            first_target = gyp['targets'][0]
+            if not 'dependencies' in first_target:
+                # Todo: reconsider the ':*' dependency on all targets in 
+                # upstream modules. May wanna exclude test targets from this,
+                # which we cannot do here easily though. Maybe bru.py can
+                # exclude test targets later on? Test targets give extra
+                # confidence that things are wired up fine, but will increase
+                # initial compile times after 'bru install'.
+                first_target['dependencies'] = [
+                    "../{}/{}.gyp:*".format(dep, dep) for dep in deps]
+                bru.save_gyp(formula, gyp)
 
         done_modules.add(module)
 
