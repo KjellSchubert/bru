@@ -10,6 +10,7 @@ import os
 import os.path
 import tarfile
 import zipfile
+import shutil
 import glob
 import argparse
 import pdb # only if you want to add pdb.set_trace()
@@ -126,7 +127,16 @@ def split_all(path):
 def url2filename(url):
     """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz,
         and http://boost.../foo/1.57.0.tgz to foo_1.57.0.tgz"""
-    path =  urllib.parse.urlparse(url).path
+    parse = urllib.parse.urlparse(url)
+    if parse.scheme == 'file':
+        path = parse.netloc
+        assert len(path) > 0
+        basename = os.path.basename(path)
+        assert len(path) > 0
+        return basename
+        
+    assert parse.scheme in ['http', 'https', 'ftp'] # todo: allow more?
+    path =  parse.path
     if path.startswith('/'):
         path = path[1:]
     components = split_all(path)
@@ -143,6 +153,26 @@ def wget(url, filename):
     # from http://stackoverflow.com/questions/7243750/download-file-from-web-in-python-3
     print("wget {} -> {}".format(url, filename))
     urllib.request.urlretrieve(url, filename)
+
+def wget_or_copy(basedir, url, destfilename):
+    """ either does a wget of an http url or copies a file:// url file
+        stored relative to basedir 
+    """
+    parse = urllib.parse.urlparse(url)
+    if parse.scheme == 'file':
+        # this is typically used to apply a patch in the form of a targ.gz
+        # on top of a larger downloaded file. E.g. for ogg & speex this
+        # patch does approximately what ./configure would have done.
+        # copying the tar file itself from ./library to ./modules seems a bit
+        # pointless, may wanna optimize the copy away
+        path = parse.netloc
+        assert len(path) > 0
+        basename = os.path.basename(path)
+        assert len(path) > 0
+        srcfilename = os.path.join(basedir, path)
+        shutil.copyfile(srcfilename, destfilename)
+    else:
+        wget(url, destfilename)
     
 def extract_file(path, to_directory):
     # from http://code.activestate.com/recipes/576714-extract-a-compressed-file/
@@ -155,7 +185,7 @@ def extract_file(path, to_directory):
         opener, mode = tarfile.open, 'r:bz2'
     elif path.endswith('.tar.xz') or path.endswith('.txz'):
         opener, mode = tarfile.open, 'r:xz'
-    else: 
+    else:
         raise ValueError("Could not extract {} as no appropriate extractor is found".format(path))
     
     with opener(path, mode) as file:
@@ -273,13 +303,14 @@ def tar_glob_group(tar, module_dir, glob_group):
 def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
+    src_module_dir = os.path.join("library", module_name)
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
     os.makedirs(module_dir, exist_ok=True)
 
     zip_file = os.path.join(module_dir, url2filename(zip_url))
     if not os.path.exists(zip_file):
         zip_file_temp = zip_file + ".tmp"
-        wget(zip_url, zip_file_temp)
+        wget_or_copy(src_module_dir, zip_url, zip_file_temp)
         os.rename(zip_file_temp, zip_file)
 
     extract_done_file = zip_file + ".extract_done"

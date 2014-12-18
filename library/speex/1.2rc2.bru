@@ -1,6 +1,11 @@
 {
     "homepage": "http://www.speex.org/",
-    "url": "http://downloads.xiph.org/releases/speex/speex-1.2rc2.tar.gz",
+    "url": [
+        "http://downloads.xiph.org/releases/speex/speex-1.2rc2.tar.gz",
+        # this here is located next to the *.bru file, containing roughly
+        # what ./configure would create
+        "file://1.2rc2-config.tar.gz"
+    ],
     "module": "speex",
     "version": "1.2rc2",
     "dependencies": {
