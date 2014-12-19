@@ -1,18 +1,41 @@
 {
+    "target_defaults" :
+    {
+        # initially I tried to put these into target "opus_common_settings" but
+        # this didnt seem to work.
+        "cflags" : [ "-O3" ],
+        "msvs_settings": {
+            "VCCLCompilerTool": {
+                "Optimization": "3"                # full (/Ox)
+            }
+        }
+    },
+    
     "targets": [
+        
+        # the only purpose of this target is to share settings between celt
+        # and silk targets.
+        {
+            "target_name": "opus_common_settings",
+            "type": "none",
+            "direct_dependent_settings" : {
+                "include_dirs": [
+                    "1.1/opus-1.1/include"
+                ],
+                "defines" : [
+                    "USE_ALLOCA=", # one of 3 mem alloc variants (alt VAR_ARRAYS)
+                        # does this choice have to match between celt & silk & opus?
+                        # Probably.
+                    "OPUS_BUILD"
+                ]
+            }
+        },
+        
         {
             "target_name": "celt",
             "type": "static_library",
             "include_dirs": [
-                "1.1/opus-1.1/include",
                 "1.1/opus-1.1/celt"
-            ],
-            # TODO: optimization flags (otherwise compile time warnings)
-            "defines" : [
-                # todo: share these defines between all libs
-                "USE_ALLOCA=", # one of 3 mem alloc variants (alt VAR_ARRAYS)
-                    # does this have to match the choice in silk? probably
-                "OPUS_BUILD"
             ],
             "sources": [
                 "1.1/opus-1.1/celt/*.c"
@@ -22,22 +45,17 @@
                     "1.1/opus-1.1/include",
                     "1.1/opus-1.1/celt"
                 ]
-            }
+            },
+            "dependencies": [ "opus_common_settings" ]
         },
 
         {
             "target_name": "silk",
             "type": "static_library",
             "include_dirs": [
-                "1.1/opus-1.1/include",
                 "1.1/opus-1.1/silk",
                 "1.1/opus-1.1/silk/float",
                 "1.1/opus-1.1/celt"
-            ],
-            "defines" : [
-                "USE_ALLOCA=", # one of 3 mem alloc variants (alt VAR_ARRAYS)
-                    # does this have to match the choice in celt? probably
-                "OPUS_BUILD"
             ],
             "sources": [
                 "1.1/opus-1.1/silk/*.c",
@@ -49,23 +67,13 @@
                     "1.1/opus-1.1/include",
                     "1.1/opus-1.1/silk"
                 ]
-            }
+            },
+            "dependencies": [ "opus_common_settings" ]
         },
         
         {
             "target_name": "opus",
             "type": "static_library",
-            "include_dirs": [
-                "1.1/opus-1.1/include",
-                "1.1/opus-1.1/silk",
-                #"1.1/opus-1.1/silk/float",
-                "1.1/opus-1.1/celt"
-            ],
-            "defines" : [
-                "USE_ALLOCA=", # one of 3 mem alloc variants (alt VAR_ARRAYS)
-                    # does this have to match the choice in celt? probably
-                "OPUS_BUILD"
-            ],
             "sources": [
                 "1.1/opus-1.1/src/*.c"
             ],
@@ -75,6 +83,7 @@
                 ]
             },
             "dependencies" : [
+                "opus_common_settings",
                 "silk",
                 "celt"
             ]
