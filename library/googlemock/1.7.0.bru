@@ -1,0 +1,14 @@
+{
+    "homepage": "https://code.google.com/p/googlemock/",
+    "url": "https://googlemock.googlecode.com/files/gmock-1.7.0.zip",
+    "module": "googlemock",
+    "version": "1.7.0",
+    
+    # looks like the gmock zip contains a copy of gtest, lets explicitly 
+    # declare a dep on the googletest module here anyway, otherwise
+    # downstream clients may end up with two gtest links, potentially
+    # violating ODR
+    "dependencies": {
+        "googletest": "1.7.0"
+    }
+}
