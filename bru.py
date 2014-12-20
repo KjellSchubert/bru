@@ -559,8 +559,7 @@ def resolve_conflicts(dependencies):
     return [(module, resolved['version'], resolved['requestor'])
             for (module, resolved) in recursive_deps.items()]
 
-def cmd_install():
-    bru_filename = 'bru.json'
+def cmd_install(bru_filename):
     print('reading', bru_filename)
     with open(bru_filename, 'r') as package_file:
         package_jso = json.loads(drop_hash_comments(package_file))
@@ -594,17 +593,20 @@ def cmd_test():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", help = "install | test")
-    args = parser.parse_args()
-    cmd2fun = {
-        'install': cmd_install,
-        'test': cmd_test
-    }
-    cmd = args.command
-    if not cmd in cmd2fun:
-        raise Exception("unknown command {}, chose install | test".format(cmd))
-    cmd2fun[cmd]()
+    subparsers = parser.add_subparsers(dest='command')
     
+    parser_install = subparsers.add_parser('install')
+    parser_install.add_argument("bru_filename", help = 'e.g. foo.bru')
+    
+    parser_test = subparsers.add_parser('test')
+    
+    args = parser.parse_args()
+    if args.command == 'install':
+        cmd_install(args.bru_filename)
+    elif args.command == 'test':
+        cmd_test()
+    else:
+        raise Exception("unknown command {}, chose install | test".format(cmd))
 
 if __name__ == "__main__":
     main()
