@@ -11,6 +11,7 @@ import os.path
 import tarfile
 import zipfile
 import shutil
+import subprocess
 import glob
 import argparse
 import pdb # only if you want to add pdb.set_trace()
@@ -215,16 +216,16 @@ class TwoComponentPath:
 # this doesn't support python3 yet.
 def ant_glob(local_root_dir, glob_expr):
     # we only support a small subset of ant's glob expr syntax: 
-    # only **/*.{extension}
-    if glob_expr == "**/*":
-        is_matching = lambda filename: True
-    else:
-        match = re.match('^\\*\\*\\/\\*(\\.[a-z0-9_]+)$', glob_expr)
-        if match == None:
-            raise Exception("expected format **/*.{ext} or **/* for ant: glob expressions, got "
-                            + glob_expr)
-        extension = match.group(1)  # e.g. '.hpp'
-        is_matching = lambda filename: filename.endswith(extension)
+    # only **/*.{extension} with optional subdirs foo/bar/ before that
+    match = re.match('^([^\*]*/)?\*\*/\*(\.[a-z0-9_]+)?$', glob_expr)
+    if match == None:
+        raise Exception("expected format **/*.{ext} or **/* for ant: glob expressions, got "
+                        + glob_expr)
+    subdir = match.group(1)
+    extension = match.group(2) or '' # e.g. '.hpp'
+    is_matching = lambda filename: filename.endswith(extension)
+    if subdir != None:
+        local_root_dir = os.path.join(local_root_dir, subdir)
     
     # now simply recursively collect files with the given extension under
     # the local_root_dir
@@ -306,6 +307,22 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     src_module_dir = os.path.join("library", module_name)
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
     os.makedirs(module_dir, exist_ok=True)
+
+    parse = urllib.parse.urlparse(zip_url)
+    if parse.scheme == 'svn+http':
+        prefix = "svn+"
+        assert zip_url.startswith(prefix)
+        checkout_url = zip_url[len(prefix):]
+        svn_root = os.path.join(module_dir, "clone")
+        if not os.path.exists(svn_root):
+            # atomic rename in case an earlier process run left a half-checkout
+            svn_root_temp = svn_root + ".tmp"
+            if os.path.exists(svn_root_temp):
+                shutil.rmtree(svn_root_temp)
+            exit_code = subprocess.call(["svn","checkout", checkout_url, svn_root_temp])
+            assert exit_code == 0, "do you have subversion 'svn' installed and in your path?"
+            os.rename(svn_root_temp, svn_root)
+        return
 
     zip_file = os.path.join(module_dir, url2filename(zip_url))
     if not os.path.exists(zip_file):
