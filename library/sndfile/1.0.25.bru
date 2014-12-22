@@ -7,6 +7,13 @@
     "make_command": {
         # external libs like speex are disabled atm, assuming you'd pull these
         # in as explicit deps if you wanted speex.
+        # Note that this here is an odd hybrid build: we use ./configure to
+        # generate #include files with necessary #defines for things like little
+        # vs big endian and such, but then use gyp instead of make to build
+        # libsndfile.a
+        # Compare with the opus build that uses 100% gyp, or the speex build
+        # which uses a minimal tar.gz containing captured ./configure output, or 
+        # the openssl build which uses configure+make.
         "Linux": "cd libsndfile-1.0.25; ./configure --disable-shared --disable-external-libs"
     }
 }

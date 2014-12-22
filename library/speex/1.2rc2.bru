@@ -4,6 +4,9 @@
         "http://downloads.xiph.org/releases/speex/speex-1.2rc2.tar.gz",
         # this here is located next to the *.bru file, containing roughly
         # what ./configure would create
+        # P.S.: e.g. libsndfile uses ./configure and then uses gyp to build
+        # libsndfile.a, and the openssl build uses configure+make to build
+        # libssl.a and only uses gyp to specify include_dirs and link_settings.
         "file://1.2rc2-config.tar.gz"
     ],
     "module": "speex",
