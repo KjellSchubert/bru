@@ -444,7 +444,7 @@ def compute_sources(formula, target):
         else:
             # source os a flat file name (relative to gyp parent dir)
             sources.append(source)
-    return sources
+    return list(sorted(sources))
 
 def copy_gyp(formula, resolved_dependencies):
     """
