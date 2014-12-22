@@ -8,6 +8,7 @@ import urllib.parse # python 2 urlparse
 import re
 import os
 import os.path
+import platform
 import tarfile
 import zipfile
 import shutil
@@ -366,14 +367,23 @@ def get_gyp_dependencies(gyp, formula, resolved_dependencies):
 def get_dependency(module_name, module_version):
     bru_modules_root = "./bru_modules"
     formula = load_formula(module_name, module_version)
-    module_dir = unpack_module(formula)
+    unpack_module(formula)
 
     # make_command should only be used if we're too lazy to provide a 
     # gyp file for a module.
+    # A drawback of using ./configure make is that build are less reproducible
+    # across machines, e.g. ./configure may enable some code paths on one 
+    # machine but not another depending on which libs are installed on both
+    # machines.
     if 'make_command' in formula:
-        make_command = formula['make_command']
-        make_done_file = zip_file + ".make_done"
+        module_dir = os.path.join(bru_modules_root, module_name, module_version)
+        make_done_file = os.path.join(module_dir, "make_command.done")
         if not os.path.exists(make_done_file):
+            make_commands = formula['make_command']
+            system = platform.system()
+            if not system in make_commands:
+                raise Exception("no key {} in make_command".format(system))
+            make_command = make_commands[system]
             with Chdir(module_dir):
                 # todo: pick a make command depending on host OS
                 print("building via '{}' ...".format(make_command))

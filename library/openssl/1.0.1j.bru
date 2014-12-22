@@ -1,0 +1,15 @@
+{
+    "homepage": "https://www.openssl.org",
+    "url": "https://www.openssl.org/source/openssl-1.0.1j.tar.gz",
+    "module": "openssl",
+    "version": "1.0.1j",
+    
+    # Creating a *.gyp file for building openssl is possible but tedious
+    # work. Instead let's build via configure/make. Note that a *.gyp file
+    # is still used to declare openssl's include_dirs and library artifacts
+    # for downstream clients.
+    "make_command": {
+        "Linux": "cd openssl-1.0.1j; ./config no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads; make"
+        # TODO: add windows build cmd line
+    }
+}
