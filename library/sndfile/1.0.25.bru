@@ -2,5 +2,11 @@
     "homepage": " http://www.mega-nerd.com/libsndfile/",
     "url": "http://www.mega-nerd.com/libsndfile/files/libsndfile-1.0.25.tar.gz",
     "module": "sndfile",
-    "version": "1.0.25"
+    "version": "1.0.25",
+    
+    "make_command": {
+        # external libs like speex are disabled atm, assuming you'd pull these
+        # in as explicit deps if you wanted speex.
+        "Linux": "cd libsndfile-1.0.25; ./configure --disable-shared --disable-external-libs"
+    }
 }
