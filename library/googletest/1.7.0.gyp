@@ -5,8 +5,8 @@
             "type": "static_library",
             "defines" : [
                 # not sure what pthreads buys us (optional parallel test
-                # execution?). Since googletest doesn't use std::thread yet
-                # afaik I'm not sure if this even compiles on windows without
+                # execution?). Since googletest doesn"t use std::thread yet
+                # afaik I"m not sure if this even compiles on windows without
                 # this #define. May wanna reconsider disabling this across
                 # all platforms. Todo?
                 "GTEST_HAS_PTHREAD=0"
@@ -33,7 +33,28 @@
                 "defines": [
                     "GTEST_HAS_PTHREAD=0"
                 ]
-            }
+            },
+            "conditions": [
+
+                # googletest doesn"t compile with VS2012 out of the box because of 2012"s
+                # lack of support for variadic templates.
+                # We need some #defines to work around this problem:
+                # http://stackoverflow.com/questions/12558327/google-test-in-visual-studio-2012
+                # TODO: should we only set this flag for VS<=2012 generators? Or do these
+                # defines belong in googletest source code to begin with?
+                ["OS=='win'", {
+                  "defines": [
+                    "GTEST_HAS_TR1_TUPLE=0",
+                    "GTEST_USE_OWN_TR1_TUPLE=1"
+                  ],
+                  "direct_dependent_settings": {
+                    "defines": [
+                      "GTEST_HAS_TR1_TUPLE=0",
+                      "GTEST_USE_OWN_TR1_TUPLE=1"
+                    ]
+                  }
+                }]
+            ]
         },
 
         # This is one of the lib's own tests, it compiles but has
@@ -46,8 +67,8 @@
         #        # files from test/ via #include "test/foo.cc"
         #        "1.7.0/gtest-1.7.0"
         #    ],
-        #    "sources": [ 
-        #        "1.7.0/gtest-1.7.0/test/gtest_all_test.cc" 
+        #    "sources": [
+        #        "1.7.0/gtest-1.7.0/test/gtest_all_test.cc"
         #    ],
         #    "dependencies": [
         #        "googletest"

@@ -1,6 +1,7 @@
 {
+    "includes": [ "bru_common.gypi" ],
     "targets": [
-    
+
         {
             "target_name": "foo",
             "type": "static_library",
@@ -21,7 +22,7 @@
                 ]
             }
         },
-        
+
         {
             "target_name": "foo-test",
             "type": "executable",
@@ -29,10 +30,10 @@
                 "foo/test/test.cpp"
             ],
             "dependencies": [
-                "foo",   # thats the library target above 
+                "foo",   # thats the library target above
                 "bru_modules/googletest/googletest.gyp:*" # an external dep
             ]
         }
-            
+
     ]
 }
