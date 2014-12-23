@@ -7,7 +7,12 @@
 # This auto-update would become unnecessary if the ./library content
 # was ever migrated to a separate server (corresponding to npmjs.org
 # or pypi.python.org), which I don't plan to do anytime soon.
-./autoupdate.py --hours 24
+
+# http://unix.stackexchange.com/questions/17499/get-path-of-current-script-when-executed-through-a-symlink
+# This is brittle & frowned upon, I might change this some time...
+script_dir="$(dirname "$(readlink -f "$0")")"
+
+$script_dir/autoupdate.py --hours 24
 
 # after the autoupdate run bru.py, forwarding all cmd line params
-./bru.py $@
+$script_dir/bru.py $@

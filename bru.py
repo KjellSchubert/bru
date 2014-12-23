@@ -75,7 +75,7 @@ def save_json(filename, jso):
 
 def load_from_library(module_name, module_version, ext):
     """ ext e.g. '.bru' or '.gyp' """
-    json_file_name = os.path.join('./library', module_name, module_version + ext)
+    json_file_name = os.path.join(get_library_dir(), module_name, module_version + ext)
     jso = load_json_with_hash_comments(json_file_name)
     return jso
 
@@ -93,10 +93,20 @@ def load_gyp(formula):
     assert 'targets' in gyp # otherwise it's not a (or is an empty) gyp file
     return gyp
 
+# http://stackoverflow.com/questions/4934806/python-how-to-find-scripts-directory
+def get_script_path():
+    return os.path.dirname(os.path.realpath(__file__))
+
+def get_library_dir():
+    """ assuming we execute bru.py from within its git clone the library
+        directory will be located in bru.py's base dir. This func here 
+        returns the path to this library dir. """
+    return os.path.join(get_script_path(), 'library')
+
 def get_module_dir(formula):
     module_name = formula['module']
     module_version = formula['version']
-    module_dir = os.path.join('./library', module_name)
+    module_dir = os.path.join(get_library_dir(), module_name)
     return module_dir
 
 def save_to_library(formula, jso, ext):
@@ -305,7 +315,7 @@ def tar_glob_group(tar, module_dir, glob_group):
 def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
-    src_module_dir = os.path.join("library", module_name)
+    src_module_dir = os.path.join(get_library_dir(), module_name)
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
     os.makedirs(module_dir, exist_ok=True)
 
@@ -479,7 +489,7 @@ def copy_gyp(formula, resolved_dependencies):
     assert module_name in resolved_dependencies
     resolved_version = resolved_dependencies[module_name]
     rel_gyp_file_path = os.path.join(module_name, resolved_version + ".gyp")
-    gyp = load_json_with_hash_comments(os.path.join('library', rel_gyp_file_path))
+    gyp = load_json_with_hash_comments(os.path.join(get_library_dir(), rel_gyp_file_path))
     for target in gyp['targets']:
 
         if 'dependencies' in target:
@@ -596,6 +606,13 @@ def cmd_install(bru_filename):
         formula = load_formula(module_name, module_version)
         get_dependency(module_name, module_version)
         copy_gyp(formula, resolved_dependencies)
+
+    # copy common.gypi which is referenced by module.gyp files and usually
+    # also by the parent *.gyp (e.g. bru-sample:foo.gyp)
+    common_gypi = 'bru_common.gypi'
+    shutil.copyfile(
+        os.path.join(get_script_path(), common_gypi),
+        common_gypi)
 
     #for module, version, requestor in recursive_deps:
     #    for ext in ['bru', 'gyp']:

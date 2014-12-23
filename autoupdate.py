@@ -10,23 +10,24 @@ import pdb
 def get_script_path():
     return os.path.dirname(os.path.realpath(__file__))
 
-timestamp_filename = 'autoupdate.last'
+def get_timestamp_filename():
+    return os.path.join(get_script_path(), 'autoupdate.last')
 
 def get_last_autoupdate_time():
     """ return time.time() param when git pull was run last, None if never """
-    if not os.path.exists(timestamp_filename):
+    if not os.path.exists(get_timestamp_filename()):
         return None
     try:
-        with open(timestamp_filename, 'r') as file:
+        with open(get_timestamp_filename(), 'r') as file:
             line = file.readline()
             return float(line)
     except Exception as ex:
         # someone corrupted the file?
-        print("WARNING: {} was corrupted? {}".format(timestamp_filename, ex))
+        print("WARNING: {} was corrupted? {}".format(get_timestamp_filename(), ex))
 
 def save_autoupdate_time():
     """ param as in time.time() """
-    with open(timestamp_filename, 'w') as file:
+    with open(get_timestamp_filename(), 'w') as file:
         file.write(str(time.time()))
         file.write('\n# this file contains the time stamp of the last successful\n'
             'git pull executed by ./autoupdate.py (as time.time())')
