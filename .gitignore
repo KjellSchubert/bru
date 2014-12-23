@@ -1,6 +1,7 @@
 .c9/
 venv/
 __pycache__
+autoupdate.last
 bru_modules
 library
 *.swp

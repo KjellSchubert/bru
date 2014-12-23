@@ -630,7 +630,7 @@ def main():
     elif args.command == 'test':
         cmd_test()
     else:
-        raise Exception("unknown command {}, chose install | test".format(cmd))
+        raise Exception("unknown command {}, chose install | test".format(args.command))
 
 if __name__ == "__main__":
     main()
