@@ -97,6 +97,11 @@ def load_gyp(formula):
 def get_script_path():
     return os.path.dirname(os.path.realpath(__file__))
 
+def get_user_home_dir():
+    """ work both on Linux & Windows, this dir will be the parent dir of
+        the .bru/ dir for storing downloaded tar.gzs on a per-user basis"""
+    return os.path.expanduser("~")
+
 def get_library_dir():
     """ assuming we execute bru.py from within its git clone the library
         directory will be located in bru.py's base dir. This func here 
@@ -335,13 +340,22 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
             os.rename(svn_root_temp, svn_root)
         return
 
-    zip_file = os.path.join(module_dir, url2filename(zip_url))
+    # Store all downloaded tar.gz files in ~/.bru, e.g as boost-regex/1.57/foo.tar.gz
+    # This ensures that multiple 'bru install foo' cmds in differet directories 
+    # on this machine won't download the same foo.tar.gz multiple times.
+    # MOdules for which we must clone an svn or git repo are not sharable that
+    # easily btw, they actually are cloned multiple times atm (could clone them
+    # once into ~/.bru and copy, but I'm not doing this atm).
+    tar_dir = os.path.join(get_user_home_dir(), ".bru", "downloads",
+                           module_name, module_version)
+    zip_file = os.path.join(tar_dir, url2filename(zip_url))
     if not os.path.exists(zip_file):
+        os.makedirs(tar_dir, exist_ok=True)
         zip_file_temp = zip_file + ".tmp"
         wget_or_copy(src_module_dir, zip_url, zip_file_temp)
         os.rename(zip_file_temp, zip_file)
 
-    extract_done_file = zip_file + ".extract_done"
+    extract_done_file = os.path.join(module_dir, ".extract_done")
     if not os.path.exists(extract_done_file):
         print("extracting {}".format(zip_file))
         extract_file(zip_file, module_dir)
