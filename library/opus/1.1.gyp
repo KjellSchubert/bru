@@ -82,6 +82,10 @@
         {
             "target_name" : "test_opus_encode",
             "type" : "executable",
+            
+            #disabling test for now due to being painfully slow
+            #"test_cwd": "1.1/opus-1.1/tests",
+            
             "sources" : [
                 "1.1/opus-1.1/tests/test_opus_encode.c"
             ],
@@ -97,6 +101,7 @@
         {
             "target_name" : "test_opus_api",
             "type" : "executable",
+            "test_cwd": "1.1/opus-1.1/tests",
             "sources" : [
                 "1.1/opus-1.1/tests/test_opus_api.c"
             ],
@@ -111,6 +116,10 @@
         {
             "target_name" : "opus_trivial_example",
             "type" : "executable",
+            
+            # test needs cmd line args, TODO: reenable once we can specify these
+            #"test_cwd": "1.1/opus-1.1/doc",
+            
             "sources" : [
                 "1.1/opus-1.1/doc/trivial_example.c"
             ],

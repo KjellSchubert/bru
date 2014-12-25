@@ -27,11 +27,7 @@
         {
             "target_name": "googlemock_test",
             "type": "executable",
-            #"include_dirs": [
-            #    # only needed because gmock_all_test.cc includes other
-            #    # files from test/ via #include "test/foo.cc"
-            #    "1.7.0/gmock-1.7.0"
-            #],
+            "test_cwd": "1.7.0/gmock-1.7.0/test",
             "sources": [ 
                 # the 'all' test compiled several minutes, so instead lets
                 # compile a smaller/faster test:

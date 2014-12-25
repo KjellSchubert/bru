@@ -31,6 +31,7 @@
         {
             "target_name": "ssltest",
             "type": "executable",
+            "test_cwd": "1.0.1j/openssl-1.0.1j/test",
             "include_dirs": [
                 "1.0.1j/openssl-1.0.1j" # e.g. e_os.h
             ],
@@ -48,6 +49,7 @@
         {
             "target_name": "demos-easy_tls",
             "type": "executable",
+            "test_cwd": "1.0.1j/openssl-1.0.1j/demos/easy_tls",
             "include_dir": [ "1.0.1j/openssl-1.0.1j/demos/easy_tls" ],
             "sources": [ 
                 "1.0.1j/openssl-1.0.1j/demos/easy_tls/test.c",

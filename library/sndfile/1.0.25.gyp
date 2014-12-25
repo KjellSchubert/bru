@@ -55,6 +55,7 @@
         {
             "target_name": "sndfile-ulaw-test",
             "type": "executable",
+            "test_cwd": "1.0.25/libsndfile-1.0.25/tests",
             "sources": [
                 "1.0.25/libsndfile-1.0.25/tests/ulaw_test.c",
                 "1.0.25/libsndfile-1.0.25/tests/utils.c"

@@ -15,7 +15,9 @@ import zipfile
 import shutil
 import subprocess
 import glob
+import time
 import argparse
+from enum import Enum
 import pdb # only if you want to add pdb.set_trace()
 
 class Formula:
@@ -823,7 +825,94 @@ def install_from_bru_file(bru_filename):
 
     # todo: clean up unused module dependencies from /bru_modules?
 
-def cmd_test():
+def get_test_targets(gyp):
+    """ returns the subset of gyp targets that are tests """
+
+    # Each module typically declares a static lib (usually one, sometimes 
+    # several), as well as one or more tests, and in rare cases additional
+    # executables, e.g. as utilities.
+    # How can we tell which of the targets are tests? Heuristically static libs
+    # cannot be tests, executables usually but not always are. What many tests
+    # still need though is a cwd at startup (e.g. to find test data), which 
+    # differs from module to module. Let's add this test_cwd property to the
+    # gyp target, gyp will ignore such additional props silently. This test_cwd
+    # is interpreted relative to the gyp file (like any other path in a gyp file).
+    targets = gyp['targets']
+    for target in targets:
+        if 'test_cwd' in target:
+            yield target
+
+class TestResult(Enum):
+    fail = 0
+    success = 1
+    notrun = 2 # e.g. not run because executable wasnt built or wasnt found
+
+class CompletedTestRun:
+    def __init__(self, target_name, test_result):
+        """ param test is a gyp target name for given module, e.g. 'googlemock_test'
+            param result is a test result
+            param result is of type TestResult
+        """
+        self.target_name = target_name
+        self.test_result = test_result
+
+def locate_executable(target_name):
+    """ return None if it (likely) wasnt built yet (or if for some other reason
+        we cannot determine where the executable was put by whatever toolchain
+        gyp was triggering.
+        Otherwise return relative path to executable.
+    """
+    for config in ['Release', 'Debug']:
+        candidates = [
+            os.path.join('out', config, target_name),
+            os.path.join('out', config, target_name + '.exe'),
+            os.path.join(config, target_name),
+            os.path.join(config, target_name + '.exe')]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                return candidate
+    return None
+
+def exec_tests(gypdir, gyp):
+    """ returns a list of test targets together with pass/fail as instances of 
+        CompletedTestRun.
+        param gypdir is the location of the gyp file
+        param gyp is the content of the gyp file
+    """
+    test_targets = get_test_targets(gyp)
+    testruns = []
+    for target in test_targets:
+        
+        # Now knowing the target we have the following problems:
+        # * where is the compiled target executable located? E.g. on Ubuntu
+        #   with make I find it in out/Release/googlemock_test but on Windows
+        #   with msvs it ends in Release/googlemock_test.exe
+        # * run Debug or Release or some other config? Let's run Release only
+        #   for now. TODO: make configurable, or use Release-Debug fallback?
+        #   Or run whichever was built last?
+        target_name = target['target_name']
+        exe_path = locate_executable(target_name)
+        if exe_path != None:
+            print('running', target_name)
+            t0 = time.time() # or clock()?
+            rel_cwd = target['test_cwd']
+            proc = subprocess.Popen([os.path.abspath(exe_path)], 
+                                    cwd = os.path.join(gypdir, rel_cwd))
+            proc.wait()
+            returncode = proc.returncode
+            print(target_name, 'returned with exit code', returncode, 'after', 
+                int(1000 * (time.time() - t0)), 'ms')
+            testruns.append(CompletedTestRun(target_name, 
+                TestResult.success if returncode == 0 else TestResult.fail))
+        else:
+            print('cannot find executable', target_name)
+            testruns.append(CompletedTestRun(target_name, TestResult.notrun))
+    return testruns
+
+def cmd_test(testables):
+    """ param testables is list of module names, empty to test all modules
+    """
+    
     # You alrdy can run tests for upstream deps via these cmds, here
     # for example for running zlib tests:
     #   >bru install
@@ -831,8 +920,33 @@ def cmd_test():
     #   >gyp *.gyp --depth=.
     #   >make
     #   >out/Default/zlib_test
-    # This command here is supposed to automate these steps.
-    raise Exception('todo')
+    # This command here is supposed to automate these steps: you can run these
+    # commands here:
+    #   >bru test  # runs tests for all modules in ./bru_modules
+    #   >bru test boost-regex  # runs tests for given modules only
+
+    modules_dir = 'bru_modules'
+    if len(testables) == 0:
+        for gyp_filename in glob.glob(os.path.join(modules_dir, '**', '*.gyp')):
+            module_dir = os.path.dirname(gyp_filename)
+            _, module = os.path.split(module_dir)
+            testables.append(module)
+
+    testruns = []
+    for module in testables:
+        gypdir = os.path.join(modules_dir, module)
+        gyp = load_json_with_hash_comments(os.path.join(
+                gypdir, module + ".gyp"))
+        module_tests = exec_tests(gypdir, gyp)
+        if len(module_tests) == 0:
+            # for modules that don't have tests defined yet strive for adding
+            # some tests
+            print('warning: no tests for module', module)
+        testruns += module_tests
+        
+    print("test summary:")
+    for testrun in testruns:
+        print('  ', testrun.target_name, testrun.test_result)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -843,12 +957,14 @@ def main():
                                 help = 'e.g. googlemock@1.7.0')
 
     parser_test = subparsers.add_parser('test')
+    parser_test.add_argument("testables", default = [], nargs = '*',
+                                help = 'e.g. googlemock')
 
     args = parser.parse_args()
     if args.command == 'install':
         cmd_install(args.installables)
     elif args.command == 'test':
-        cmd_test()
+        cmd_test(args.testables)
     else:
         raise Exception("unknown command {}, chose install | test".format(args.command))
 

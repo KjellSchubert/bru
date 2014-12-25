@@ -79,6 +79,7 @@
         {
             "target_name": "googletest_sample1",
             "type" : "executable",
+            "test_cwd": "1.7.0/gtest-1.7.0/samples",
             "include_dirs" : [
                 "1.7.0/gtest-1.7.0/samples/"
             ],

@@ -50,7 +50,7 @@
         # TODO: reenable this test after circular deps were fixed in 
         # modularized Boost.
         #{
-        #    "target_name": "bost-regex_captures_test",
+        #    "target_name": "boost-regex_captures_test",
         #    "type": "executable",
         #    "sources": [
         #        "1.57.0/regex-boost-1.57.0/test/captures/captures_test.cpp"
