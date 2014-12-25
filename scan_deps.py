@@ -71,38 +71,8 @@ def get_all_modules(library_path):
     return (dir for dir in os.listdir(library_path) 
             if os.path.isdir(os.path.join(library_path, dir)))
 
-def get_all_versions(library_path, module):
-    bru_file_names = os.listdir(os.path.join(library_path, module))
-    regex = re.compile('^([0-9.]+)\\.bru$')
-    for bru_file_name in bru_file_names:
-        match = regex.match(bru_file_name)
-        if match != None:
-            version = match.group(1)
-            yield version
-
-def alphnumeric_lt(a, b):
-    # from http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python
-    def to_alphanumeric_pairs(text):
-        convert = lambda text: int(text) if text.isdigit() else text
-        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
-        return alphanum_key(text)
-    pdb.set_trace()
-    return to_alphanumeric_pairs(a) < to_alphanumeric_pairs(b)
-
-@functools.total_ordering
-class ModuleVersion:
-    def __init__(self, version_text):
-        self.version_text = version_text
-    def __lt__(self, other):
-        lhs = self .version_text
-        rhs = other.version_text
-        # module versions could be straightforward like 1.2.3, or they could be
-        # openssl-style mixtures of numberrs & letters like 1.0.0f
-        return alphnumeric_lt(lhs, rhs)
-
-def get_latest_version_of(module):
-    versions = get_all_versions('./library', module)
-    return max((ModuleVersion(version_text) for version_text in versions)).version_text
+get_all_versions = bru.get_all_versions
+get_latest_version_of = bru.get_latest_version_of
 
 def get_include_files(include_dir):
     """ returns relative paths for all #include files underneath this dir.

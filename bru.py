@@ -2,6 +2,7 @@
 
 import json
 import itertools
+import functools
 import collections
 import urllib.request
 import urllib.parse # python 2 urlparse
@@ -70,7 +71,7 @@ def save_json(filename, jso):
         os.makedirs(dirname, exist_ok=True)
     with open(filename, 'w') as json_file:
         json_file.write(json.dumps(jso, indent = 4))
-        print("saved " + filename)
+        #print("saved " + filename)
 
 
 def load_from_library(module_name, module_version, ext):
@@ -607,8 +608,190 @@ def resolve_conflicts(dependencies):
     return [(module, resolved['version'], resolved['requestor'])
             for (module, resolved) in recursive_deps.items()]
 
-def cmd_install(bru_filename):
-    print('reading', bru_filename)
+def get_all_versions(library_path, module):
+    bru_file_names = os.listdir(os.path.join(library_path, module))
+    regex = re.compile('^([0-9.]+)\\.bru$')
+    for bru_file_name in bru_file_names:
+        match = regex.match(bru_file_name)
+        if match != None:
+            version = match.group(1)
+            yield version
+
+def alphnumeric_lt(a, b):
+    # from http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python
+    def to_alphanumeric_pairs(text):
+        convert = lambda text: int(text) if text.isdigit() else text
+        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+        return alphanum_key(text)
+    pdb.set_trace()
+    return to_alphanumeric_pairs(a) < to_alphanumeric_pairs(b)
+
+@functools.total_ordering
+class ModuleVersion:
+    def __init__(self, version_text):
+        self.version_text = version_text
+    def __lt__(self, other):
+        lhs = self .version_text
+        rhs = other.version_text
+        # module versions could be straightforward like 1.2.3, or they could be
+        # openssl-style mixtures of numberrs & letters like 1.0.0f
+        return alphnumeric_lt(lhs, rhs)
+
+def get_latest_version_of(module):
+    versions = get_all_versions(get_library_dir(), module)
+    return max((ModuleVersion(version_text) for version_text in versions)).version_text
+
+def get_single_bru_file(dir):
+    """ return None of no *.bru file in this dir """
+    matches = glob.glob("*.bru")
+    if len(matches) == 0:
+        return None
+    if len(matches) > 1:
+        raise Exception("there are multiple *.bru files in {}: {}".format(
+              dir, matches))
+    return os.path.join(dir, matches[0])
+
+def get_or_create_single_bru_file(dir):
+    """ returns single *.bru file from given dir or creates an empty
+        package.bru file (corresponding to package.json for npm).
+        So unlike get_single_bru_file() never returns None.
+    """
+    bru_file = get_single_bru_file(dir)
+    if bru_file == None:
+        bru_file = os.path.join(dir, 'package.bru')
+        save_json(bru_file, {'dependencies':{}})
+        print('created ', bru_file)
+    assert bru_file != None
+    return bru_file
+
+def parse_module_at_version(installable):
+    """ parses 'googlemock@1.7.0' into tuple (module, version),
+        and returns (module, None) for input lacking the @version suffix.
+    """
+    elems = installable.split('@')
+    if len(elems) == 1:
+        return Installable(elems[0], None)
+    if len(elems) == 2:
+        return Installable(elems[0], elems[1])
+    raise Exception("expected module@version but got {}".format(installable))
+
+def parse_existing_module_at_version(installable):
+    """ like parse_module_at_version but returns the latest version if version
+        was unspecified. Also verifies module at version actually exist
+        in ./library.
+    """
+    installable = parse_module_at_version(installable)
+    module = installable.module
+    version = installable.version
+    if not os.path.exists(os.path.join(get_library_dir(), module)):
+        raise Exception("no module {} in {}, may want to 'git pull'"\
+              " if this module was added very recently".format(
+              module, get_library_dir()))
+    if version == None:
+        version = get_latest_version_of(module)
+    if not os.path.exists(os.path.join(get_library_dir(), module)):
+        raise Exception("no version {} in {}/{}, may want to 'git pull'"\
+              " if this version was added very recently".format(
+              version, get_library_dir(), module))
+    assert version != None
+    return Installable(module, version)
+
+def add_dependencies_to_bru(bru_filename, installables):
+    bru = load_json_with_hash_comments(bru_filename)
+    if not 'dependencies' in bru:
+        bru['dependencies'] = {}
+    deps = bru['dependencies']
+    for installable in installables:
+        deps[installable.module] = installable.version
+    save_json(bru_filename, bru) # warning: this nukes comments atm
+    
+def add_dependencies_to_gyp(gyp_filename, installables):
+    gyp = load_json_with_hash_comments(gyp_filename)
+    # typically a gyp file has multiple targets, e.g. a static_library and
+    # one or more test executables. Here we add the new dep to only the first
+    # target in the gyp file, which is somewhat arbitrary. TODO: revise.
+    # Until then end user can always shuffle around dependencies as needed
+    # between targets.
+    if not 'targets' in gyp:
+        gyp['targets'] = []
+    targets = gyp['targets']
+    if len(targets) == 0:
+        targets[0] = {}
+    first_target = targets[0]
+    if not 'dependencies' in first_target:
+        first_target['dependencies'] = []
+    deps = first_target['dependencies']
+    for installable in installables:
+        module = installable.module
+        deps.append("bru_modules/{}/{}.gyp:*".format(module, module))
+    save_json(gyp_filename, gyp) # warning: this nukes comments atm
+
+def create_gyp_file(gyp_filename):
+    """ creates enough of a gyp file so that we can record dependencies """
+    if os.path.exists(gyp_filename):
+        raise Exception('{} already exists'.format(gyp_filename))
+    gyp = {
+        "targets": [
+            collections.OrderedDict([
+                ("target_name", "foo"), # just a guess, user should rename
+                ("type", "none"), # more likely 'static_library' or 'executable'
+                
+                # these two props are going to have to be filled in by enduser
+                ("sources", []),
+                ("includes_dirs", []),
+                
+                ("dependencies", [])
+        ])]
+    }
+    save_json(gyp_filename, gyp)
+
+class Installable:
+    def __init__(self, module, version):
+        self.module = module
+        self.version = version
+
+def cmd_install(installables):
+    """ param installables: e.g. [] or ['googlemock@1.7.0', 'boost-regex']
+        This is supposed to mimic 'npm install' syntax, see 
+        https://docs.npmjs.com/cli/install. Examples:
+          a) bru install googlemock@1.7.0
+          b) bru install googlemock
+          c) bru install
+        Variant (a) is self-explanatory, installing the module of the given
+        version. Variant (b) installs the latest known version of the module
+        as specified by the versions listed in bru/library/googlemock.
+        Variant (c) will install all dependencies listed in the local *.bru
+        file (similar as how 'npm install' install all deps from ./package.json).
+        Unlike for 'npm install' the option --save is implied, means whatever you
+        install will end up in the local *.bru file's "dependencies" list, as
+        well as in the companion *.gyp file.
+    """
+    if len(installables) == 0:
+        # 'bru install'
+        bru_filename = get_single_bru_file(os.getcwd())
+        if bru_filename == None:
+            raise Exception("no file *.bru in cwd")
+        print('installing dependencies listed in', bru_filename)
+        install_from_bru_file(bru_filename)
+    else:
+        # installables are ['googlemock', 'googlemock@1.7.0']
+        installables = [parse_existing_module_at_version(installable) 
+                        for installable in installables]
+        bru_filename = get_or_create_single_bru_file(os.getcwd())
+        gyp_filename = bru_filename[:-3] + 'gyp'
+        if not os.path.exists(gyp_filename):
+            create_gyp_file(gyp_filename)
+        add_dependencies_to_bru(bru_filename, installables)
+        add_dependencies_to_gyp(gyp_filename, installables)
+        for installable in installables:
+            print("added dependency {}@{} to {} and {}".format(
+                installable.module, installable.version, 
+                bru_filename, gyp_filename))
+        # now download the new dependency just like 'bru install' would do
+        # after we added the dep to the bru & gyp file:
+        install_from_bru_file(bru_filename)
+
+def install_from_bru_file(bru_filename):
     with open(bru_filename, 'r') as package_file:
         package_jso = json.loads(drop_hash_comments(package_file))
     recursive_deps = resolve_conflicts(package_jso['dependencies'])
@@ -624,9 +807,11 @@ def cmd_install(bru_filename):
     # copy common.gypi which is referenced by module.gyp files and usually
     # also by the parent *.gyp (e.g. bru-sample:foo.gyp)
     common_gypi = 'bru_common.gypi'
-    shutil.copyfile(
-        os.path.join(get_script_path(), common_gypi),
-        common_gypi)
+    if not os.path.exists(common_gypi):
+        print('copying', common_gypi)
+        shutil.copyfile(
+            os.path.join(get_script_path(), common_gypi),
+            common_gypi)
 
     #for module, version, requestor in recursive_deps:
     #    for ext in ['bru', 'gyp']:
@@ -651,13 +836,14 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
 
     parser_install = subparsers.add_parser('install')
-    parser_install.add_argument("bru_filename", help = 'e.g. foo.bru')
+    parser_install.add_argument("installables", default = [], nargs = '*',
+                                help = 'e.g. googlemock@1.7.0')
 
     parser_test = subparsers.add_parser('test')
 
     args = parser.parse_args()
     if args.command == 'install':
-        cmd_install(args.bru_filename)
+        cmd_install(args.installables)
     elif args.command == 'test':
         cmd_test()
     else:
