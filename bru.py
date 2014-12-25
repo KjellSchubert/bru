@@ -805,7 +805,10 @@ def install_from_bru_file(bru_filename):
         copy_gyp(formula, resolved_dependencies)
 
     # copy common.gypi which is referenced by module.gyp files and usually
-    # also by the parent *.gyp (e.g. bru-sample:foo.gyp)
+    # also by the parent *.gyp (e.g. bru-sample:foo.gyp).
+    # Should end users be allowed to make changes to bru_common.gypi or
+    # should they rather edit their own optional common.gpyi which shadows
+    # bru_common.gypi? Unsure, let them edit for now, so dont overwrite gypi.
     common_gypi = 'bru_common.gypi'
     if not os.path.exists(common_gypi):
         print('copying', common_gypi)

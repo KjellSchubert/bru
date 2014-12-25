@@ -1,16 +1,4 @@
 {
-    "target_defaults" :
-    {
-        # initially I tried to put these into target "opus_common_settings" but
-        # this didnt seem to work.
-        "cflags" : [ "-O3" ],
-        "msvs_settings": {
-            "VCCLCompilerTool": {
-                "Optimization": "3"                # full (/Ox)
-            }
-        }
-    },
-    
     "targets": [
         
         # the only purpose of this target is to share settings between celt
