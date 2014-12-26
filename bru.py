@@ -107,7 +107,7 @@ def get_user_home_dir():
 
 def get_library_dir():
     """ assuming we execute bru.py from within its git clone the library
-        directory will be located in bru.py's base dir. This func here 
+        directory will be located in bru.py's base dir. This func here
         returns the path to this library dir. """
     return os.path.join(get_script_path(), 'library')
 
@@ -348,7 +348,7 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
         return
 
     # Store all downloaded tar.gz files in ~/.bru, e.g as boost-regex/1.57/foo.tar.gz
-    # This ensures that multiple 'bru install foo' cmds in differet directories 
+    # This ensures that multiple 'bru install foo' cmds in differet directories
     # on this machine won't download the same foo.tar.gz multiple times.
     # MOdules for which we must clone an svn or git repo are not sharable that
     # easily btw, they actually are cloned multiple times atm (could clone them
@@ -362,10 +362,10 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
             zip_file_temp = zip_file + ".tmp"
             wget(zip_url, zip_file_temp)
             os.rename(zip_file_temp, zip_file)
-    
+
         unpack_tarfile_once(zip_file, module_dir)
         return
-    
+
     raise Exception('unsupported scheme in', zip_url)
 
 def unpack_module(formula):
@@ -627,7 +627,7 @@ def alphnumeric_lt(a, b):
     # from http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python
     def to_alphanumeric_pairs(text):
         convert = lambda text: int(text) if text.isdigit() else text
-        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
         return alphanum_key(text)
     pdb.set_trace()
     return to_alphanumeric_pairs(a) < to_alphanumeric_pairs(b)
@@ -710,7 +710,7 @@ def add_dependencies_to_bru(bru_filename, installables):
     for installable in installables:
         deps[installable.module] = installable.version
     save_json(bru_filename, bru) # warning: this nukes comments atm
-    
+
 def add_dependencies_to_gyp(gyp_filename, installables):
     gyp = load_json_with_hash_comments(gyp_filename)
     # typically a gyp file has multiple targets, e.g. a static_library and
@@ -739,19 +739,20 @@ def create_gyp_file(gyp_filename):
     """ creates enough of a gyp file so that we can record dependencies """
     if os.path.exists(gyp_filename):
         raise Exception('{} already exists'.format(gyp_filename))
-    gyp = {
-        "targets": [
+    gyp = collections.OrderedDict([
+        ("includes", ["bru_common.gypi"]),
+        ("targets", [
             collections.OrderedDict([
                 ("target_name", "foo"), # just a guess, user should rename
                 ("type", "none"), # more likely 'static_library' or 'executable'
-                
+
                 # these two props are going to have to be filled in by enduser
                 ("sources", []),
                 ("includes_dirs", []),
-                
+
                 ("dependencies", [])
-        ])]
-    }
+        ])])
+    ])
     save_json(gyp_filename, gyp)
 
 class Installable:
@@ -761,7 +762,7 @@ class Installable:
 
 def cmd_install(installables):
     """ param installables: e.g. [] or ['googlemock@1.7.0', 'boost-regex']
-        This is supposed to mimic 'npm install' syntax, see 
+        This is supposed to mimic 'npm install' syntax, see
         https://docs.npmjs.com/cli/install. Examples:
           a) bru install googlemock@1.7.0
           b) bru install googlemock
@@ -784,7 +785,7 @@ def cmd_install(installables):
         install_from_bru_file(bru_filename)
     else:
         # installables are ['googlemock', 'googlemock@1.7.0']
-        installables = [parse_existing_module_at_version(installable) 
+        installables = [parse_existing_module_at_version(installable)
                         for installable in installables]
         bru_filename = get_or_create_single_bru_file(os.getcwd())
         gyp_filename = bru_filename[:-3] + 'gyp'
@@ -794,7 +795,7 @@ def cmd_install(installables):
         add_dependencies_to_gyp(gyp_filename, installables)
         for installable in installables:
             print("added dependency {}@{} to {} and {}".format(
-                installable.module, installable.version, 
+                installable.module, installable.version,
                 bru_filename, gyp_filename))
         # now download the new dependency just like 'bru install' would do
         # after we added the dep to the bru & gyp file:
@@ -835,12 +836,12 @@ def install_from_bru_file(bru_filename):
 def get_test_targets(gyp):
     """ returns the subset of gyp targets that are tests """
 
-    # Each module typically declares a static lib (usually one, sometimes 
+    # Each module typically declares a static lib (usually one, sometimes
     # several), as well as one or more tests, and in rare cases additional
     # executables, e.g. as utilities.
     # How can we tell which of the targets are tests? Heuristically static libs
     # cannot be tests, executables usually but not always are. What many tests
-    # still need though is a cwd at startup (e.g. to find test data), which 
+    # still need though is a cwd at startup (e.g. to find test data), which
     # differs from module to module. Let's add this test/cwd property to the
     # gyp target, gyp will ignore such additional props silently. This test/cwd
     # is interpreted relative to the gyp file (like any other path in a gyp file).
@@ -881,7 +882,7 @@ def locate_executable(target_name):
     return None
 
 def exec_tests(gypdir, gyp):
-    """ returns a list of test targets together with pass/fail as instances of 
+    """ returns a list of test targets together with pass/fail as instances of
         CompletedTestRun.
         param gypdir is the location of the gyp file
         param gyp is the content of the gyp file
@@ -889,7 +890,7 @@ def exec_tests(gypdir, gyp):
     test_targets = get_test_targets(gyp)
     testruns = []
     for target in test_targets:
-        
+
         # Now knowing the target we have the following problems:
         # * where is the compiled target executable located? E.g. on Ubuntu
         #   with make I find it in out/Release/googlemock_test but on Windows
@@ -905,13 +906,13 @@ def exec_tests(gypdir, gyp):
             test = target['test']
             rel_cwd = test['cwd'] if 'cwd' in test else './'
             test_argv = test['args'] if 'args' in test else []
-            proc = subprocess.Popen([os.path.abspath(exe_path)] + test_argv, 
+            proc = subprocess.Popen([os.path.abspath(exe_path)] + test_argv,
                                     cwd = os.path.join(gypdir, rel_cwd))
             proc.wait()
             returncode = proc.returncode
-            print(target_name, 'returned with exit code', returncode, 'after', 
+            print(target_name, 'returned with exit code', returncode, 'after',
                 int(1000 * (time.time() - t0)), 'ms')
-            testruns.append(CompletedTestRun(target_name, 
+            testruns.append(CompletedTestRun(target_name,
                 TestResult.success if returncode == 0 else TestResult.fail))
         else:
             print('cannot find executable', target_name)
@@ -921,7 +922,7 @@ def exec_tests(gypdir, gyp):
 def cmd_test(testables):
     """ param testables is list of module names, empty to test all modules
     """
-    
+
     # You alrdy can run tests for upstream deps via these cmds, here
     # for example for running zlib tests:
     #   >bru install
@@ -952,10 +953,129 @@ def cmd_test(testables):
             # some tests
             print('warning: no tests for module', module)
         testruns += module_tests
-        
+
     print("test summary:")
     for testrun in testruns:
         print('  ', testrun.target_name, testrun.test_result)
+
+def cmd_make():
+    """ this command makes some educated guesses about which toolchain
+        the user probably wants to run, then invokes gyp to create the
+        makefiles for this toolchain and invokes the build. On Linux
+        'bru make' is likely equivalent to:
+           >gyp *gyp --depth=.
+           >make
+        On Windows it's likely equivalent to:
+           >gyp --depth=. package.gyp -G msvs_version=2012
+           >C:\Windows\Microsoft.NET\Framework\v4.0.30319\msbuild.exe package.sln
+        The main purpose of 'bru make' is really to spit out these two
+        command lines as a quick reminder for how to build via cmd line.
+    """
+
+    # first locate the single gyp in the cwd
+    bru_file = get_single_bru_file('.')
+    if bru_file == None:
+        raise Exception("there's no *.bru file in current work dir, "
+            'e.g. run "bru install googlemock" first to create one')
+    gyp_file = bru_file[:-3] + 'gyp'
+    if not os.path.exists(gyp_file):
+        raise Exception(bru_file,'has no companion *.gyp file, '
+            'e.g. recreate one via "bru install googlemock"')
+
+    system = platform.system()
+    if system == 'Windows':
+        cmd_make_win(gyp_file)
+    elif system == 'Linux':
+        cmd_make_linux(gyp_file)
+    else:
+        raise Exception('no idea how to invoke gyp & toolchain on platform {}'\
+            .format(system))
+
+def get_latest_msbuild_exe():
+    """ return path to latest msbuild on Windows machine """
+    env = os.environ
+    windir = env['SystemRoot'] if 'SystemRoot' in env else env['windir']
+    glob_expr = os.path.join(windir, 'Microsoft.NET', 'Framework',
+        '**', 'msbuild.exe')
+    msbuilds = glob.glob(glob_expr)
+    return max(msbuilds)  # not alphanumeric, should be good enough tho
+
+def get_latest_msvs_version():
+    """ e.g. return 2012 (aka VC11) if msvs 2012 is installed. If multiple
+        vs versions are installed then pick latest.
+        Return None if no installs are found?
+    """
+    # whats a good way to detect the msvs version?
+    # a) scan for install dirs like
+    #    c:\Program Files (x86)\Microsoft Visual Studio 10.0
+    # b) scan for env vars like VS110COMNTOOLS
+    # Let's do (b) for now.
+    # See also https://code.google.com/p/gyp/source/browse/trunk/pylib/gyp/MSVSVersion.py
+    msvs_versions = []
+    regex = re.compile('^VS([0-10]+)COMNTOOLS$')
+    for key in os.environ:
+        match = regex.match(key)
+        if match != None:
+            msvs_versions.append(int(match.group(1)))
+    if len(msvs_versions) == 0:
+        return None
+    latest = max(msvs_versions) # e.g. 110
+    if len(msvs_versions) > 1:
+        print('detected installs of msvs {}, choosing latest {}'.format(
+            msvs_versions, latest))
+    msvs_version2year = {
+        80: 2005,
+        90: 2008,
+        100: 2010,
+        110: 2012,
+    }
+    if not latest in msvs_version2year:
+        print('not sure how to map VC{} to a VS year, defaulting to VS 2012'
+            .format(latest))
+        return 2012
+    return msvs_version2year[latest]
+
+def cmd_make_win(gyp_filename):
+    # TODO: locate msvs version via glob
+    msvs_version = get_latest_msvs_version()
+    if msvs_version == None:
+        print('WARNING: no msvs installation detected, did you install it? '
+            'Defaulting to msvs 2012.')
+    gyp_cmdline = 'gyp --depth=. {} -G msvs_version={}'.format(
+        gyp_filename, msvs_version)
+    print('running >', gyp_cmdline)
+    returncode = os.system(gyp_cmdline)
+    if returncode != 0:
+        raise Exception('error running gyp, did you install it?'
+            ' Instructions at https://github.com/KjellSchubert/bru')
+    # gyp should have created a *.sln file, verify that.
+    # if it didnt that pass a msvc generator option to gyp in a more explicit
+    # fashion (is -G msvs_version enough? need GYP_GENERATORS=msvs?).
+    sln_filename = gyp_filename[:-3] + 'sln'
+    if not os.path.exists(sln_filename):
+        raise Exception('gyp unexpectedly did not generate a *.sln file, '
+            'you may wanna invoke gyp manually to generate the expected '
+            'make/sln/ninja files, e.g. set GYP_GENERATORS=msvs')
+
+    # there are many ways to build the *.sln now, e.g. pass it to devenv
+    # or alternatively to msbuild. Lets do msbuild here:
+    # TODO locate msbuild via glob
+    msbuild_exe = get_latest_msbuild_exe()
+    if msbuild_exe == None:
+        raise Exception('did not detect any installs of msbuild, these should'
+            ' be part of .NET installations, please install msbuild or .NET')
+    config = 'Release'
+    msbuild_cmdline = '{} {} /p:Configuration={}'.format(
+        msbuild_exe, sln_filename, config)
+    print('running msvs via msbuild >', msbuild_cmdline)
+    returncode = os.system(msbuild_cmdline)
+    if returncode != 0:
+        raise Exception('msbuild failed with errors')
+    print('Build complete.')
+
+def cmd_make_linux(gyp_filename):
+    # make? ninja?
+    raise Exception('TODO')
 
 def main():
     parser = argparse.ArgumentParser()
@@ -969,9 +1089,13 @@ def main():
     parser_test.add_argument("testables", default = [], nargs = '*',
                                 help = 'e.g. googlemock')
 
+    parser_test = subparsers.add_parser('make')
+
     args = parser.parse_args()
     if args.command == 'install':
         cmd_install(args.installables)
+    elif args.command == 'make':
+        cmd_make()
     elif args.command == 'test':
         cmd_test(args.testables)
     else:
