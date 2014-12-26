@@ -44,13 +44,20 @@
                 # defines belong in googletest source code to begin with?
                 ["OS=='win'", {
                   "defines": [
-                    "GTEST_HAS_TR1_TUPLE=0",
-                    "GTEST_USE_OWN_TR1_TUPLE=1"
+                    # Initially I had used these #defines here, for which
+                    # msvs 2012 compiled googletest just fine:
+                    #   "GTEST_HAS_TR1_TUPLE=0",
+                    #   "GTEST_USE_OWN_TR1_TUPLE=1"
+                    # But I got compiler errors around 'tuple' with googlemock.
+                    # So instead I started using _VARIADIC_MAX=10, which works
+                    # fine for googlemock with msvs 2012:
+                    "_VARIADIC_MAX=10"
                   ],
                   "direct_dependent_settings": {
                     "defines": [
-                      "GTEST_HAS_TR1_TUPLE=0",
-                      "GTEST_USE_OWN_TR1_TUPLE=1"
+                      #"GTEST_HAS_TR1_TUPLE=0",
+                      #"GTEST_USE_OWN_TR1_TUPLE=1"
+                      "_VARIADIC_MAX=10"
                     ]
                   }
                 }]
