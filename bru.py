@@ -1035,6 +1035,13 @@ def get_latest_msvs_version():
         return 2012
     return msvs_version2year[latest]
 
+def run_gyp(gyp_cmdline):
+    print('running >', gyp_cmdline)
+    returncode = os.system(gyp_cmdline)
+    if returncode != 0:
+        raise Exception('error running gyp, did you install it?'
+            ' Instructions at https://github.com/KjellSchubert/bru')
+
 def cmd_make_win(gyp_filename):
     # TODO: locate msvs version via glob
     msvs_version = get_latest_msvs_version()
@@ -1043,11 +1050,7 @@ def cmd_make_win(gyp_filename):
             'Defaulting to msvs 2012.')
     gyp_cmdline = 'gyp --depth=. {} -G msvs_version={}'.format(
         gyp_filename, msvs_version)
-    print('running >', gyp_cmdline)
-    returncode = os.system(gyp_cmdline)
-    if returncode != 0:
-        raise Exception('error running gyp, did you install it?'
-            ' Instructions at https://github.com/KjellSchubert/bru')
+    run_gyp(gyp_cmdline)
     # gyp should have created a *.sln file, verify that.
     # if it didnt that pass a msvc generator option to gyp in a more explicit
     # fashion (is -G msvs_version enough? need GYP_GENERATORS=msvs?).
@@ -1070,12 +1073,30 @@ def cmd_make_win(gyp_filename):
     print('running msvs via msbuild >', msbuild_cmdline)
     returncode = os.system(msbuild_cmdline)
     if returncode != 0:
-        raise Exception('msbuild failed with errors')
+        raise Exception('msbuild failed with errors, returncode =', returncode)
     print('Build complete.')
 
 def cmd_make_linux(gyp_filename):
-    # make? ninja?
-    raise Exception('TODO')
+    # Here we could check if ninja or some such is installed to generate ninja
+    # project files. But for simplicity's sake let's just use whatever gyp
+    # defaults to.
+
+    # For some odd reason passing './package.gyp' as a param to gyp will 
+    # generate garbage, instead you gotta pass 'package.gyp'. Se let's 
+    # explicitly remove a leading ./
+    dirname = os.path.dirname(gyp_filename)
+    assert dirname == '.' or len(dirname) == 0
+    gyp_filename = os.path.basename(gyp_filename)
+    
+    gyp_cmdline = 'gyp --depth=. {}'.format(gyp_filename)
+    run_gyp(gyp_cmdline)
+    if not os.path.exists('Makefile'):
+        raise Exception('gyp did not generate ./Makefile, no idea how to '
+            'build with your toolchain, please build manually')
+    returncode = os.system('make')
+    if returncode != 0:
+        raise Exception('Build failed: make returned', returncode)
+    print('Build complete.')
 
 def main():
     parser = argparse.ArgumentParser()
