@@ -863,6 +863,8 @@ class CompletedTestRun:
         """
         self.target_name = target_name
         self.test_result = test_result
+        self.module = None
+        self.duration_in_ms = 0
 
 def locate_executable(target_name):
     """ return None if it (likely) wasnt built yet (or if for some other reason
@@ -881,43 +883,56 @@ def locate_executable(target_name):
                 return candidate
     return None
 
-def exec_tests(gypdir, gyp):
-    """ returns a list of test targets together with pass/fail as instances of
+def exec_test(gypdir, target):
+    """ runs test (if executable was built) and returns an instance of
         CompletedTestRun.
         param gypdir is the location of the gyp file
-        param gyp is the content of the gyp file
+        param target is a 'target' node from a gyp file, so a dict with
+              keys like gyp's 'target_name' and the bru-specific 'test'
     """
-    test_targets = get_test_targets(gyp)
-    testruns = []
-    for target in test_targets:
 
-        # Now knowing the target we have the following problems:
-        # * where is the compiled target executable located? E.g. on Ubuntu
-        #   with make I find it in out/Release/googlemock_test but on Windows
-        #   with msvs it ends in Release/googlemock_test.exe
-        # * run Debug or Release or some other config? Let's run Release only
-        #   for now. TODO: make configurable, or use Release-Debug fallback?
-        #   Or run whichever was built last?
-        target_name = target['target_name']
-        exe_path = locate_executable(target_name)
-        if exe_path != None:
-            print('running', target_name)
-            t0 = time.time() # or clock()?
-            test = target['test']
-            rel_cwd = test['cwd'] if 'cwd' in test else './'
-            test_argv = test['args'] if 'args' in test else []
-            proc = subprocess.Popen([os.path.abspath(exe_path)] + test_argv,
-                                    cwd = os.path.join(gypdir, rel_cwd))
-            proc.wait()
-            returncode = proc.returncode
-            print(target_name, 'returned with exit code', returncode, 'after',
-                int(1000 * (time.time() - t0)), 'ms')
-            testruns.append(CompletedTestRun(target_name,
-                TestResult.success if returncode == 0 else TestResult.fail))
-        else:
-            print('cannot find executable', target_name)
-            testruns.append(CompletedTestRun(target_name, TestResult.notrun))
-    return testruns
+    # Now knowing the target we have the following problems:
+    # * where is the compiled target executable located? E.g. on Ubuntu
+    #   with make I find it in out/Release/googlemock_test but on Windows
+    #   with msvs it ends in Release/googlemock_test.exe
+    # * run Debug or Release or some other config? Let's run Release only
+    #   for now. TODO: make configurable, or use Release-Debug fallback?
+    #   Or run whichever was built last?
+    target_name = target['target_name']
+    exe_path = locate_executable(target_name)
+    if exe_path != None:
+        print('running', target_name)
+        t0 = time.time() # or clock()?
+        test = target['test']
+        rel_cwd = test['cwd'] if 'cwd' in test else './'
+        test_argv = test['args'] if 'args' in test else []
+        proc = subprocess.Popen([os.path.abspath(exe_path)] + test_argv,
+                                cwd = os.path.join(gypdir, rel_cwd))
+        proc.wait()
+        returncode = proc.returncode
+        duration_in_ms = int(1000 * (time.time() - t0))
+        print(target_name, 'returned with exit code', returncode, 'after',
+            duration_in_ms, 'ms')
+        testrun = CompletedTestRun(target_name,
+            TestResult.success if returncode == 0 else TestResult.fail)
+        testrun.duration_in_ms = duration_in_ms
+        return testrun
+    else:
+        print('cannot find executable', target_name)
+        return CompletedTestRun(target_name, TestResult.notrun)
+
+def collect_tests(module_names):
+    """ yields tuples (module, gypdir, test_target), where gypdir is the
+        directory the *gyp file is located in (since all file paths in the
+        gyp - e.g. the test.cwd - are relative to that particular dir """
+    modules_dir = 'bru_modules'
+    for module in module_names:
+        gypdir = os.path.join(modules_dir, module)
+        gyp = load_json_with_hash_comments(os.path.join(
+                gypdir, module + ".gyp"))
+        test_targets = get_test_targets(gyp)
+        for test_target in test_targets:
+            yield (module, gypdir, test_target)
 
 def cmd_test(testables):
     """ param testables is list of module names, empty to test all modules
@@ -942,21 +957,71 @@ def cmd_test(testables):
             _, module = os.path.split(module_dir)
             testables.append(module)
 
+    # first let's check if all tests were built already, if they weren't then
+    # we'll do an implicit 'bru make' before running tests
+    def did_all_builds_complete(testables):
+        for module, gypdir, target in collect_tests(testables):
+            target_name = target['target_name']
+            if locate_executable(target_name) == None:
+                print("executable for {}:{} not found".format(
+                    module, target_name))
+                return False
+        return True
+    if not did_all_builds_complete(testables):
+        print("running 'bru make':")
+        cmd_make()
+
     testruns = []
-    for module in testables:
-        gypdir = os.path.join(modules_dir, module)
-        gyp = load_json_with_hash_comments(os.path.join(
-                gypdir, module + ".gyp"))
-        module_tests = exec_tests(gypdir, gyp)
-        if len(module_tests) == 0:
-            # for modules that don't have tests defined yet strive for adding
-            # some tests
-            print('warning: no tests for module', module)
-        testruns += module_tests
+    module2test_count = dict((module, 0) for module in testables)
+    for module, gypdir, target in collect_tests(testables):
+        testrun = exec_test(gypdir, target)
+        testrun.module = module
+        testruns.append(testrun)
+        module2test_count[module] += 1
+        
+    # for modules that don't have tests defined yet strive for adding
+    # some tests, warn/inform the user about these modules here:
+    modules_without_tests = [module 
+                for (module, test_count) in module2test_count.items()
+                if test_count == 0]
+                
+    # xxx TODO: reduce horrible redundancy
+    successful_tests = [testrun for testrun in testruns
+                          if testrun.test_result == TestResult.success]
+    failed_tests = [testrun for testrun in testruns
+                          if testrun.test_result == TestResult.fail]
+    missing_tests = [testrun for testrun in testruns
+                          if testrun.test_result == TestResult.notrun]
 
     print("test summary:")
-    for testrun in testruns:
-        print('  ', testrun.target_name, testrun.test_result)
+    if len(modules_without_tests) > 0:
+        print('warning: the following modules have no tests configured:')
+        for module in sorted(modules_without_tests):
+            print('  ', module)
+
+    if len(successful_tests) > 0:
+        print('the following tests succeeded:')
+        for testrun in successful_tests:
+            print('  {}:{} after {} ms'.format(
+                testrun.module, testrun.target_name, 
+                testrun.duration_in_ms))
+
+    if len(missing_tests) > 0:
+        print('the following tests are missing (build failed?):')
+        for testrun in missing_tests:
+            print('  {}:{} '.format(
+                testrun.module, testrun.target_name))
+                
+    if len(failed_tests) > 0:
+        print('the following tests failed:')
+        for testrun in failed_tests:
+            print('  {}:{} after {} ms'.format(
+                testrun.module, testrun.target_name, 
+                testrun.duration_in_ms))
+                
+    if len(missing_tests) > 0 or len(failed_tests) > 0:
+        raise Exception('Tests failed or are missing')
+    print('All tests successful.')
 
 def cmd_make():
     """ this command makes some educated guesses about which toolchain
