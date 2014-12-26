@@ -29,6 +29,9 @@
         # must be run from rev81/clone dir
         {
             "target_name": "tiny-js-test",
+            "test": {
+                "cwd": "rev81/clone"
+            },
             "type": "executable",
             "sources": [ "rev81/clone/run_tests.cpp" ],
             "dependencies": [ "tiny-js" ]

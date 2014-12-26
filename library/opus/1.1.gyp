@@ -84,7 +84,7 @@
             "type" : "executable",
             
             #disabling test for now due to being painfully slow
-            #"test_cwd": "1.1/opus-1.1/tests",
+            #"test": { "cwd": "1.1/opus-1.1/tests" },
             
             "sources" : [
                 "1.1/opus-1.1/tests/test_opus_encode.c"
@@ -101,7 +101,9 @@
         {
             "target_name" : "test_opus_api",
             "type" : "executable",
-            "test_cwd": "1.1/opus-1.1/tests",
+            "test": {
+                "cwd": "1.1/opus-1.1/tests"
+            },
             "sources" : [
                 "1.1/opus-1.1/tests/test_opus_api.c"
             ],
@@ -117,9 +119,18 @@
             "target_name" : "opus_trivial_example",
             "type" : "executable",
             
-            # test needs cmd line args, TODO: reenable once we can specify these
-            #"test_cwd": "1.1/opus-1.1/doc",
-            
+            # test needs cmd line args, in fact it's not much of a test, it's
+            # doing a speexenc/speexdec equivalent, encoding pcm as opus and
+            # back. Format is 16bit PCM LittleEndian aka ffmpeg's s16le. 
+            # Not much of a test, only verifies the codec won't crash/hang. 
+            # Listen to output PCM to gauge codec quality 'manually'.
+            # Since the opus tar.gz doesn't include PCM files afaik we pretend
+            # some arbitrary file from this repo is s16le (terribly noisy :) PCM.
+            "test": {
+                "cwd": "1.1/opus-1.1",
+                "args": ["configure", "configure.pretend.s16le.pcm"]
+            },
+
             "sources" : [
                 "1.1/opus-1.1/doc/trivial_example.c"
             ],

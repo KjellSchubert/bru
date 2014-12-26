@@ -26,6 +26,10 @@
         {
             "target_name": "speexenc",
             "type": "executable",
+            
+            # TODO: unzip test audio and run speexenc on it to make this a 
+            # decent test
+            
             "sources": [ 
                 "1.2rc2/speex-1.2rc2/src/speexenc.c",
                 "1.2rc2/speex-1.2rc2/src/wav_io.c",

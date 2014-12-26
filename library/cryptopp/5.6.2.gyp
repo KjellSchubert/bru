@@ -149,7 +149,9 @@
         {
             "target_name": "cryptest",
             "type": "executable",
-            "test_cwd": "5.6.2",
+            "test": { 
+                "cwd": "5.6.2"
+            },
             "sources": [
                 "5.6.2/bench.cpp",
                 "5.6.2/bench2.cpp",

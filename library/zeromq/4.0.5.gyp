@@ -23,6 +23,7 @@
         {
             "target_name": "test_system",
             "type": "executable",
+            "test": {},
             "include_dirs": [
                 "4.0.5/zeromq-4.0.5/src" # tests need platform.hpp
             ],
@@ -33,6 +34,7 @@
         {
             "target_name": "test_monitor",
             "type": "executable",
+            "test": {},
             "include_dirs": [
                 "4.0.5/zeromq-4.0.5/src" # tests need platform.hpp
             ],

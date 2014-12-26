@@ -174,26 +174,6 @@ def wget(url, filename):
     print("wget {} -> {}".format(url, filename))
     urllib.request.urlretrieve(url, filename)
 
-def wget_or_copy(basedir, url, destfilename):
-    """ either does a wget of an http url or copies a file:// url file
-        stored relative to basedir
-    """
-    parse = urllib.parse.urlparse(url)
-    if parse.scheme == 'file':
-        # this is typically used to apply a patch in the form of a targ.gz
-        # on top of a larger downloaded file. E.g. for ogg & speex this
-        # patch does approximately what ./configure would have done.
-        # copying the tar file itself from ./library to ./modules seems a bit
-        # pointless, may wanna optimize the copy away
-        path = parse.netloc
-        assert len(path) > 0
-        basename = os.path.basename(path)
-        assert len(path) > 0
-        srcfilename = os.path.join(basedir, path)
-        shutil.copyfile(srcfilename, destfilename)
-    else:
-        wget(url, destfilename)
-
 def extract_file(path, to_directory):
     # from http://code.activestate.com/recipes/576714-extract-a-compressed-file/
     # with slight modifications (without the cwd mess)
@@ -320,6 +300,16 @@ def tar_glob_group(tar, module_dir, glob_group):
         print("  adding {}".format(tar_file))
         tar.add(build_file, arcname = tar_file)
 
+def unpack_tarfile_once(zip_file, module_dir):
+    """ unpacks tar or zip file unless we unpacked it in the past alrdy """
+    zip_file_basename = os.path.basename(zip_file)
+    assert len(zip_file_basename) > 0
+    extract_done_file = os.path.join(module_dir, zip_file_basename + ".unpack_done")
+    if not os.path.exists(extract_done_file):
+        print("unpacking {}".format(zip_file))
+        extract_file(zip_file, module_dir)
+        touch(extract_done_file)
+
 def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
@@ -343,26 +333,40 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
             os.rename(svn_root_temp, svn_root)
         return
 
+    if parse.scheme == 'file':
+        # this is typically used to apply a patch in the form of a targ.gz
+        # on top of a larger downloaded file. E.g. for ogg & speex this
+        # patch does approximately what ./configure would have done.
+        # copying the tar file itself from ./library to ./modules would be
+        # pointless, so we extract this file right from the library dir:
+        path = parse.netloc
+        assert len(path) > 0
+        basename = os.path.basename(path)
+        assert len(path) > 0
+        src_tar_filename = os.path.join(src_module_dir, path)
+        unpack_tarfile_once(src_tar_filename, module_dir)
+        return
+
     # Store all downloaded tar.gz files in ~/.bru, e.g as boost-regex/1.57/foo.tar.gz
     # This ensures that multiple 'bru install foo' cmds in differet directories 
     # on this machine won't download the same foo.tar.gz multiple times.
     # MOdules for which we must clone an svn or git repo are not sharable that
     # easily btw, they actually are cloned multiple times atm (could clone them
     # once into ~/.bru and copy, but I'm not doing this atm).
-    tar_dir = os.path.join(get_user_home_dir(), ".bru", "downloads",
-                           module_name, module_version)
-    zip_file = os.path.join(tar_dir, url2filename(zip_url))
-    if not os.path.exists(zip_file):
-        os.makedirs(tar_dir, exist_ok=True)
-        zip_file_temp = zip_file + ".tmp"
-        wget_or_copy(src_module_dir, zip_url, zip_file_temp)
-        os.rename(zip_file_temp, zip_file)
-
-    extract_done_file = os.path.join(module_dir, ".extract_done")
-    if not os.path.exists(extract_done_file):
-        print("extracting {}".format(zip_file))
-        extract_file(zip_file, module_dir)
-        touch(extract_done_file)
+    if parse.scheme in ['http', 'https', 'ftp']:
+        tar_dir = os.path.join(get_user_home_dir(), ".bru", "downloads",
+                               module_name, module_version)
+        zip_file = os.path.join(tar_dir, url2filename(zip_url))
+        if not os.path.exists(zip_file):
+            os.makedirs(tar_dir, exist_ok=True)
+            zip_file_temp = zip_file + ".tmp"
+            wget(zip_url, zip_file_temp)
+            os.rename(zip_file_temp, zip_file)
+    
+        unpack_tarfile_once(zip_file, module_dir)
+        return
+    
+    raise Exception('unsupported scheme in', zip_url)
 
 def unpack_module(formula):
     if not 'module' in formula or not 'version' in formula:
@@ -612,7 +616,7 @@ def resolve_conflicts(dependencies):
 
 def get_all_versions(library_path, module):
     bru_file_names = os.listdir(os.path.join(library_path, module))
-    regex = re.compile('^([0-9.]+)\\.bru$')
+    regex = re.compile('^(.+)\\.bru$') # version can be 1.2.3 or 1.2rc7 or ...
     for bru_file_name in bru_file_names:
         match = regex.match(bru_file_name)
         if match != None:
@@ -725,7 +729,10 @@ def add_dependencies_to_gyp(gyp_filename, installables):
     deps = first_target['dependencies']
     for installable in installables:
         module = installable.module
-        deps.append("bru_modules/{}/{}.gyp:*".format(module, module))
+        dep_gyp_path = "bru_modules/{}/{}.gyp".format(module, module)
+        dep_expr = dep_gyp_path + ":*" # depend on all targets, incl tests
+        if not dep_expr in deps:
+            deps.append(dep_expr)
     save_json(gyp_filename, gyp) # warning: this nukes comments atm
 
 def create_gyp_file(gyp_filename):
@@ -834,12 +841,12 @@ def get_test_targets(gyp):
     # How can we tell which of the targets are tests? Heuristically static libs
     # cannot be tests, executables usually but not always are. What many tests
     # still need though is a cwd at startup (e.g. to find test data), which 
-    # differs from module to module. Let's add this test_cwd property to the
-    # gyp target, gyp will ignore such additional props silently. This test_cwd
+    # differs from module to module. Let's add this test/cwd property to the
+    # gyp target, gyp will ignore such additional props silently. This test/cwd
     # is interpreted relative to the gyp file (like any other path in a gyp file).
     targets = gyp['targets']
     for target in targets:
-        if 'test_cwd' in target:
+        if 'test' in target:
             yield target
 
 class TestResult(Enum):
@@ -895,8 +902,10 @@ def exec_tests(gypdir, gyp):
         if exe_path != None:
             print('running', target_name)
             t0 = time.time() # or clock()?
-            rel_cwd = target['test_cwd']
-            proc = subprocess.Popen([os.path.abspath(exe_path)], 
+            test = target['test']
+            rel_cwd = test['cwd'] if 'cwd' in test else './'
+            test_argv = test['args'] if 'args' in test else []
+            proc = subprocess.Popen([os.path.abspath(exe_path)] + test_argv, 
                                     cwd = os.path.join(gypdir, rel_cwd))
             proc.wait()
             returncode = proc.returncode

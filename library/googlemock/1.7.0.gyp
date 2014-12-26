@@ -27,7 +27,7 @@
         {
             "target_name": "googlemock_test",
             "type": "executable",
-            "test_cwd": "1.7.0/gmock-1.7.0/test",
+            "test": {},
             "sources": [ 
                 # the 'all' test compiled several minutes, so instead lets
                 # compile a smaller/faster test:

@@ -45,6 +45,7 @@
         {
             "target_name": "zlib_test",
             "type": "executable",
+            "test": {},
             "sources": [ "1.2.8/zlib-1.2.8/test/example.c" ],
             "dependencies": [
                 "zlib"
