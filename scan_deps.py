@@ -38,6 +38,7 @@ import glob
 import collections
 import itertools
 import functools # @total_ordering
+import subprocess
 import bru
 import pdb # only if you want to add pdb.set_trace()
 
@@ -248,6 +249,16 @@ def scan_deps(formula, include_file_index):
 
     return (included_modules, unknown_includes)
 
+def is_in_scm(path):
+    """ return true if the file is (git) versioned """
+    # http://stackoverflow.com/questions/2405305/git-how-to-tell-if-a-file-is-git-tracked-by-shell-exit-code
+    with open(os.devnull, 'w') as devnull:
+        proc = subprocess.Popen(['git', 'ls-files', '--error-unmatch', path], 
+                 stdout = devnull, stderr = devnull)
+        proc.wait()
+        returncode = proc.returncode
+    return returncode == 0
+
 def get_arg_modules(module, version):
     """ returns list of (module,version) tuples given cmdline args.
         If version is None then we pick the latest available version
@@ -283,7 +294,10 @@ def main():
         print("scanning module {} version {}".format(module, version))
         formula = bru.load_formula(module, version)
         (deps, missing_includes) = scan_deps(formula, index)
-        print("dependencies: ", deps)
+        print("dependencies: ")
+        for dep in deps:
+            # show for each dep if it was git added alrdy
+            print(dep, '' if is_in_scm(os.path.join('library', dep)) else '*')
         if len(missing_includes) > 0:
             print("missing includes: ", missing_includes)
 
