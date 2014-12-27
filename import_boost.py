@@ -15,6 +15,12 @@
 #   {'boost-random', 'boost-range', 'boost-tr1', 'boost-lexical_cast', 'boost-math', 'boost-algorithm'}           
 #   {'boost-graph_parallel', 'boost-property_map', 'boost-bimap', 'boost-disjoint_sets', 'boost-graph', 'boost-mpi'}
 #   {'boost-date_time', 'boost-spirit', 'boost-serialization', 'boost-pool', 'boost-thread'}
+#
+# Here some more info on these cycles: 
+#   https://svn.boost.org/trac/boost/wiki/ModuleDepednecies
+# Some of these cycles were alrdy broken after the 1.57 boost release, e.g. see 
+# https://github.com/boostorg/range/commit/4f3bdbe4d3cdd307c6a07406f42e81806ea0a922
+# removed the boost-algorithm dep from boost-range.
 
 import argparse
 import json
