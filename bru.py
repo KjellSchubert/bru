@@ -310,6 +310,61 @@ def unpack_tarfile_once(zip_file, module_dir):
         extract_file(zip_file, module_dir)
         touch(extract_done_file)
 
+def remove_url_prefix(url, prefix):
+    """ param prefix e.g. 'git+' """
+    assert url.startswith(prefix)
+    return url[len(prefix):]
+
+def atomic_clone_repo(repo_url, module_dir, exec_clone):
+    """ This executes an svn checkout or a git clone, taking care of the atomic
+        rename of the clone to deal with interrupted clones (without implementing
+        the svn or git-specific clone itself).
+        param module_dir e.g. bru_modules/boost-range, that's where to clone to
+        param repo_url is an svn or git url that will be passed to exec_clone()
+        param exec_clone is a function which will be passed the intended parent
+              dir of the repo clone as well as the checkout url
+    """
+    svn_root = os.path.join(module_dir, "clone")
+    if not os.path.exists(svn_root):
+        # atomic rename in case an earlier process run left a half-checkout
+        svn_root_temp = svn_root + ".tmp"
+        if os.path.exists(svn_root_temp):
+            shutil.rmtree(svn_root_temp)
+        exec_clone(repo_url, svn_root_temp)
+        os.rename(svn_root_temp, svn_root)
+
+def svn_checkout(repo_url, clone_root_dir):
+    exit_code = subprocess.call(["svn","checkout", repo_url, clone_root_dir])
+    assert exit_code == 0, "do you have subversion 'svn' installed and in your path?"
+
+def split_off_changeset(repo_url):
+    """ splits http://foo.com/bar@xyz into tuple (http://foo.com/bar, xyz),
+        with the 2nd tuple elem being None if there's no '@' in the URL """
+    parse = urllib.parse.urlparse(repo_url)
+    at_index = parse.path.rfind('@')
+    if at_index != -1:
+        changeset_len = len(parse.path) - at_index # includes '@'
+        assert repo_url[-changeset_len] == '@'
+        url_prefix = repo_url[:-changeset_len]
+        changeset = repo_url[-changeset_len+1:]
+        assert repo_url == url_prefix + '@' + changeset
+    else:
+        url_prefix = repo_url
+        changeset = None
+    return (url_prefix, changeset)
+
+def git_clone(repo_url, clone_root_dir):
+    # if repo_url ends with @... then consider the portion of the @
+    # the branch or changeset that should be checked out.
+    (repo_url, changeset) = split_off_changeset(repo_url)
+    print("git clone", repo_url)
+    cmdline = ["git","clone", repo_url, clone_root_dir]
+    exit_code = subprocess.call(cmdline)
+    assert exit_code == 0, "do you have subversion 'svn' installed and in your path?"
+    if changeset != None:
+        print("git checkout", changeset)
+        subprocess.call(['git', 'checkout', changeset])
+
 def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
@@ -318,19 +373,14 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     os.makedirs(module_dir, exist_ok=True)
 
     parse = urllib.parse.urlparse(zip_url)
-    if parse.scheme == 'svn+http':
-        prefix = "svn+"
-        assert zip_url.startswith(prefix)
-        checkout_url = zip_url[len(prefix):]
-        svn_root = os.path.join(module_dir, "clone")
-        if not os.path.exists(svn_root):
-            # atomic rename in case an earlier process run left a half-checkout
-            svn_root_temp = svn_root + ".tmp"
-            if os.path.exists(svn_root_temp):
-                shutil.rmtree(svn_root_temp)
-            exit_code = subprocess.call(["svn","checkout", checkout_url, svn_root_temp])
-            assert exit_code == 0, "do you have subversion 'svn' installed and in your path?"
-            os.rename(svn_root_temp, svn_root)
+    if parse.scheme in ['svn+http', 'svn+https']:
+        repo_url = remove_url_prefix(zip_url, 'svn+')
+        atomic_clone_repo(repo_url, module_dir, svn_checkout)
+        return
+
+    if parse.scheme in ['git+http', 'git+https']:
+        repo_url = remove_url_prefix(zip_url, 'git+')
+        atomic_clone_repo(repo_url, module_dir, git_clone)
         return
 
     if parse.scheme == 'file':

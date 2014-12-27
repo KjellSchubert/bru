@@ -1,0 +1,37 @@
+{
+    "homepage": "http://www.boost.org/",
+    
+    #"url": "https://github.com/boostorg/range/archive/boost-1.57.0.tar.gz",
+    # The boost-range to boost-algorithm module dependency creates an unwanted
+    # dependency cycle (which gyp refuses to handle) and is mostly accidental.
+    # So WARNING: this URL here does not designate boost-range 1.57.0 but 
+    # a successor of it patched for modularization. I hope boost 1.58 will 
+    # address the modularization issue satisfactorily.
+    "url": "git+https://github.com/boostorg/range.git@4f3bdbe4d3cdd307c6a07406f42e81806ea0a922",
+    
+    "module": "boost-range",
+    "version": "1.57.0",
+
+    "dependencies": {
+        
+        # The unwanted boost-algorithm dep is removed in the git clone
+        # in changeset 4f3bdbe4d3cdd307c6a07406f42e81806ea0a922
+        #"boost-algorithm": "1.57.0",
+        
+        "boost-array": "1.57.0",
+        "boost-assert": "1.57.0",
+        "boost-concept_check": "1.57.0",
+        "boost-config": "1.57.0",
+        "boost-conversion": "1.57.0",
+        "boost-core": "1.57.0",
+        "boost-detail": "1.57.0",
+        "boost-functional": "1.57.0",
+        "boost-iterator": "1.57.0",
+        "boost-mpl": "1.57.0",
+        "boost-optional": "1.57.0",
+        "boost-preprocessor": "1.57.0",
+        "boost-regex": "1.57.0",
+        "boost-static_assert": "1.57.0",
+        "boost-tuple": "1.57.0"
+    }
+}
