@@ -9,6 +9,12 @@
 #   >./detect_cycles.py   # should not detect dependency cycles
 # Sadly this doesn't work as of today without generating plenty of module 
 # dependency cycles, see details below at fix_annoying_dependency_cycle().
+#
+# Currenty for boost 1.57 these cycles here are detected by detect_cycles.py:
+#   {mpl type_traits typeof utility} # resolved by merging all these modules into library/boost-mpl
+#   {'boost-random', 'boost-range', 'boost-tr1', 'boost-lexical_cast', 'boost-math', 'boost-algorithm'}           
+#   {'boost-graph_parallel', 'boost-property_map', 'boost-bimap', 'boost-disjoint_sets', 'boost-graph', 'boost-mpi'}
+#   {'boost-date_time', 'boost-spirit', 'boost-serialization', 'boost-pool', 'boost-thread'}
 
 import argparse
 import json
@@ -128,8 +134,12 @@ def import_boost(boost_lib, version):
     if not os.path.isdir(library_root):
       raise Exception("expected to run script in repo root with " + libary_root + " dir")
     
-    bru.save_formula(formula)
-    bru.save_gyp(formula, gyp)
+    if not os.path.exists(os.path.join(library_root, bru_module_name)):
+        print('saving', bru_module_name, 'to library')
+        bru.save_formula(formula)
+        bru.save_gyp(formula, gyp)
+    else:
+        print('skipping existing module', bru_module_name)
 
 # WARNING: after I started generating a *.gyp file for each 
 # modularized boost lib it turned out that gyp complained about

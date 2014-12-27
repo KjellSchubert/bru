@@ -134,6 +134,7 @@ class IncludeFileIndex:
         # whose tar.gz was downloaded already anyway?
         self.include2modules = {} 
         for module in get_all_modules(library_path):
+            print('scanning #includes for', module)
             for version in get_all_versions(library_path, module):
                 formula = bru.load_formula(module, version)
                 bru.unpack_module(formula)
