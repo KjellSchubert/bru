@@ -864,7 +864,7 @@ class CompletedTestRun:
         self.target_name = target_name
         self.test_result = test_result
         self.module = None
-        self.duration_in_ms = 0
+        self.duration_in_ms = -1 # -1 means test wasnt run yet
 
 def locate_executable(target_name):
     """ return None if it (likely) wasnt built yet (or if for some other reason
@@ -984,44 +984,44 @@ def cmd_test(testables):
     modules_without_tests = [module 
                 for (module, test_count) in module2test_count.items()
                 if test_count == 0]
-                
-    # xxx TODO: reduce horrible redundancy
-    successful_tests = [testrun for testrun in testruns
-                          if testrun.test_result == TestResult.success]
-    failed_tests = [testrun for testrun in testruns
-                          if testrun.test_result == TestResult.fail]
-    missing_tests = [testrun for testrun in testruns
-                          if testrun.test_result == TestResult.notrun]
+
+    # also partition/group testruns by test result:                
+    testgroups = {} # testresult to list of testruns, so partitioned testruns
+    for test_result, runs in itertools.groupby(testruns,
+                             lambda testrun: testrun.test_result):
+        testgroups[test_result] = list(runs)
+
+    def get_test_group(test_result):
+        return testgroups[test_result] if test_result in testgroups else []
+
+    def print_test_group(msg, test_result):
+        testgroup = list(get_test_group(test_result))
+        if len(testgroup) > 0:
+            print(msg.format(len(testgroup)))
+            for testrun in testgroup:
+                line = '  {}:{}'.format(testrun.module, testrun.target_name)
+                if testrun.duration_in_ms >= 0:
+                    line += ' after {} ms'.format(testrun.duration_in_ms)
+                print(line)
+        return len(testgroup)
 
     print("test summary:")
     if len(modules_without_tests) > 0:
         print('warning: the following modules have no tests configured:')
         for module in sorted(modules_without_tests):
             print('  ', module)
-
-    if len(successful_tests) > 0:
-        print('the following tests succeeded:')
-        for testrun in successful_tests:
-            print('  {}:{} after {} ms'.format(
-                testrun.module, testrun.target_name, 
-                testrun.duration_in_ms))
-
-    if len(missing_tests) > 0:
-        print('the following tests are missing (build failed?):')
-        for testrun in missing_tests:
-            print('  {}:{} '.format(
-                testrun.module, testrun.target_name))
-                
-    if len(failed_tests) > 0:
-        print('the following tests failed:')
-        for testrun in failed_tests:
-            print('  {}:{} after {} ms'.format(
-                testrun.module, testrun.target_name, 
-                testrun.duration_in_ms))
-                
-    if len(missing_tests) > 0 or len(failed_tests) > 0:
+    successful_test_count = print_test_group(
+        'The following {} tests succeeded:', 
+        TestResult.success)
+    missing_test_count = print_test_group(
+        'The following {} tests are missing (build failed?):', 
+        TestResult.notrun)
+    failed_test_count = print_test_group(
+        'The following {} tests failed:', 
+        TestResult.fail)
+    if missing_test_count > 0 or failed_test_count > 0:
         raise Exception('Tests failed or are missing')
-    print('All tests successful.')
+    print('All {} tests successful.'.format(successful_test_count))
 
 def cmd_make():
     """ this command makes some educated guesses about which toolchain
