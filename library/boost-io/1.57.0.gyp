@@ -14,7 +14,7 @@
             "dependencies": [
                 "../boost-config/boost-config.gyp:*"
             ]
-        },
+        }
         
         # TODO
         #{
@@ -23,15 +23,16 @@
         #    "sources": ""
         #},
         
-        {
-            "target_name": "boost-io-quoted_manip_test",
-            "type": "executable",
-            "test": {},
-            "sources": [
-                "1.57.0/io-boost-1.57.0/test/quoted_manip_test.cpp"
-            ],
-            "dependencies": [ "boost-io" ]
-        }
+        # this depends on boost-test (see Jamfile reaching outside the module)
+        #{
+        #    "target_name": "boost-io-quoted_manip_test",
+        #    "type": "executable",
+        #    "test": {},
+        #    "sources": [
+        #        "1.57.0/io-boost-1.57.0/test/quoted_manip_test.cpp"
+        #    ],
+        #    "dependencies": [ "boost-io" ]
+        #}
 
     ]
 }
