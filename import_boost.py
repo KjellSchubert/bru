@@ -50,6 +50,13 @@ def get_boost_lib_names():
     # pretty crappy:
     matches = re.findall('\\.\\.\\/(.*)\\.git @', html)
     assert len(matches) > 10 and 'asio' in matches, "regex is outdated, update it"
+
+    # math depends on numeric_conversion, sadly the numeric module is the only
+    # one split into submodules, needing special treatment. Libs are listed here:
+    # https://github.com/boostorg/boost/tree/master/libs/numeric
+    if not 'numeric_conversion' in matches:
+        matches.append('numeric_conversion')
+
     return matches
 
 def import_boost(boost_lib, version):

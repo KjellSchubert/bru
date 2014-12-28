@@ -30,13 +30,14 @@
         },
         
         # this test compiles ridiculously slowly btw (about 1min)
-        {
-            "target_name": "boost-container_vector_test",
-            "type": "executable",
-            "test": {},
-            "sources": [ "1.57.0/container-boost-1.57.0/test/vector_test.cpp" ],
-            "dependencies": [ "boost-container" ]
-        },
+        # So I disabled it for now.
+        #{
+        #    "target_name": "boost-container_vector_test",
+        #    "type": "executable",
+        #    "test": {},
+        #    "sources": [ "1.57.0/container-boost-1.57.0/test/vector_test.cpp" ],
+        #    "dependencies": [ "boost-container" ]
+        #},
         
         {
             "target_name": "boost-container_string_test",

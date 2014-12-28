@@ -111,8 +111,8 @@ def fix_annoying_dependency_cycle(module_names, target_module, version):
     merged_target['target_name'] = target_module
     merged_target['include_dirs'] = []
     merged_target['sources'] = []
-    merge_dep = '../{}/{}.gyp:{}'.format(
-        target_module, target_module, merged_target['target_name'])
+    merge_dep = '../{}/{}.gyp:*'.format(
+        target_module, target_module)
     for i in range(len(gyps)):
         formula = formulas[i]
         gyp = gyps[i]
