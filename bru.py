@@ -1074,7 +1074,8 @@ def cmd_test(testables):
         'The following {} tests failed:', 
         TestResult.fail)
     if missing_test_count > 0 or failed_test_count > 0:
-        raise Exception('Tests failed or are missing')
+        raise Exception('ERROR: {} tests failed and {} tests failed building'\
+                        .format(failed_test_count, missing_test_count))
     print('All {} tests successful.'.format(successful_test_count))
 
 def cmd_make():
