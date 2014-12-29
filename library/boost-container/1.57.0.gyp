@@ -2,7 +2,7 @@
     "targets": [
         {
             "target_name": "boost-container",
-            "type": "static_library",
+            "type": "none",
             "include_dirs": [
                 "1.57.0/container-boost-1.57.0/include"
             ],
@@ -14,7 +14,11 @@
             "sources": [
                 # allocators are imlp'd in *.c files, this library is 
                 # header-only unless you use allocators
-                "1.57.0/container-boost-1.57.0/src/*.c"
+                # P.S the allocator files don't compile on Windows, are 
+                # excluded in alloc_lib.vcproj, let's exclude them on 
+                # all platforms for now.
+                # These *.c files also #include each other.
+                # "1.57.0/container-boost-1.57.0/src/dlmalloc_ext_2_8_6.c"
             ],
             "dependencies": [
                 "../boost-config/boost-config.gyp:*",

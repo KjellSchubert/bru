@@ -2,7 +2,7 @@
     "targets": [
         {
             "target_name": "boost-math",
-            "type": "static_library",
+            "type": "none",
             "dependencies": [
                 "../boost-lexical_cast-math/boost-lexical_cast-math.gyp:*"
             ],

@@ -363,7 +363,11 @@ def git_clone(repo_url, clone_root_dir):
     assert exit_code == 0, "do you have subversion 'svn' installed and in your path?"
     if changeset != None:
         print("git checkout", changeset)
-        subprocess.call(['git', 'checkout', changeset])
+        proc = subprocess.Popen(['git', 'checkout', changeset], 
+                                  cwd = clone_root_dir)
+        proc.wait()
+        exit_code = proc.returncode
+        assert exit_code == 0, "git checkout returned error {}".format(exit_code)
 
 def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
