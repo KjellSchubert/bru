@@ -18,7 +18,18 @@
             },
             "sources": [
                 # boost-math has its cpp files in a src/tr1 subdir
-                "1.57.0/math-boost-1.57.0/src/tr1/*.cpp"
+                # P.S.: compilation of boost-math is brutally slow imo, and
+                # I've seen it compile too often for my taste: boost-lexical_cast
+                # keep pulling it in while only needing a tiny subset of 
+                # boost-math. So let's compile this tiny subset here:
+                # I hope someone will take care of the dependency cycle between
+                # boost-lexical_cast and boost-math soon, e.g. by splitting 
+                # boost-math into two modules.
+                # To compile all of boost-math:
+                #   "1.57.0/math-boost-1.57.0/src/tr1/*.cpp"
+                # To compile only the subset that lexical_cast cares about:
+                "1.57.0/math-boost-1.57.0/src/tr1/copysign*.cpp",
+                "1.57.0/math-boost-1.57.0/src/tr1/fpclassify*.cpp"
             ],
             "dependencies": [
                 "../boost-smart_ptr/boost-smart_ptr.gyp:*",
