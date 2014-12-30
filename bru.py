@@ -19,8 +19,7 @@ import pdb # only if you want to add pdb.set_trace()
 
 import brulib.jsonc
 import brulib.library
-import brulib.untar
-import brulib.clone
+import brulib.module_downloader
 
 # http://stackoverflow.com/questions/4934806/python-how-to-find-scripts-directory
 def get_script_path():
@@ -34,11 +33,6 @@ def get_library_dir():
 
 def get_library():
     return brulib.library.Library(get_library_dir())
-
-def get_user_home_dir():
-    """ work both on Linux & Windows, this dir will be the parent dir of
-        the .bru/ dir for storing downloaded tar.gzs on a per-user basis"""
-    return os.path.expanduser("~")
 
 # from http://stackoverflow.com/questions/431684/how-do-i-cd-in-python
 class Chdir:
@@ -56,69 +50,17 @@ class Chdir:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
-    """ downloads tar.gz or zip file as given by zip_url, then unpacks it
-        under bru_modules_root """
-    src_module_dir = get_library().get_module_dir(module_name)
-    module_dir = os.path.join(bru_modules_root, module_name, module_version)
-    os.makedirs(module_dir, exist_ok=True)
+def touch(file_name, times=None):
+    # http://stackoverflow.com/questions/1158076/implement-touch-using-python
+    with open(file_name, 'a'):
+        os.utime(file_name, times)
 
-    parse = urllib.parse.urlparse(zip_url)
-    if parse.scheme in ['svn+http', 'svn+https','git+http', 'git+https']:
-        brulib.clone.atomic_clone_repo(zip_url, module_dir)
-        return
-
-    if parse.scheme == 'file':
-        # this is typically used to apply a patch in the form of a targ.gz
-        # on top of a larger downloaded file. E.g. for ogg & speex this
-        # patch does approximately what ./configure would have done.
-        # copying the tar file itself from ./library to ./modules would be
-        # pointless, so we extract this file right from the library dir:
-        path = parse.netloc
-        assert len(path) > 0
-        basename = os.path.basename(path)
-        assert len(path) > 0
-        src_tar_filename = os.path.join(src_module_dir, path)
-        brulib.untar.untar_once(src_tar_filename, module_dir)
-        return
-
-    # Store all downloaded tar.gz files in ~/.bru, e.g as boost-regex/1.57/foo.tar.gz
-    # This ensures that multiple 'bru install foo' cmds in differet directories
-    # on this machine won't download the same foo.tar.gz multiple times.
-    # MOdules for which we must clone an svn or git repo are not sharable that
-    # easily btw, they actually are cloned multiple times atm (could clone them
-    # once into ~/.bru and copy, but I'm not doing this atm).
-    if parse.scheme in ['http', 'https', 'ftp']:
-        tar_dir = os.path.join(get_user_home_dir(), ".bru", "downloads",
-                               module_name, module_version)
-        brulib.untar.wget_and_untar_once(zip_url, tar_dir, module_dir)
-        return
-
-    raise Exception('unsupported scheme in', zip_url)
-
-def unpack_module(formula):
-    if not 'module' in formula or not 'version' in formula:
-        print(json.dumps(formula, indent=4))
-        raise Exception('missing module & version')
-    module = formula['module']
-    version = formula['version']
-    zip_urls = formula['url']
-
-    # 'url' can be a single string or a list
-    if isinstance(zip_urls, str):
-        zip_urls = [zip_urls]
-
-    bru_modules_root = './bru_modules'
-    for zip_url in zip_urls:
-        unpack_dependency(bru_modules_root, module, version, zip_url)
-    module_dir = os.path.join(bru_modules_root, module, module)
-    return module_dir
-
-def get_dependency(module_name, module_version):
-    bru_modules_root = "./bru_modules"
-    formula = get_library().load_formula(module_name, module_version)
-    unpack_module(formula)
-
+def exec_make_command(formula, bru_modules_root):
+    """ note that few modules specify a make_command. The few that do usually
+        don't execute a full make but only a ./configure.
+        This part is kinda ugly atm: consistent use of gyp for building modules
+        we depent on would be preferable. TODO: revisit.
+    """
     # make_command should only be used if we're too lazy to provide a
     # gyp file for a module.
     # A drawback of using ./configure make is that build are less reproducible
@@ -126,21 +68,31 @@ def get_dependency(module_name, module_version):
     # machine but not another depending on which libs are installed on both
     # machines.
     if 'make_command' in formula:
-        module_dir = os.path.join(bru_modules_root, module_name, module_version)
+        module_dir = os.path.join(bru_modules_root, formula['module'], formula['version'])
         make_done_file = os.path.join(module_dir, "make_command.done")
         if not os.path.exists(make_done_file):
+            # pick a make command depending on host OS
             make_commands = formula['make_command']
             system = platform.system()
             if not system in make_commands:
                 raise Exception("no key {} in make_command".format(system))
             make_command = make_commands[system]
+            
+            # exec make_command with cwd being the module_dir (so the dir the
+            # gyp file is in, not that the gyp file is used here, but using the
+            # same base dir for the gyp & make_command probably makes sense)
             with Chdir(module_dir):
-                # todo: pick a make command depending on host OS
                 print("building via '{}' ...".format(make_command))
                 error_code = os.system(make_command)
                 if error_code != 0:
                     raise ValueError("build failed with error code {}".format(error_code))
             touch(make_done_file)
+
+def get_dependency(module_name, module_version):
+    bru_modules_root = "./bru_modules"
+    formula = get_library().load_formula(module_name, module_version)
+    brulib.module_downloader.get_urls(formula, bru_modules_root)
+    exec_make_command(formula, bru_modules_root)
 
 def verify_resolved_dependencies(formula, target, resolved_dependencies):
     """ param formula is the formula with a bunch of desired(!) dependencies
@@ -184,7 +136,7 @@ def verify_resolved_dependencies(formula, target, resolved_dependencies):
         return resolved_dependencies[upstream_module]
     return list(map(map_dependency, target['dependencies']))
 
-def compute_sources(formula, sources):
+def apply_glob_exprs(formula, sources):
     """ gyp does not support glob expression or wildcards in 'sources', this
         here turns these glob expressions into a list of source files.
         param sources is target['sources'] or target['sources!']
@@ -267,7 +219,7 @@ def copy_gyp(formula, resolved_dependencies):
         # like that.
         for prop in ['sources', 'sources!']:
             if prop in target:
-                target[prop] = compute_sources(formula, target[prop])
+                target[prop] = apply_glob_exprs(formula, target[prop])
 
     # note that library/boost-regex/1.57.0.gyp is being copied to
     # bru_modules/boost-regex/boost-regex.gyp here (with some minor
@@ -293,13 +245,13 @@ def copy_gyp(formula, resolved_dependencies):
     brulib.jsonc.savefile(os.path.join('bru_modules', module_name, 'bru-version.json'),
         {'version': resolved_version})
 
-def resolve_conflicts(dependencies):
+def resolve_conflicts(dependencies, root_requestor):
     """ takes a dict of modules and version matchers and recursively finds
         all indirect deps. Then resolves version conflicts by picking the newer
         of competing deps, or by picking the version that was requested by the module
         closest to the root of the dependency tree (unsure still).
+        param root_requestor is whatever topmost *.bru listed deps, e.g. 'package.bru'
     """
-    root_requestor = 'bru.json'
     todo = [(module, version, root_requestor) for (module, version)
             in dependencies.items()]
     recursive_deps = collections.OrderedDict()
@@ -493,7 +445,7 @@ def cmd_install(installables):
 
 def install_from_bru_file(bru_filename):
     package_jso = brulib.jsonc.loadfile(bru_filename)
-    recursive_deps = resolve_conflicts(package_jso['dependencies'])
+    recursive_deps = resolve_conflicts(package_jso['dependencies'], bru_filename)
     resolved_dependencies = dict((module, version)
         for (module, version, requestor) in recursive_deps)
     for module_name, module_version, requestor in recursive_deps:
