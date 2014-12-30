@@ -20,66 +20,15 @@ import argparse
 from enum import Enum
 import pdb # only if you want to add pdb.set_trace()
 
+import brulib.jsonc
+
 class Formula:
     pass
-
-def drop_hash_comment(line):
-    """ Getting a line with '#' comment it drops the comment.
-        Note that JSON does not support comments, but gyp
-        with its JSON-like syntax (really just a Python dict)
-        does support comments.
-        Should this func be aware of hashes in double quotes?
-        Atm it's not.
-    """
-    hash_index = line.find('#')
-
-    # drops suffix while keeping trailing \n
-    def drop_line_suffix(line, index):
-      trailing_whitespace = line[len(line.rstrip()):]
-      remaining_line = line[0:index]
-      return remaining_line + trailing_whitespace
-
-    return line if hash_index == -1 else drop_line_suffix(line,hash_index)
-
-
-def drop_hash_comments(file):
-    """ reads file that can have '<whitespace>#' line comments, dropping
-        all comments.
-    """
-    lines = file.readlines()
-    lines_without_comments = (drop_hash_comment(line) for line in lines)
-    return "".join(lines_without_comments)
-
-# json (or pythen dicts) with hash comments is what gyp uses alrdy, so I
-# made *.bru the same format.
-def load_json_with_hash_comments(filename):
-    with open(filename) as json_file:
-        json_without_hash_comments = drop_hash_comments(json_file)
-        try:
-            jso = json.loads(json_without_hash_comments,
-                                  object_pairs_hook=collections.OrderedDict)
-            return jso
-        except Exception as err:
-            print("error parsing json in {}: {}".format(filename, err))
-            print(json_without_hash_comments)
-            raise
-
-def save_json(filename, jso):
-    """ note this will lose hash comments atm. We could preserve them, is not
-        urgent though imo. Does implicit mkdir -p.
-        Param jso ('java script object') is a dict or OrderedDict """
-    dirname = os.path.dirname(filename)
-    if len(dirname) > 0:
-        os.makedirs(dirname, exist_ok=True)
-    with open(filename, 'w') as json_file:
-        json_file.write(json.dumps(jso, indent = 4))
-        #print("saved " + filename)
-
 
 def load_from_library(module_name, module_version, ext):
     """ ext e.g. '.bru' or '.gyp' """
     json_file_name = os.path.join(get_library_dir(), module_name, module_version + ext)
-    jso = load_json_with_hash_comments(json_file_name)
+    jso = brulib.jsonc.loadfile(json_file_name)
     return jso
 
 def load_formula(module_name, module_version):
@@ -123,7 +72,7 @@ def save_to_library(formula, jso, ext):
     module_version = formula['version']
     module_dir = get_module_dir(formula)
     file_name = os.path.join(module_dir, module_version + ext)
-    save_json(file_name, jso)
+    brulib.jsonc.savefile(file_name, jso)
     #print("not modifying existing " + bru_file_name)
 
 
@@ -565,7 +514,7 @@ def copy_gyp(formula, resolved_dependencies):
     assert module_name in resolved_dependencies
     resolved_version = resolved_dependencies[module_name]
     rel_gyp_file_path = os.path.join(module_name, resolved_version + ".gyp")
-    gyp = load_json_with_hash_comments(os.path.join(get_library_dir(), rel_gyp_file_path))
+    gyp = brulib.jsonc.loadfile(os.path.join(get_library_dir(), rel_gyp_file_path))
     for target in gyp['targets']:
 
         if 'dependencies' in target:
@@ -621,10 +570,10 @@ def copy_gyp(formula, resolved_dependencies):
             new_gyp[key] = value
         gyp = new_gyp
 
-    save_json(gyp_target_file, gyp)
+    brulib.jsonc.savefile(gyp_target_file, gyp)
 
     # this file is only saved for human reader's sake atm:
-    save_json(os.path.join('bru_modules', module_name, 'bru-version.json'),
+    brulib.jsonc.savefile(os.path.join('bru_modules', module_name, 'bru-version.json'),
         {'version': resolved_version})
 
 def resolve_conflicts(dependencies):
@@ -721,7 +670,7 @@ def get_or_create_single_bru_file(dir):
     bru_file = get_single_bru_file(dir)
     if bru_file == None:
         bru_file = os.path.join(dir, 'package.bru')
-        save_json(bru_file, {'dependencies':{}})
+        brulib.jsonc.savefile(bru_file, {'dependencies':{}})
         print('created ', bru_file)
     assert bru_file != None
     return bru_file
@@ -759,16 +708,16 @@ def parse_existing_module_at_version(installable):
     return Installable(module, version)
 
 def add_dependencies_to_bru(bru_filename, installables):
-    bru = load_json_with_hash_comments(bru_filename)
+    bru = brulib.jsonc.loadfile(bru_filename)
     if not 'dependencies' in bru:
         bru['dependencies'] = {}
     deps = bru['dependencies']
     for installable in installables:
         deps[installable.module] = installable.version
-    save_json(bru_filename, bru) # warning: this nukes comments atm
+    brulib.jsonc.savefile(bru_filename, bru) # warning: this nukes comments atm
 
 def add_dependencies_to_gyp(gyp_filename, installables):
-    gyp = load_json_with_hash_comments(gyp_filename)
+    gyp = brulib.jsonc.loadfile(gyp_filename)
     # typically a gyp file has multiple targets, e.g. a static_library and
     # one or more test executables. Here we add the new dep to only the first
     # target in the gyp file, which is somewhat arbitrary. TODO: revise.
@@ -789,7 +738,7 @@ def add_dependencies_to_gyp(gyp_filename, installables):
         dep_expr = dep_gyp_path + ":*" # depend on all targets, incl tests
         if not dep_expr in deps:
             deps.append(dep_expr)
-    save_json(gyp_filename, gyp) # warning: this nukes comments atm
+    brulib.jsonc.savefile(gyp_filename, gyp) # warning: this nukes comments atm
 
 def create_gyp_file(gyp_filename):
     """ creates enough of a gyp file so that we can record dependencies """
@@ -809,7 +758,7 @@ def create_gyp_file(gyp_filename):
                 ("dependencies", [])
         ])])
     ])
-    save_json(gyp_filename, gyp)
+    brulib.jsonc.savefile(gyp_filename, gyp)
 
 class Installable:
     def __init__(self, module, version):
@@ -858,8 +807,7 @@ def cmd_install(installables):
         install_from_bru_file(bru_filename)
 
 def install_from_bru_file(bru_filename):
-    with open(bru_filename, 'r') as package_file:
-        package_jso = json.loads(drop_hash_comments(package_file))
+    package_jso = brulib.jsonc.loadfile(bru_filename)
     recursive_deps = resolve_conflicts(package_jso['dependencies'])
     resolved_dependencies = dict((module, version)
         for (module, version, requestor) in recursive_deps)
@@ -991,7 +939,7 @@ def collect_tests(module_names):
     modules_dir = 'bru_modules'
     for module in module_names:
         gypdir = os.path.join(modules_dir, module)
-        gyp = load_json_with_hash_comments(os.path.join(
+        gyp = brulib.jsonc.loadfile(os.path.join(
                 gypdir, module + ".gyp"))
         test_targets = get_test_targets(gyp)
         for test_target in test_targets:
