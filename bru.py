@@ -96,56 +96,6 @@ def extract_file(path, to_directory):
         file.extractall(to_directory)
         file.close()
 
-class TwoComponentPath:
-    """ Used to represent artifacts in tar files, like #include files which
-        in the extracted tar are under some root_dir like .../include and
-        are named with multiple path comonents underneath, e.g. boost/regex/foo.h
-    """
-
-    def __init__(self, root_dir, path):
-        self.root_dir = root_dir
-        self.path = path
-    def get_full_path(self):
-        return os.path.join(self.root_dir, self.path)
-
-# See http://stackoverflow.com/questions/161755/how-would-you-implement-ant-style-patternsets-in-python-to-select-groups-of-file
-# The drawback of glob.glob("**/*.http") is that it will find hpp files
-# exactly one level deep, unlike an Ant-style fileset include glob which
-# searches recursively. A recursive Ant-style glob is more convenient
-# to specify filesets of boost #includes for example, so this here
-# supports ant-style glob syntax also if you specify a ant:**/*.hpp
-# glob_expr.
-# Initially I wanted to reuse https://pypi.python.org/pypi/formic but
-# this doesn't support python3 yet.
-def ant_glob(local_root_dir, glob_expr):
-    # we only support a small subset of ant's glob expr syntax:
-    # only **/*.{extension} with optional subdirs foo/bar/ before that
-    match = re.match('^([^\*]*/)?\*\*/\*(\.[a-z0-9_]+)?$', glob_expr)
-    if match == None:
-        raise Exception("expected format **/*.{ext} or **/* for ant: glob expressions, got "
-                        + glob_expr)
-    subdir = match.group(1)
-    extension = match.group(2) or '' # e.g. '.hpp'
-    is_matching = lambda filename: filename.endswith(extension)
-    if subdir != None:
-        local_root_dir = os.path.join(local_root_dir, subdir)
-
-    # now simply recursively collect files with the given extension under
-    # the local_root_dir
-    for root, dirs, files in os.walk(local_root_dir):
-        for file in files:
-            if is_matching(file):
-                yield os.path.join(root, file)
-
-# Can handle either python-style or ant style glob exprs:
-def do_glob(local_root_dir, glob_expr):
-    ant_glob_prefix = 'ant:'
-    if glob_expr.startswith(ant_glob_prefix):
-        expr = glob_expr[len(ant_glob_prefix):]
-        return ant_glob(local_root_dir, expr)
-    else:
-        return glob.glob(os.path.join(local_root_dir, glob_expr))
-
 def touch(file_name, times=None):
     # http://stackoverflow.com/questions/1158076/implement-touch-using-python
     with open(file_name, 'a'):
@@ -153,7 +103,10 @@ def touch(file_name, times=None):
 
 # from http://stackoverflow.com/questions/431684/how-do-i-cd-in-python
 class Chdir:
-    """Context manager for changing the current working directory"""
+    """ Context manager for changing the current working directory.
+        Used in conjunction with os.system for executing $make_command,
+        typically used to run ./configure
+    """
     def __init__( self, newPath ):
         self.newPath = newPath
 
@@ -163,46 +116,6 @@ class Chdir:
 
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
-
-class GlobGroup:
-    """ represents the mapping of local build files to normalized tar file names
-        for a group of one or more files matching a glob expression
-    """
-    def __init__(self, local_root_dir, glob_exprs, tar_root_dir):
-        assert isinstance(glob_exprs, list) # multiple glob exprs
-        self.local_root_dir = local_root_dir
-        self.tar_root_dir = tar_root_dir
-        self.glob_exprs = glob_exprs
-
-
-def new_glob_group(glob_group_jso):
-    """ argument glob_group_jso has a 'glob' expr as well as other props that
-        specify how to tar local files and map them into the tar file.
-        This file name mapping is desirable to end up with consistent tar
-        files for includes (e.g. containing ./include/boost/regex/foo.h)
-        for all the diverse builds we have to run.
-    """
-    glob_exprs = glob_group_jso['glob_expr'].split(';')
-    local_root_dir = glob_group_jso['local_root_dir']
-    tar_root_dir = glob_group_jso['tar_root_dir']
-    return GlobGroup(local_root_dir, glob_exprs, tar_root_dir)
-
-def tar_glob_group(tar, module_dir, glob_group):
-    joined_build_root = os.path.join(module_dir, glob_group.local_root_dir);
-    build_file_lists = [
-        glob.glob(os.path.join(joined_build_root, glob_expr))
-        for glob_expr in glob_group.glob_exprs]
-    build_files = list(itertools.chain(*build_file_lists))
-    if len(build_files) == 0:
-        raise ValueError("no matches for {} in dir {}".format(
-          glob_group.glob_exprs,
-          joined_build_root))
-    for build_file in build_files:
-        common_prefix = os.path.commonprefix([build_file, joined_build_root])
-        relative_path = os.path.relpath(build_file, common_prefix)
-        tar_file = os.path.join(glob_group.tar_root_dir, relative_path)
-        print("  adding {}".format(tar_file))
-        tar.add(build_file, arcname = tar_file)
 
 def unpack_tarfile_once(zip_file, module_dir):
     """ unpacks tar or zip file unless we unpacked it in the past alrdy """
@@ -344,15 +257,6 @@ def unpack_module(formula):
     module_dir = os.path.join(bru_modules_root, module, module)
     return module_dir
 
-def get_gyp_dependencies(gyp, formula, resolved_dependencies):
-    """ Param gyp is a *.gyp file content, so a dict.
-        Param formula is the formula belonging to the gyp, so a list
-        of module deps with desired versions.
-        Param resolved_dependencies is a superset of the deps in formula
-        with recursively resolved module versions (after resolving conflicts).
-    """
-
-
 def get_dependency(module_name, module_version):
     bru_modules_root = "./bru_modules"
     formula = get_library().load_formula(module_name, module_version)
@@ -429,16 +333,18 @@ def compute_sources(formula, sources):
         param sources is target['sources'] or target['sources!']
     """
     def is_glob_expr(source):
-        return '*' in source or source.startswith('ant:')
+        return '*' in source
     gyp_target_dir = os.path.join('bru_modules', formula['module']) # that is
         # the dir the gyp file for this module is being stored in, so paths
         # in the gyp file are interpreted relative to that
     result = []
     for source in sources:
+        if source.startswith('ant:'):
+            raise Exception('Ant-style glob exprs no longer supported: ' + source)
         if is_glob_expr(source):
             matching_sources = [os.path.relpath(filename, start=gyp_target_dir)
                                 for filename in
-                                do_glob(gyp_target_dir, source)]
+                                glob.glob(os.path.join(gyp_target_dir, source))]
             assert len(matching_sources) > 0, "no matches for glob " + source
             result += matching_sources
         else:

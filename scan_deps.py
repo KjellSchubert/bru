@@ -83,6 +83,18 @@ def get_include_files(include_dir):
             include_file = os.path.relpath(filename, start=include_dir)
             yield include_file
 
+class TwoComponentPath:
+    """ Used to represent artifacts in tar files, like #include files which
+        in the extracted tar are under some root_dir like .../include and
+        are named with multiple path comonents underneath, e.g. boost/regex/foo.h
+    """
+
+    def __init__(self, root_dir, path):
+        self.root_dir = root_dir
+        self.path = path
+    def get_full_path(self):
+        return os.path.join(self.root_dir, self.path)
+
 def collect_includes(formula):
     """  one of the most basic things to know about a module is which
          include files it comes with: e.g. for boost you're supposed
