@@ -21,38 +21,11 @@ from enum import Enum
 import pdb # only if you want to add pdb.set_trace()
 
 import brulib.jsonc
-
-class Formula:
-    pass
-
-def load_from_library(module_name, module_version, ext):
-    """ ext e.g. '.bru' or '.gyp' """
-    json_file_name = os.path.join(get_library_dir(), module_name, module_version + ext)
-    jso = brulib.jsonc.loadfile(json_file_name)
-    return jso
-
-def load_formula(module_name, module_version):
-    """ E.g. to load recipe for module_name='zlib' module_version='1.2.8' """
-    # Recipes will be downloaded from some server some day (e..g  from github
-    # directly).
-    formula = load_from_library(module_name, module_version, '.bru')
-    assert formula['module'] == module_name and formula['version'] == module_version
-    return formula
-
-def load_gyp(formula):
-    """ to load the gyp file associated with a formula """
-    gyp = load_from_library(formula['module'], formula['version'], '.gyp')
-    assert 'targets' in gyp # otherwise it's not a (or is an empty) gyp file
-    return gyp
+import brulib.library
 
 # http://stackoverflow.com/questions/4934806/python-how-to-find-scripts-directory
 def get_script_path():
     return os.path.dirname(os.path.realpath(__file__))
-
-def get_user_home_dir():
-    """ work both on Linux & Windows, this dir will be the parent dir of
-        the .bru/ dir for storing downloaded tar.gzs on a per-user basis"""
-    return os.path.expanduser("~")
 
 def get_library_dir():
     """ assuming we execute bru.py from within its git clone the library
@@ -60,31 +33,13 @@ def get_library_dir():
         returns the path to this library dir. """
     return os.path.join(get_script_path(), 'library')
 
-def get_module_dir(formula):
-    module_name = formula['module']
-    module_version = formula['version']
-    module_dir = os.path.join(get_library_dir(), module_name)
-    return module_dir
+def get_library():
+    return brulib.library.Library(get_library_dir())
 
-def save_to_library(formula, jso, ext):
-    """ param jso is the dict or OrderedDict to save, which can by the
-        forumula itself, or a gyp file, or ... """
-    module_version = formula['version']
-    module_dir = get_module_dir(formula)
-    file_name = os.path.join(module_dir, module_version + ext)
-    brulib.jsonc.savefile(file_name, jso)
-    #print("not modifying existing " + bru_file_name)
-
-
-def save_formula(formula):
-    """ param formula is the same dict as returned by load_formula,
-        so should be an OrderedDict.
-    """
-    save_to_library(formula, formula, '.bru')
-
-def save_gyp(formula, gyp):
-    """ param is a dict representing gyp file content """
-    save_to_library(formula, gyp, '.gyp')
+def get_user_home_dir():
+    """ work both on Linux & Windows, this dir will be the parent dir of
+        the .bru/ dir for storing downloaded tar.gzs on a per-user basis"""
+    return os.path.expanduser("~")
 
 def split_all(path):
     (head, tail) = os.path.split(path)
@@ -321,7 +276,7 @@ def git_clone(repo_url, clone_root_dir):
 def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
-    src_module_dir = os.path.join(get_library_dir(), module_name)
+    src_module_dir = get_library().get_module_dir(module_name)
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
     os.makedirs(module_dir, exist_ok=True)
 
@@ -400,7 +355,7 @@ def get_gyp_dependencies(gyp, formula, resolved_dependencies):
 
 def get_dependency(module_name, module_version):
     bru_modules_root = "./bru_modules"
-    formula = load_formula(module_name, module_version)
+    formula = get_library().load_formula(module_name, module_version)
     unpack_module(formula)
 
     # make_command should only be used if we're too lazy to provide a
@@ -513,8 +468,7 @@ def copy_gyp(formula, resolved_dependencies):
     module_name = formula['module']
     assert module_name in resolved_dependencies
     resolved_version = resolved_dependencies[module_name]
-    rel_gyp_file_path = os.path.join(module_name, resolved_version + ".gyp")
-    gyp = brulib.jsonc.loadfile(os.path.join(get_library_dir(), rel_gyp_file_path))
+    gyp = get_library().load_gyp(formula)
     for target in gyp['targets']:
 
         if 'dependencies' in target:
@@ -603,7 +557,7 @@ def resolve_conflicts(dependencies):
         else:
             # this is the first time this module was requested, freeze that
             # chosen version:
-            formula = load_formula(module_name, module_version)
+            formula = get_library().load_formula(module_name, module_version)
             recursive_deps[module_name] = {
                 'version' : module_version,
                 'requestor' : requestor
@@ -618,39 +572,6 @@ def resolve_conflicts(dependencies):
 
     return [(module, resolved['version'], resolved['requestor'])
             for (module, resolved) in recursive_deps.items()]
-
-def get_all_versions(library_path, module):
-    bru_file_names = os.listdir(os.path.join(library_path, module))
-    regex = re.compile('^(.+)\\.bru$') # version can be 1.2.3 or 1.2rc7 or ...
-    for bru_file_name in bru_file_names:
-        match = regex.match(bru_file_name)
-        if match != None:
-            version = match.group(1)
-            yield version
-
-def alphnumeric_lt(a, b):
-    # from http://stackoverflow.com/questions/2669059/how-to-sort-alpha-numeric-set-in-python
-    def to_alphanumeric_pairs(text):
-        convert = lambda text: int(text) if text.isdigit() else text
-        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ]
-        return alphanum_key(text)
-    pdb.set_trace()
-    return to_alphanumeric_pairs(a) < to_alphanumeric_pairs(b)
-
-@functools.total_ordering
-class ModuleVersion:
-    def __init__(self, version_text):
-        self.version_text = version_text
-    def __lt__(self, other):
-        lhs = self .version_text
-        rhs = other.version_text
-        # module versions could be straightforward like 1.2.3, or they could be
-        # openssl-style mixtures of numberrs & letters like 1.0.0f
-        return alphnumeric_lt(lhs, rhs)
-
-def get_latest_version_of(module):
-    versions = get_all_versions(get_library_dir(), module)
-    return max((ModuleVersion(version_text) for version_text in versions)).version_text
 
 def get_single_bru_file(dir):
     """ return None of no *.bru file in this dir """
@@ -694,16 +615,17 @@ def parse_existing_module_at_version(installable):
     installable = parse_module_at_version(installable)
     module = installable.module
     version = installable.version
-    if not os.path.exists(os.path.join(get_library_dir(), module)):
+    library = get_library()
+    if not os.path.exists(library.get_module_dir(module)):
         raise Exception("no module {} in {}, may want to 'git pull'"\
               " if this module was added very recently".format(
-              module, get_library_dir()))
+              module, library.get_root_dir()))
     if version == None:
-        version = get_latest_version_of(module)
-    if not os.path.exists(os.path.join(get_library_dir(), module)):
+        version = library.get_latest_version_of(module)
+    if not library.has_formula(module, version):
         raise Exception("no version {} in {}/{}, may want to 'git pull'"\
               " if this version was added very recently".format(
-              version, get_library_dir(), module))
+              version, library.get_root_dir(), module))
     assert version != None
     return Installable(module, version)
 
@@ -814,7 +736,7 @@ def install_from_bru_file(bru_filename):
     for module_name, module_version, requestor in recursive_deps:
         print('processing dependency {} version {} requested by {}'
               .format(module_name, module_version, requestor))
-        formula = load_formula(module_name, module_version)
+        formula = get_library().load_formula(module_name, module_version)
         get_dependency(module_name, module_version)
         copy_gyp(formula, resolved_dependencies)
 

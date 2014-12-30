@@ -13,6 +13,9 @@ import copy
 from collections import OrderedDict
 import pdb # only if you want to add pdb.set_trace()
 
+def get_library():
+    return bru.get_library()
+
 def merge_key(source, target, key):
     """ in-place merge """
     assert isinstance(source, dict)
@@ -78,11 +81,12 @@ def fix_annoying_dependency_cycle(module_names, target_module, version):
         merge target """
 
     print('merging dependency cycle:', module_names, 'into', target_module)
+    library = get_library()
     formulas = list(map(
-        lambda module_name: bru.load_formula(module_name, version), 
+        lambda module_name: library.load_formula(module_name, version), 
         module_names))
     gyps = list(map(
-        lambda formula: bru.load_gyp(formula),
+        lambda formula: library.load_gyp(formula),
         formulas))
 
     # Merge the *.bru files.

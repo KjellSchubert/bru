@@ -42,8 +42,8 @@ import subprocess
 import bru
 import pdb # only if you want to add pdb.set_trace()
 
-OrderedDict = collections.OrderedDict
-
+def get_library():
+    return bru.get_library()
 
 def get_includes_from_cpp(cpp_file_name):
     """ open cpp or hpp file and scans it for #includes, returning the
@@ -72,9 +72,6 @@ def get_all_modules(library_path):
     return (dir for dir in os.listdir(library_path) 
             if os.path.isdir(os.path.join(library_path, dir)))
 
-get_all_versions = bru.get_all_versions
-get_latest_version_of = bru.get_latest_version_of
-
 def get_include_files(include_dir):
     """ returns relative paths for all #include files underneath this dir.
         Since we can't be sure which extensions are include files and which
@@ -102,7 +99,7 @@ def collect_includes(formula):
          list of #include files as an 'includes' property.
          Returns a list of TwoComponentPath objects.
     """
-    gyp = bru.load_gyp(formula)
+    gyp = get_library().load_gyp(formula)
     module = formula['module']
     version = formula['version']
     gyp_root_dir = os.path.join('./bru_modules', module)
@@ -134,10 +131,11 @@ class IncludeFileIndex:
         # Only the latest known version of each module? All modules
         # whose tar.gz was downloaded already anyway?
         self.include2modules = {} 
+        library = get_library()
         for module in get_all_modules(library_path):
             print('scanning #includes for', module)
-            for version in get_all_versions(library_path, module):
-                formula = bru.load_formula(module, version)
+            for version in library.get_all_versions(module):
+                formula = library.load_formula(module, version)
                 bru.unpack_module(formula)
                 includes = [two_component_path.path 
                     for two_component_path in collect_includes(formula)]
@@ -201,7 +199,7 @@ def scan_deps(formula, include_file_index):
     # We could also heuristically search for cpp and hpp files, but
     # this won't work too well (e.g. it'll add dependencies only needed
     # for tests)
-    gyp = bru.load_gyp(formula)
+    gyp = get_library().load_gyp(formula)
     include_files = []
     src_files = []
     for target in gyp['targets']:
@@ -264,14 +262,15 @@ def get_arg_modules(module, version):
         If version is None then we pick the latest available version
         of a module
         If module ends with '*' then we glob all matching modules """
+    library = get_library()
     if module.endswith('*'):
         lib_dir = './library'
         matching_dirs = glob.glob(os.path.join(lib_dir, module))
         modules = [os.path.relpath(dir, start=lib_dir) for dir in matching_dirs]
-        return [(module, version or get_latest_version_of(module)) 
+        return [(module, version or library.get_latest_version_of(module)) 
                 for module in modules]
     else:
-        version = version or get_latest_version_of(module)
+        version = version or library.get_latest_version_of(module)
         return [(module, version)]
 
 def main():
@@ -283,6 +282,7 @@ def main():
         help='recursively find dependencies')
     args = parser.parse_args()
     index = IncludeFileIndex('./library', './bru_modules')
+    library = get_library()
 
     todo_module_version = get_arg_modules(args.module, args.version)
     done_modules = set()
@@ -292,7 +292,7 @@ def main():
             continue
         
         print("scanning module {} version {}".format(module, version))
-        formula = bru.load_formula(module, version)
+        formula = library.load_formula(module, version)
         (deps, missing_includes) = scan_deps(formula, index)
         print("dependencies: ")
         for dep in deps:
@@ -305,9 +305,9 @@ def main():
         # the formula alrdy epxlicitly lists deps:
         if not 'dependencies' in formula:
             def annotate_with_latest_version(modules):
-                dependency2version = OrderedDict()
+                dependency2version = collections.OrderedDict()
                 for module in sorted(modules):
-                    dependency2version[module] = get_latest_version_of(module)
+                    dependency2version[module] = library.get_latest_version_of(module)
                 return dependency2version
 
             # remove deps we consider builtin, like C++ stdlib and C lib. 
@@ -326,7 +326,7 @@ def main():
         # the boost modules after boost_import.py): add the all found
         # deps to the first gyp target's dependencies.
         if len(deps) > 0:
-            gyp = bru.load_gyp(formula)
+            gyp = library.load_gyp(formula)
             first_target = gyp['targets'][0]
             if not 'dependencies' in first_target:
                 # Todo: reconsider the ':*' dependency on all targets in 
@@ -343,7 +343,7 @@ def main():
 
         if args.recursive:
             direct_dependency_modules = list(item for item in deps)
-            todo_module_version += ((module, get_latest_version_of(module)) 
+            todo_module_version += ((module, library.get_latest_version_of(module)) 
                                    for module in direct_dependency_modules)
 
     if args.recursive:

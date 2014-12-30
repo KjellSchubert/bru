@@ -17,6 +17,9 @@ import scan_deps
 import graph_cycles
 import pdb # only if you want to add pdb.set_trace()
 
+def get_library():
+    return bru.get_library()
+
 def get_lib_with_most_includes(formulas):
     """ return formula with most include files """
     tuples = []
@@ -55,9 +58,10 @@ def main():
     # dependencies. If a module has multiple version we only look
     # at the latest one for simplicity's sake.
     module2formula = {}
+    library = get_library()
     for module in os.listdir('library'):
-        version = scan_deps.get_latest_version_of(module)
-        formula = bru.load_formula(module, version)
+        version = library.get_latest_version_of(module)
+        formula = library.load_formula(module, version)
         module2formula[module] = formula
     print("loaded ", len(module2formula), " formulas")
 

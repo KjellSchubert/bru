@@ -2,7 +2,7 @@ import unittest
 import brulib.jsonc
 import os
 
-class BruTestCase(unittest.TestCase):
+class JsoncTestCase(unittest.TestCase):
 
     def test_drop_hash_comment(self):
         drop_hash_comment = brulib.jsonc.drop_hash_comment
