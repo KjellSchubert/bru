@@ -2,7 +2,6 @@
 
 import json
 import itertools
-import functools
 import collections
 import urllib.request
 import urllib.parse # python 2 urlparse
@@ -10,8 +9,6 @@ import re
 import os
 import os.path
 import platform
-import tarfile
-import zipfile
 import shutil
 import subprocess
 import glob
@@ -22,6 +19,8 @@ import pdb # only if you want to add pdb.set_trace()
 
 import brulib.jsonc
 import brulib.library
+import brulib.untar
+import brulib.clone
 
 # http://stackoverflow.com/questions/4934806/python-how-to-find-scripts-directory
 def get_script_path():
@@ -41,66 +40,6 @@ def get_user_home_dir():
         the .bru/ dir for storing downloaded tar.gzs on a per-user basis"""
     return os.path.expanduser("~")
 
-def split_all(path):
-    (head, tail) = os.path.split(path)
-    if len(head) > 0 and len(tail):
-        return split_all(head) + [tail]
-    else:
-        return [path]
-
-def url2filename(url):
-    """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz,
-        and http://boost.../foo/1.57.0.tgz to foo_1.57.0.tgz"""
-    parse = urllib.parse.urlparse(url)
-    if parse.scheme == 'file':
-        path = parse.netloc
-        assert len(path) > 0
-        basename = os.path.basename(path)
-        assert len(path) > 0
-        return basename
-
-    assert parse.scheme in ['http', 'https', 'ftp'] # todo: allow more?
-    path =  parse.path
-    if path.startswith('/'):
-        path = path[1:]
-    components = split_all(path)
-
-    # only because of boost's nameing scheme and because modularized boost
-    # requires downloading several targzs into the same module dir I set
-    # this to 3. Otherwise 1 would be fine. Infinity would be OK also.
-    combined_component_count = 5
-
-    return "_".join(components[-combined_component_count:])
-
-def wget(url, filename):
-    """ typically to download tar.gz or zip """
-    # from http://stackoverflow.com/questions/7243750/download-file-from-web-in-python-3
-    print("wget {} -> {}".format(url, filename))
-    urllib.request.urlretrieve(url, filename)
-
-def extract_file(path, to_directory):
-    # from http://code.activestate.com/recipes/576714-extract-a-compressed-file/
-    # with slight modifications (without the cwd mess)
-    if path.endswith('.zip'):
-        opener, mode = zipfile.ZipFile, 'r'
-    elif path.endswith('.tar.gz') or path.endswith('.tgz'):
-        opener, mode = tarfile.open, 'r:gz'
-    elif path.endswith('.tar.bz2') or path.endswith('.tbz'):
-        opener, mode = tarfile.open, 'r:bz2'
-    elif path.endswith('.tar.xz') or path.endswith('.txz'):
-        opener, mode = tarfile.open, 'r:xz'
-    else:
-        raise ValueError("Could not extract {} as no appropriate extractor is found".format(path))
-
-    with opener(path, mode) as file:
-        file.extractall(to_directory)
-        file.close()
-
-def touch(file_name, times=None):
-    # http://stackoverflow.com/questions/1158076/implement-touch-using-python
-    with open(file_name, 'a'):
-        os.utime(file_name, times)
-
 # from http://stackoverflow.com/questions/431684/how-do-i-cd-in-python
 class Chdir:
     """ Context manager for changing the current working directory.
@@ -117,75 +56,6 @@ class Chdir:
     def __exit__(self, etype, value, traceback):
         os.chdir(self.savedPath)
 
-def unpack_tarfile_once(zip_file, module_dir):
-    """ unpacks tar or zip file unless we unpacked it in the past alrdy """
-    zip_file_basename = os.path.basename(zip_file)
-    assert len(zip_file_basename) > 0
-    extract_done_file = os.path.join(module_dir, zip_file_basename + ".unpack_done")
-    if not os.path.exists(extract_done_file):
-        print("unpacking {}".format(zip_file))
-        extract_file(zip_file, module_dir)
-        touch(extract_done_file)
-
-def remove_url_prefix(url, prefix):
-    """ param prefix e.g. 'git+' """
-    assert url.startswith(prefix)
-    return url[len(prefix):]
-
-def atomic_clone_repo(repo_url, module_dir, exec_clone):
-    """ This executes an svn checkout or a git clone, taking care of the atomic
-        rename of the clone to deal with interrupted clones (without implementing
-        the svn or git-specific clone itself).
-        param module_dir e.g. bru_modules/boost-range, that's where to clone to
-        param repo_url is an svn or git url that will be passed to exec_clone()
-        param exec_clone is a function which will be passed the intended parent
-              dir of the repo clone as well as the checkout url
-    """
-    svn_root = os.path.join(module_dir, "clone")
-    if not os.path.exists(svn_root):
-        # atomic rename in case an earlier process run left a half-checkout
-        svn_root_temp = svn_root + ".tmp"
-        if os.path.exists(svn_root_temp):
-            shutil.rmtree(svn_root_temp)
-        exec_clone(repo_url, svn_root_temp)
-        os.rename(svn_root_temp, svn_root)
-
-def svn_checkout(repo_url, clone_root_dir):
-    exit_code = subprocess.call(["svn","checkout", repo_url, clone_root_dir])
-    assert exit_code == 0, "do you have subversion 'svn' installed and in your path?"
-
-def split_off_changeset(repo_url):
-    """ splits http://foo.com/bar@xyz into tuple (http://foo.com/bar, xyz),
-        with the 2nd tuple elem being None if there's no '@' in the URL """
-    parse = urllib.parse.urlparse(repo_url)
-    at_index = parse.path.rfind('@')
-    if at_index != -1:
-        changeset_len = len(parse.path) - at_index # includes '@'
-        assert repo_url[-changeset_len] == '@'
-        url_prefix = repo_url[:-changeset_len]
-        changeset = repo_url[-changeset_len+1:]
-        assert repo_url == url_prefix + '@' + changeset
-    else:
-        url_prefix = repo_url
-        changeset = None
-    return (url_prefix, changeset)
-
-def git_clone(repo_url, clone_root_dir):
-    # if repo_url ends with @... then consider the portion of the @
-    # the branch or changeset that should be checked out.
-    (repo_url, changeset) = split_off_changeset(repo_url)
-    print("git clone", repo_url)
-    cmdline = ["git","clone", repo_url, clone_root_dir]
-    exit_code = subprocess.call(cmdline)
-    assert exit_code == 0, "do you have subversion 'svn' installed and in your path?"
-    if changeset != None:
-        print("git checkout", changeset)
-        proc = subprocess.Popen(['git', 'checkout', changeset], 
-                                  cwd = clone_root_dir)
-        proc.wait()
-        exit_code = proc.returncode
-        assert exit_code == 0, "git checkout returned error {}".format(exit_code)
-
 def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
@@ -194,14 +64,8 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     os.makedirs(module_dir, exist_ok=True)
 
     parse = urllib.parse.urlparse(zip_url)
-    if parse.scheme in ['svn+http', 'svn+https']:
-        repo_url = remove_url_prefix(zip_url, 'svn+')
-        atomic_clone_repo(repo_url, module_dir, svn_checkout)
-        return
-
-    if parse.scheme in ['git+http', 'git+https']:
-        repo_url = remove_url_prefix(zip_url, 'git+')
-        atomic_clone_repo(repo_url, module_dir, git_clone)
+    if parse.scheme in ['svn+http', 'svn+https','git+http', 'git+https']:
+        brulib.clone.atomic_clone_repo(zip_url, module_dir)
         return
 
     if parse.scheme == 'file':
@@ -215,7 +79,7 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
         basename = os.path.basename(path)
         assert len(path) > 0
         src_tar_filename = os.path.join(src_module_dir, path)
-        unpack_tarfile_once(src_tar_filename, module_dir)
+        brulib.untar.untar_once(src_tar_filename, module_dir)
         return
 
     # Store all downloaded tar.gz files in ~/.bru, e.g as boost-regex/1.57/foo.tar.gz
@@ -227,14 +91,7 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
     if parse.scheme in ['http', 'https', 'ftp']:
         tar_dir = os.path.join(get_user_home_dir(), ".bru", "downloads",
                                module_name, module_version)
-        zip_file = os.path.join(tar_dir, url2filename(zip_url))
-        if not os.path.exists(zip_file):
-            os.makedirs(tar_dir, exist_ok=True)
-            zip_file_temp = zip_file + ".tmp"
-            wget(zip_url, zip_file_temp)
-            os.rename(zip_file_temp, zip_file)
-
-        unpack_tarfile_once(zip_file, module_dir)
+        brulib.untar.wget_and_untar_once(zip_url, tar_dir, module_dir)
         return
 
     raise Exception('unsupported scheme in', zip_url)
