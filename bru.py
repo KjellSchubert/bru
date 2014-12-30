@@ -519,27 +519,28 @@ def verify_resolved_dependencies(formula, target, resolved_dependencies):
         return resolved_dependencies[upstream_module]
     return list(map(map_dependency, target['dependencies']))
 
-def compute_sources(formula, target):
+def compute_sources(formula, sources):
     """ gyp does not support glob expression or wildcards in 'sources', this
-        here turns these glob expressions into a list of source files
+        here turns these glob expressions into a list of source files.
+        param sources is target['sources'] or target['sources!']
     """
     def is_glob_expr(source):
         return '*' in source or source.startswith('ant:')
-    sources = []
     gyp_target_dir = os.path.join('bru_modules', formula['module']) # that is
         # the dir the gyp file for this module is being stored in, so paths
         # in the gyp file are interpreted relative to that
-    for source in target['sources']:
+    result = []
+    for source in sources:
         if is_glob_expr(source):
             matching_sources = [os.path.relpath(filename, start=gyp_target_dir)
                                 for filename in
                                 do_glob(gyp_target_dir, source)]
             assert len(matching_sources) > 0, "no matches for glob " + source
-            sources += matching_sources
+            result += matching_sources
         else:
             # source os a flat file name (relative to gyp parent dir)
-            sources.append(source)
-    return list(sorted(sources))
+            result.append(source)
+    return list(sorted(result))
 
 def copy_gyp(formula, resolved_dependencies):
     """
@@ -598,8 +599,9 @@ def copy_gyp(formula, resolved_dependencies):
         # is that the files in ./library are not really *.gyp files anymore,
         # and should probably be called *.gyp.in or *.gyp-bru or something
         # like that.
-        if 'sources' in target:
-            target['sources'] = compute_sources(formula, target)
+        for prop in ['sources', 'sources!']:
+            if prop in target:
+                target[prop] = compute_sources(formula, target[prop])
 
     # note that library/boost-regex/1.57.0.gyp is being copied to
     # bru_modules/boost-regex/boost-regex.gyp here (with some minor
@@ -960,8 +962,15 @@ def exec_test(gypdir, target):
         test = target['test']
         rel_cwd = test['cwd'] if 'cwd' in test else './'
         test_argv = test['args'] if 'args' in test else []
+        test_stdin = test['stdin'] if 'stdin' in test else None
         proc = subprocess.Popen([os.path.abspath(exe_path)] + test_argv,
-                                cwd = os.path.join(gypdir, rel_cwd))
+                                cwd = os.path.join(gypdir, rel_cwd),
+                                stdin = subprocess.PIPE if test_stdin != None else None)
+        if test_stdin != None:
+            # from http://stackoverflow.com/questions/163542/python-how-do-i-pass-a-string-into-subprocess-popen-using-the-stdin-argument
+            proc.stdin.write(test_stdin.encode('utf8'))
+            proc.stdin.close() # signal eos ?
+            proc.communicate() # necessary ?
         proc.wait()
         returncode = proc.returncode
         duration_in_ms = int(1000 * (time.time() - t0))
