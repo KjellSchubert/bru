@@ -1,5 +1,9 @@
 This here is experimental work in progress.
 
+[![Build Status](https://travis-ci.org/KjellSchubert/bru.svg?branch=master)](https://travis-ci.org/KjellSchubert/bru)
+[![Coverage Status](https://coveralls.io/repos/KjellSchubert/bru/badge.png)](https://coveralls.io/r/KjellSchubert/bru)
+
+
 Goal: download common open-source C++ dependencies like ICU, boost-regex, 
 cryptopp in a similar way as other package managers do that in other languages,
 e.g. npm for nodejs, pip for python and so on. This process here is supposed 
