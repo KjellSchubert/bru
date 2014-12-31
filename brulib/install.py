@@ -187,7 +187,7 @@ def exec_make_command(formula, bru_modules_root, system):
 def download_module(library, module_name, module_version):
     bru_modules_root = "./bru_modules"
     formula = library.load_formula(module_name, module_version)
-    brulib.module_downloader.get_urls(formula, bru_modules_root)
+    brulib.module_downloader.get_urls(library, formula, bru_modules_root)
     exec_make_command(formula, bru_modules_root, platform.system())
 
 def verify_resolved_dependencies(formula, target, resolved_dependencies):

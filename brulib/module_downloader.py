@@ -14,7 +14,7 @@ def get_user_home_dir():
         the .bru/ dir for storing downloaded tar.gzs on a per-user basis"""
     return os.path.expanduser("~")
 
-def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
+def unpack_dependency(library, module_name, module_version, zip_url, bru_modules_root):
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
@@ -35,7 +35,7 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
         assert len(path) > 0
         basename = os.path.basename(path)
         assert len(path) > 0
-        src_module_dir = get_library().get_module_dir(module_name)
+        src_module_dir = library.get_module_dir(module_name)
         src_tar_filename = os.path.join(src_module_dir, path)
         brulib.untar.untar_once(src_tar_filename, module_dir)
         return
@@ -54,7 +54,7 @@ def unpack_dependency(bru_modules_root, module_name, module_version, zip_url):
 
     raise Exception('unsupported scheme in', zip_url)
 
-def get_urls(formula, bru_modules_root):
+def get_urls(library, formula, bru_modules_root):
     """ param formula is the retval from Library.load_formula(). This will either
             download & unpack tar.gz files or clone repos
         param bru_modules_root is the destination dir to unpack the downloaded
@@ -72,4 +72,4 @@ def get_urls(formula, bru_modules_root):
         zip_urls = [zip_urls]
 
     for zip_url in zip_urls:
-        unpack_dependency(bru_modules_root, module, version, zip_url)
+        unpack_dependency(library, module, version, zip_url, bru_modules_root)

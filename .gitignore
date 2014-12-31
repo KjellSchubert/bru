@@ -1,6 +1,12 @@
+# c9.io
 .c9/
+
+# pip install virtualenv
 venv/
+
 __pycache__
+
+# from autoupdate.py
 autoupdate.last
 bru_modules
 *.swp

@@ -59,9 +59,10 @@ def savefile(filename, jso):
         Param jso ('java script object') is a dict or OrderedDict.
         Note that atm this looses all hash comments that were in a previously
         loaded file. Not worth addressing any time soon imo. """
+    json_text = json.dumps(jso, indent = 4)
     dirname = os.path.dirname(filename)
     if len(dirname) > 0:
         os.makedirs(dirname, exist_ok=True)
     with open(filename, 'w') as json_file:
-        json_file.write(json.dumps(jso, indent = 4))
+        json_file.write(json_text)
         #print("saved " + filename)
