@@ -1,0 +1,4 @@
+# for running tests at travis-ci
+nose
+coverage
+coveralls

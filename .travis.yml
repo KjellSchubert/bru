@@ -1,0 +1,13 @@
+language: python
+
+python:
+  - 3.4
+
+install:
+  - pip install -r requirements-dev.txt --use-mirrors
+
+script:
+  - nosetests --with-coverage --cover-package=brulib
+
+after_success:
+  - coveralls
