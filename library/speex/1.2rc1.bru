@@ -1,0 +1,19 @@
+{
+    "homepage": "http://www.speex.org/",
+    "url": [
+        "http://downloads.xiph.org/releases/speex/speex-1.2rc1.tar.gz",
+        # this here is located next to the *.bru file, containing roughly
+        # what ./configure would create
+        # P.S.: e.g. libsndfile uses ./configure and then uses gyp to build
+        # libsndfile.a, and the openssl build uses configure+make to build
+        # libssl.a and only uses gyp to specify include_dirs and link_settings.
+        "file://1.2rc1-config.tar.gz"
+    ],
+    "module": "speex",
+    "version": "1.2rc1",
+    "dependencies": {
+        # the ogg dependency is only needed for the speexenc/dec samples
+        # since these deal with speex in ogg containers.
+        "ogg" : "1.3.2"
+    }
+}

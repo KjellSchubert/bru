@@ -1,4 +1,11 @@
 {
+    # WARNING: this module does not include the resampler components that
+    # were part of speex 1.2rc1, these are now in a separate speexdsp module
+    # that depends on speex but which I cannot compile since it cannot
+    # find include "speex/speex_buffer.h", which is in the speex trunk but
+    # in neither speex*.tar.gz fpr 1.2rc2. So I wonder if rc2 is broken?
+    # I'm using 1.2rc1 for now, this is for legacy code only anyway, since
+    # speex is kinda dead. Use 1.2rc1 or opus instead.
     "homepage": "http://www.speex.org/",
     "url": [
         "http://downloads.xiph.org/releases/speex/speex-1.2rc2.tar.gz",
