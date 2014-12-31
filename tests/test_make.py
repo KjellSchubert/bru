@@ -24,7 +24,8 @@ class MakeTestCase(unittest.TestCase):
     def test_make_tinyjs(self):
         library = brulib.library.Library('./library')
         brulib.install.cmd_install(library, ['tiny-js'])
-        brulib.make.cmd_make()
+        config = 'Debug'
+        brulib.make.cmd_make(config)
         # assert that built products are in out/Release or in ./Release
         # The tiny-js-test is the target_name as specified in tiny-js's *.gyp.
         assert brulib.runtests.locate_executable('tiny-js-test')

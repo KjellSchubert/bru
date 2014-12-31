@@ -34,14 +34,15 @@ def main():
     parser_test.add_argument("testables", default = [], nargs = '*',
                                 help = 'e.g. googlemock')
 
-    parser_test = subparsers.add_parser('make')
+    parser_make = subparsers.add_parser('make')
+    parser_make.add_argument('--config', default='Release')
 
     args = parser.parse_args()
     library = get_library()
     if args.command == 'install':
         brulib.install.cmd_install(library, args.installables)
     elif args.command == 'make':
-        brulib.make.cmd_make()
+        brulib.make.cmd_make(args.config)
     elif args.command == 'test':
         brulib.runtests.cmd_test(args.testables)
     else:

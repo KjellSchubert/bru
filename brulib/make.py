@@ -6,7 +6,7 @@ import os
 import platform
 import brulib.install
 
-def cmd_make():
+def cmd_make(config):
     """ this command makes some educated guesses about which toolchain
         the user probably wants to run, then invokes gyp to create the
         makefiles for this toolchain and invokes the build. On Linux
@@ -18,6 +18,7 @@ def cmd_make():
            >C:\Windows\Microsoft.NET\Framework\v4.0.30319\msbuild.exe package.sln
         The main purpose of 'bru make' is really to spit out these two
         command lines as a quick reminder for how to build via cmd line.
+        param config contains 'Release' or 'Debug'
     """
 
     # first locate the single gyp in the cwd
@@ -32,9 +33,9 @@ def cmd_make():
 
     system = platform.system()
     if system == 'Windows':
-        cmd_make_win(gyp_file)
+        cmd_make_win(gyp_file, config)
     elif system == 'Linux':
-        cmd_make_linux(gyp_file)
+        cmd_make_linux(gyp_file, config)
     else:
         raise Exception('no idea how to invoke gyp & toolchain on platform {}'\
             .format(system))
@@ -90,7 +91,7 @@ def run_gyp(gyp_cmdline):
         raise Exception('error running gyp, did you install it?'
             ' Instructions at https://github.com/KjellSchubert/bru')
 
-def cmd_make_win(gyp_filename):
+def cmd_make_win(gyp_filename, config):
     # TODO: locate msvs version via glob
     msvs_version = get_latest_msvs_version()
     if msvs_version == None:
@@ -115,7 +116,6 @@ def cmd_make_win(gyp_filename):
     if msbuild_exe == None:
         raise Exception('did not detect any installs of msbuild, these should'
             ' be part of .NET installations, please install msbuild or .NET')
-    config = 'Release'
     msbuild_cmdline = '{} {} /p:Configuration={}'.format(
         msbuild_exe, sln_filename, config)
     print('running msvs via msbuild >', msbuild_cmdline)
@@ -124,7 +124,7 @@ def cmd_make_win(gyp_filename):
         raise Exception('msbuild failed with errors, returncode =', returncode)
     print('Build complete.')
 
-def cmd_make_linux(gyp_filename):
+def cmd_make_linux(gyp_filename, config):
     # Here we could check if ninja or some such is installed to generate ninja
     # project files. But for simplicity's sake let's just use whatever gyp
     # defaults to.
@@ -141,7 +141,7 @@ def cmd_make_linux(gyp_filename):
     if not os.path.exists('Makefile'):
         raise Exception('gyp did not generate ./Makefile, no idea how to '
             'build with your toolchain, please build manually')
-    returncode = os.system('make')
+    returncode = os.system('make BUILDTYPE={}'.format(config))
     if returncode != 0:
         raise Exception('Build failed: make returned', returncode)
     print('Build complete.')

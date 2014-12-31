@@ -6,6 +6,7 @@ import os
 import re
 import glob
 import shutil
+import filecmp
 import platform
 import collections
 import brulib.jsonc
@@ -115,7 +116,17 @@ def create_gyp_file(gyp_filename):
     if os.path.exists(gyp_filename):
         raise Exception('{} already exists'.format(gyp_filename))
     gyp = collections.OrderedDict([
-        ("includes", ["bru_common.gypi"]),
+        ("includes", [
+            # bru_common.gypi should in general not be edited, but stay a copy
+            # of the original. If you want to override settings in this gypi
+            # file then you're better off editing bru_overrides.gypi.
+            # That way if bru_common.gyp gets improvements in git you don't 
+            # need to merge these external changes with your local ones.
+            "bru_common.gypi",
+            # This is the gypi file you're encourage to edit, bru will always
+            # keep this empty and untouched.
+            "bru_overrides.gypi"
+        ]),
         ("targets", [
             collections.OrderedDict([
                 ("target_name", "foo"), # just a guess, user should rename
@@ -330,7 +341,10 @@ def copy_gyp(library, formula, resolved_dependencies):
         # we want the 'includes' at the begin, to achieve this order see
         # http://stackoverflow.com/questions/16664874/how-can-i-add-the-element-at-the-top-of-ordereddict-in-python
         new_gyp = collections.OrderedDict()
-        new_gyp['includes'] = ['../../bru_common.gypi']
+        new_gyp['includes'] = [
+                '../../bru_common.gypi',
+                '../../bru_overrides.gypi'
+        ]
         for key, value in gyp.items():
             new_gyp[key] = value
         gyp = new_gyp
@@ -401,14 +415,28 @@ def install_from_bru_file(bru_filename, library):
     # copy common.gypi which is referenced by module.gyp files and usually
     # also by the parent *.gyp (e.g. bru-sample:foo.gyp).
     # Should end users be allowed to make changes to bru_common.gypi or
-    # should they rather edit their own optional common.gpyi which shadows
-    # bru_common.gypi? Unsure, let them edit for now, so dont overwrite gypi.
+    # should they rather edit their own optional bru_overrides.gpyi which 
+    # shadowsbru_common.gypi? Let's do the latter. See comments in
+    # create_gyp_file for more details.
+    # Anyway: just in case the user did make changes to bru_common.gypi 
+    # let's only copy it if it's new.
     common_gypi = 'bru_common.gypi'
+    overrides_gypi = 'bru_overrides.gypi'
+    common_gypi_src = os.path.join(library.get_root_dir(), '..', common_gypi)
     if not os.path.exists(common_gypi):
         print('copying', common_gypi)
-        shutil.copyfile(
-            os.path.join(library.get_root_dir(), '..', common_gypi),
-            common_gypi)
+        shutil.copyfile(common_gypi_src, common_gypi)
+    elif not filecmp.cmp(common_gypi_src, common_gypi):
+        print('WARNING: {} differs from {}: it is OK but not recommended'
+              ' to modify {}, instead rather modify {}', 
+              common_gypi, common_gypi_src, common_gypi, overrides_gypi)
+
+    # create empty bru_overrides.gypi only if it doesn't exist yet
+    # One use case for bru_overides.gypi is to tweak the Debug build to
+    # include clang -fsanitize=address options.
+    if not os.path.exists(overrides_gypi):
+        print('creating empty {}'.format(overrides_gypi))
+        brulib.jsonc.savefile(overrides_gypi, {})
 
     #for module, version, requestor in recursive_deps:
     #    for ext in ['bru', 'gyp']:
