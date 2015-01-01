@@ -39,11 +39,12 @@ import collections
 import itertools
 import functools # @total_ordering
 import subprocess
-import bru
+import brulib.library
+import brulib.module_downloader
 import pdb # only if you want to add pdb.set_trace()
 
 def get_library():
-    return bru.get_library()
+    return brulib.library.Library('./library') # or bru.get_library()
 
 def get_includes_from_cpp(cpp_file_name):
     """ open cpp or hpp file and scans it for #includes, returning the
@@ -124,7 +125,7 @@ def collect_includes(formula):
         include_dirs = target['include_dirs']
         for include_dir in include_dirs:
             abs_include_dir = os.path.join(gyp_root_dir, include_dir)
-            include_files += [bru.TwoComponentPath(abs_include_dir, include_file)
+            include_files += [TwoComponentPath(abs_include_dir, include_file)
                               for include_file 
                               in get_include_files(abs_include_dir)]
     #assert len(include_files) > 0, "missing includes for " + module
@@ -148,7 +149,7 @@ class IncludeFileIndex:
             print('scanning #includes for', module)
             for version in library.get_all_versions(module):
                 formula = library.load_formula(module, version)
-                bru.unpack_module(formula)
+                brulib.module_downloader.get_urls(library, formula, bru_modules_path)
                 includes = [two_component_path.path 
                     for two_component_path in collect_includes(formula)]
                 includes.sort()
@@ -178,7 +179,7 @@ def get_modules_for_includes(included_files, include_file_index):
     for included_file in included_files:
         mods = include_file_index.get_modules_containing(included_file)
         if len(mods) > 1:
-            print("WARNING: {} is present in multiple modules: ".format(
+            print("WARNING: {} is present in multiple modules: {}".format(
                   included_file, mods))
         if len(mods) == 0:
             unknown_includes.add(included_file)
@@ -331,7 +332,7 @@ def main():
 
             formula['dependencies'] = annotate_with_latest_version(deps)
             print(formula)
-            bru.save_formula(formula)
+            library.save_formula(formula)
 
         # also add the deps to the gyp in a sloppy & ad-hoc way for now:
         # this works sort of ok for modules with a single target only (e.g.
@@ -349,7 +350,7 @@ def main():
                 # initial compile times after 'bru install'.
                 first_target['dependencies'] = [
                     "../{}/{}.gyp:*".format(dep, dep) for dep in deps]
-                bru.save_gyp(formula, gyp)
+                library.save_gyp(formula, gyp)
 
         done_modules.add(module)
 
