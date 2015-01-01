@@ -86,7 +86,7 @@ def get_latest_msvs_version():
     return msvs_version2year[latest]
 
 def run_gyp(gyp_cmdline):
-    print('running >', gyp_cmdline)
+    print("running '{}'".format(gyp_cmdline))
     returncode = os.system(gyp_cmdline)
     if returncode != 0:
         raise Exception('error running gyp, did you install it?'
@@ -119,7 +119,7 @@ def cmd_make_win(gyp_filename, config):
             ' be part of .NET installations, please install msbuild or .NET')
     msbuild_cmdline = '{} {} /p:Configuration={}'.format(
         msbuild_exe, sln_filename, config)
-    print('running msvs via msbuild >', msbuild_cmdline)
+    print("running msvs via msbuild: '{}'".format(msbuild_cmdline))
     returncode = os.system(msbuild_cmdline)
     if returncode != 0:
         raise Exception('msbuild failed with errors, returncode =', returncode)
@@ -142,7 +142,9 @@ def cmd_make_linux(gyp_filename, config):
     if not os.path.exists('Makefile'):
         raise Exception('gyp did not generate ./Makefile, no idea how to '
             'build with your toolchain, please build manually')
-    returncode = os.system('make BUILDTYPE={}'.format(config))
+    make_cmdline = 'make BUILDTYPE={}'.format(config)
+    print("running '{}'".format(make_cmdline))
+    returncode = os.system(make_cmdline)
     if returncode != 0:
         raise Exception('Build failed: make returned', returncode)
     print('Build complete.')
