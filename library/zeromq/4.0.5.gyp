@@ -15,7 +15,10 @@
                 ]
             },
             "link_settings": {
-                "libraries": [ "-lpthread" ]
+                "libraries": [ 
+                    "-lrt",  # undefined reference to `clock_gettime'
+                    "-lpthread"
+                ]
             }
         },
         
