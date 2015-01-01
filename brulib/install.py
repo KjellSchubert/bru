@@ -268,6 +268,30 @@ def apply_glob_exprs(formula, sources):
             result.append(source)
     return list(sorted(result))
 
+def apply_recursive(dic, func):
+    """ param dic is usually a dictionary, e.g. 'target' or 'condition' 
+              child node. It can also be a child dict or child list of
+              these nodes/dicts
+        param func is a func to be applied to each child dictionary, taking
+              the dictionary as the only param
+    """
+    if isinstance(dic, dict):
+        func(dic)
+        for key, val in dic.items():
+            if isinstance(val, dict) or isinstance(val, list):
+                apply_recursive(val, func)
+    if isinstance(dic, list):
+        for elem in dic:
+            apply_recursive(elem, func)
+
+def apply_glob_to_sources(dic, formula):
+    """ param dic is a 'target' dictionary, or one of the childnodes
+        in a 'conditions' list
+    """
+    for prop in ['sources', 'sources!']:
+        if prop in dic:
+            dic[prop] = apply_glob_exprs(formula, dic[prop])
+
 def copy_gyp(library, formula, resolved_dependencies):
     """
         Param resolved_dependencies is a superset of the deps in formula
@@ -324,9 +348,10 @@ def copy_gyp(library, formula, resolved_dependencies):
         # is that the files in ./library are not really *.gyp files anymore,
         # and should probably be called *.gyp.in or *.gyp-bru or something
         # like that.
-        for prop in ['sources', 'sources!']:
-            if prop in target:
-                target[prop] = apply_glob_exprs(formula, target[prop])
+        # Apply the same mapping to 'sources' in the 'target' itelf and within
+        # its childnodes like 'conditions':
+        apply_recursive(target, lambda dic: apply_glob_to_sources(dic, formula))
+
 
     # note that library/boost-regex/1.57.0.gyp is being copied to
     # bru_modules/boost-regex/boost-regex.gyp here (with some minor

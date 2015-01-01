@@ -97,6 +97,29 @@ class InstallTestCase(unittest.TestCase):
                 'bru_modules/protobuf/protobuf.gyp:*',
             ]))
     
+    def test_apply_recursive(self):
+        """ for applying glob exprs in 'sources', no matter where these
+            appear in a gyp target (e.g. in 'target' or within 'conditions')
+        """
+        gyp_target = {
+            'conditions': [ ['x=y', { 'sources': [ 'a', 'b' ] } ]], 
+            'baz': 'hi',
+            'sources': ['c']
+        }
+        def mapper(dic):
+            assert isinstance(dic, dict)
+            if 'sources' in dic:
+                dic['sources'] = [source + 'X' for source in dic['sources']]
+        install.apply_recursive(gyp_target, mapper) # in-place
+        self.assertEqual(
+            gyp_target,
+            {
+                'conditions': [ ['x=y', { 'sources': [ 'aX', 'bX' ] } ]], 
+                'baz': 'hi',
+                'sources': ['cX']
+            }
+        )
+    
     def test_exec_make_command(self):
         platform = "Linux"
         formula = {
