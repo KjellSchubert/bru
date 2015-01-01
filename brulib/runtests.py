@@ -151,8 +151,8 @@ def cmd_test(testables):
                 return False
         return True
     if not did_all_builds_complete(testables):
-        print("running 'bru make':")
-        brulib.make.cmd_make()
+        # build Debug config, it compiles faster
+        brulib.make.cmd_make('Debug')
 
     testruns = []
     module2test_count = dict((module, 0) for module in testables)

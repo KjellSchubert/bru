@@ -34,8 +34,11 @@ def main():
     parser_test.add_argument("testables", default = [], nargs = '*',
                                 help = 'e.g. googlemock')
 
+    # for 'bru make' let's default to config=Debug, it compiles faster
+    # (even though tests run slower, tests should run much faster than
+    # compilation for most modules)
     parser_make = subparsers.add_parser('make')
-    parser_make.add_argument('--config', default='Release')
+    parser_make.add_argument('--config', default='Debug', required=False)
 
     args = parser.parse_args()
     library = get_library()

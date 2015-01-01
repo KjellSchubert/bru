@@ -20,6 +20,7 @@ def cmd_make(config):
         command lines as a quick reminder for how to build via cmd line.
         param config contains 'Release' or 'Debug'
     """
+    print("running 'bru make --config {}'".format(config))
 
     # first locate the single gyp in the cwd
     bru_file = brulib.install.get_single_bru_file('.')
