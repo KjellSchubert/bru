@@ -1,7 +1,10 @@
 language: python
 
 python:
-  - 3.4
+  # originally I built with Python 3.4, but it turned out the travis-ci
+  # clang build slaves only offer Python 3.2, so let's make this the
+  # minimum requirement instead:
+  - 3.2
 
 before_install:
   # we need to install gyp before running tests, otherwise the 'bru make'

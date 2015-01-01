@@ -5,7 +5,6 @@ import glob
 import time
 import subprocess
 import itertools
-from enum import Enum
 import brulib.jsonc
 import brulib.make
 
@@ -26,10 +25,14 @@ def get_test_targets(gyp):
         if 'test' in target:
             yield target
 
-class TestResult(Enum):
-    fail = 0
-    success = 1
-    notrun = 2 # e.g. not run because executable wasnt built or wasnt found
+# initially this was an (3.4) Enum, but I reduced the requirement to 3.2, see
+# .travis.yml for details.
+# So this here simulates a Python Enum:
+class TestResult:
+    pass
+TestResult.fail = 0
+TestResult.success = 1
+TestResult.notrun = 2 # e.g. not run because executable wasnt built or wasnt found
 
 class CompletedTestRun:
     def __init__(self, target_name, test_result):
