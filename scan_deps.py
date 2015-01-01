@@ -308,7 +308,7 @@ def main():
         formula = library.load_formula(module, version)
         (deps, missing_includes) = scan_deps(formula, index)
         print("dependencies: ")
-        for dep in deps:
+        for dep in sorted(deps):
             # show for each dep if it was git added alrdy
             print(dep, '' if is_in_scm(os.path.join('library', dep)) else '*')
         if len(missing_includes) > 0:
