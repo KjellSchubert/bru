@@ -1,0 +1,25 @@
+{
+    "homepage": "http://www.boost.org/",
+    "url": "https://github.com/boostorg/date_time/archive/boost-1.57.0.tar.gz",
+    "module": "boost-date_time",
+    "version": "1.57.0",
+    "dependencies": {
+        "boost-algorithm": "1.57.0",
+        "boost-assert": "1.57.0",
+        "boost-config": "1.57.0",
+        "boost-io": "1.57.0",
+        "boost-lexical_cast": "1.57.0",
+        "boost-mpl": "1.57.0",
+        "boost-range": "1.57.0",
+        # boost serialization only becomes a dependency if you #include
+        # boost-date_time/*_serialize.hpp, or if you want to build its tests
+        # that depend on these includes. Since date_time->serialiation->thread
+        # ->date_time is a cyclic dependency in boost 1.57.0 I'm breaking this
+        # cycle here:
+        #"boost-serialization": "1.57.0",
+        "boost-smart_ptr": "1.57.0",
+        "boost-static_assert": "1.57.0",
+        "boost-throw_exception": "1.57.0",
+        "boost-tokenizer": "1.57.0"
+    }
+}
