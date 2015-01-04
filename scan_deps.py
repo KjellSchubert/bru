@@ -228,10 +228,12 @@ def scan_deps(formula, include_file_index):
                 src_files += glob.glob(os.path.join(gyp_root, src_filename))
 
     def abbreviate_list(elems):
-        prefix = elems[:min(5, len(elems))]
-        return prefix
-    print('include_files:',abbreviate_list(include_files))
-    print('src files:', abbreviate_list(src_files))
+        max_len = 5
+        if len(elems) <= max_len:
+            return elems
+        return elems[:max_len] + ['...']
+    print('include_files:\n', '\n'.join(abbreviate_list(include_files)))
+    print('src files:\n', '\n'.join(abbreviate_list(src_files)))
 
     def get_included_files(cpp_files):
         return set(itertools.chain.from_iterable(
