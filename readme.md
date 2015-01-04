@@ -126,17 +126,23 @@ Installing prerequisites on Ubuntu
 
 Install Python 2.x (needed for gyp) Python 3.x (needed for bru) the usual way:
 
->sudo apt-get install python  # Python 2.x, usually preinstalled
->sudo apt-get install python3
+```
+sudo apt-get install python  # Python 2.x, usually preinstalled
+sudo apt-get install python3
+```
 
 Verify Python install:
 
->python --version # should print 2.x
->python3 --version # should print 3.x
+```
+python --version # should print 2.x
+python3 --version # should print 3.x
+```
 
 Install gyp:
 
->sudo apt-get install gyp
+```
+sudo apt-get install gyp
+```
 
 
 Installing prerequisites on Windows
@@ -145,41 +151,52 @@ Installing prerequisites on Windows
 Install Python 2.x (needed for gyp) and Python 3.x (needed for bru) the usual
 way: 
 
->choco install python2
->choco install python3
+```
+choco install python2
+choco install python3
+```
 
 Sadly the current chocolatey Python 3.4.2 install does not create a python3
 symlink yet, so do that manually:
 
->cd c:\tools\python3
->ln python.exe python3.exe
->ln Scripts\pip3.exe pip3.exe
+```
+cd c:\tools\python3
+ln python.exe python3.exe
+ln Scripts\pip3.exe pip3.exe
+```
 
 As of December 2014 'choco install python2' does not add c:\tools\python2\Scripts
 to your PATH so do that manually now, using the equivalent of:
 
->set PATH=%PATH%;c:\tools\python2\Scripts
+```
+set PATH=%PATH%;c:\tools\python2\Scripts
+```
 
 Verify Python install:
 
->python --version # should print 2.x
->python3 --version # should print 3.x
->pip2 --version
->pip3 --version
+```
+python --version # should print 2.x
+python3 --version # should print 3.x
+pip2 --version
+pip3 --version
+```
 
 Install gyp: chocolatey.org does not have gyp available as of Dec 2014,
 (searching for gyp yields ninja only) and it's not available from pypi either,
 so install latest gyp from source:
 
->choco install svn # unless you have svn installed already
->svn checkout http://gyp.googlecode.com/svn/trunk/ gyp-read-only 
-    (as described [here](https://code.google.com/p/gyp/issues/detail?id=170))
->cd gyp-read-only; python setup.py install # note that's python 2.x
+```
+choco install svn # unless you have svn installed already
+svn checkout http://gyp.googlecode.com/svn/trunk/ gyp-read-only 
+cd gyp-read-only; python setup.py install
+```
 
 Verify that the 'gyp' command works outside the gyp-read-only dir:
 
->cd ..
->gyp -h
+```
+cd ..
+gyp -h
+```
 
 If this doesn't work check [here](https://code.google.com/p/gyp/issues/detail?id=170) 
 for a potential solution (is copying the gyp.bat file still necessary?) and make sure
