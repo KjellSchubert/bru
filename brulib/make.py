@@ -142,7 +142,9 @@ def cmd_make_linux(gyp_filename, config):
     if not os.path.exists('Makefile'):
         raise Exception('gyp did not generate ./Makefile, no idea how to '
             'build with your toolchain, please build manually')
-    make_cmdline = 'make BUILDTYPE={}'.format(config)
+    verbose = '' # set to 1 for verbose output, this is especially useful
+            # when running into linker problems with --start-group for example
+    make_cmdline = 'make BUILDTYPE={} V={}'.format(config, verbose)
     print("running '{}'".format(make_cmdline))
     returncode = os.system(make_cmdline)
     if returncode != 0:
