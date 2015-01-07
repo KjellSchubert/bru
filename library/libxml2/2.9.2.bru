@@ -1,0 +1,16 @@
+{
+    "homepage": "http://xmlsoft.org",
+    "url": "ftp://xmlsoft.org/libxml2/libxml2-2.9.2.tar.gz",
+    "module": "libxml2",
+    "version": "2.9.2",
+
+    "make_command": {
+        # had compiler error with default --with-threads
+        "Linux": "cd libxml2-2.9.2 ; ./configure --disable-shared --without-threads --without-python"
+    },
+
+    # deps are iconv and zlib according to http://www.zlatkovic.com/libxml.en.html
+    "dependencies": {
+        "zlib": "1.2.8"
+    }
+}
