@@ -19,9 +19,23 @@
             },
             # link against libssl.a and libcrypto.a
             "link_settings" : {
-                "libraries" : [ "-lcrypto", "-lssl" ],
-                "library_dirs": [ "1.0.1j/openssl-1.0.1j" ]
-            }
+                # here's we use the same ugly pattern as for xerces to reference
+                # the lib built via 'make' downstream: use a crappy 'copies'
+                # into <(SHARED_INTERMEDIATE_DIR).
+                "libraries" : [ "-lssl", "-lcrypto", "-lssl", "-ldl" ],
+                "library_dirs": [ "<(SHARED_INTERMEDIATE_DIR)/libs" ]
+            },
+            # I dont like this pointless copying around, TODO: find a better 
+            # solution
+            "copies": [
+                {
+                    "destination": "<(SHARED_INTERMEDIATE_DIR)/libs",
+                    "files": [ 
+                        "1.0.1j/openssl-1.0.1j/libcrypto.a",
+                        "1.0.1j/openssl-1.0.1j/libssl.a" 
+                    ]
+                }
+            ]
         },
             
         # openssl has code for many separate test executables in the /test
@@ -51,9 +65,10 @@
         {
             "target_name": "demos-easy_tls",
             "type": "executable",
-            "test": { 
-                "cwd": "1.0.1j/openssl-1.0.1j/demos/easy_tls"
-            },
+            # not suitable as a test, just building this to see if it links
+            #"test": { 
+            #    "cwd": "1.0.1j/openssl-1.0.1j/demos/easy_tls"
+            #},
             "include_dir": [ "1.0.1j/openssl-1.0.1j/demos/easy_tls" ],
             "sources": [ 
                 "1.0.1j/openssl-1.0.1j/demos/easy_tls/test.c",
