@@ -1,0 +1,10 @@
+{
+    "homepage": "http://xerces.apache.org/xerces-c",
+    "url": "http://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.1.tar.gz",
+    "module": "xerces",
+    "version": "3.1.1",
+    "make_command": {
+        # generates xercesc/util/Xerces_autoconf_config.hpp and ...
+        "Linux": "cd xerces-c-3.1.1; ./configure --disable-shared --disable-transcoder-icu; cd src; make"
+    }
+}
