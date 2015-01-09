@@ -11,7 +11,7 @@
             # include_dirs for downstream dependencies.
             
             "target_name": "openssl",
-            "type": "static_library",
+            "type": "none",
             "direct_dependent_settings": {
                 "include_dirs": [
                     "1.0.1j/openssl-1.0.1j/include"
