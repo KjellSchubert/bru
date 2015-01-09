@@ -38,14 +38,17 @@ def main():
     # (even though tests run slower, tests should run much faster than
     # compilation for most modules)
     parser_make = subparsers.add_parser('make')
-    parser_make.add_argument('--config', default='Debug', required=False)
+    parser_make.add_argument('--config', default='Debug', required=False,
+        help = 'config Debug | Release')
+    parser_make.add_argument('--verbose', '-v', action='count',
+        help = 'enables verbose output in underlying build toolchain (e.g. make)')
 
     args = parser.parse_args()
     library = get_library()
     if args.command == 'install':
         brulib.install.cmd_install(library, args.installables)
     elif args.command == 'make':
-        brulib.make.cmd_make(args.config)
+        brulib.make.cmd_make(args.config, args.verbose)
     elif args.command == 'test':
         brulib.runtests.cmd_test(args.testables)
     else:

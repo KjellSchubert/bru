@@ -6,7 +6,7 @@ import os
 import platform
 import brulib.install
 
-def cmd_make(config):
+def cmd_make(config, verbose):
     """ this command makes some educated guesses about which toolchain
         the user probably wants to run, then invokes gyp to create the
         makefiles for this toolchain and invokes the build. On Linux
@@ -19,6 +19,8 @@ def cmd_make(config):
         The main purpose of 'bru make' is really to spit out these two
         command lines as a quick reminder for how to build via cmd line.
         param config contains 'Release' or 'Debug'
+        param verbose 0 means not verbose, >= 1 means higher verbosity level
+            (whatever that means in the underlying toolchain)
     """
     print("running 'bru make --config {}'".format(config))
 
@@ -36,7 +38,7 @@ def cmd_make(config):
     if system == 'Windows':
         cmd_make_win(gyp_file, config)
     elif system == 'Linux':
-        cmd_make_linux(gyp_file, config)
+        cmd_make_linux(gyp_file, config, verbose)
     else:
         raise Exception('no idea how to invoke gyp & toolchain on platform {}'\
             .format(system))
@@ -125,7 +127,7 @@ def cmd_make_win(gyp_filename, config):
         raise Exception('msbuild failed with errors, returncode =', returncode)
     print('Build complete.')
 
-def cmd_make_linux(gyp_filename, config):
+def cmd_make_linux(gyp_filename, config, verbose):
     # Here we could check if ninja or some such is installed to generate ninja
     # project files. But for simplicity's sake let's just use whatever gyp
     # defaults to.
@@ -142,9 +144,8 @@ def cmd_make_linux(gyp_filename, config):
     if not os.path.exists('Makefile'):
         raise Exception('gyp did not generate ./Makefile, no idea how to '
             'build with your toolchain, please build manually')
-    verbose = '' # set to 1 for verbose output, this is especially useful
-            # when running into linker problems with --start-group for example
-    make_cmdline = 'make BUILDTYPE={} V={}'.format(config, verbose)
+    make_cmdline = 'make BUILDTYPE={} V={}'.format(config, 
+            '1' if verbose >= 1 else '')
     print("running '{}'".format(make_cmdline))
     returncode = os.system(make_cmdline)
     if returncode != 0:
