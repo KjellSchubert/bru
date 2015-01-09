@@ -40,7 +40,7 @@ def main():
     parser_make = subparsers.add_parser('make')
     parser_make.add_argument('--config', default='Debug', required=False,
         help = 'config Debug | Release')
-    parser_make.add_argument('--verbose', '-v', action='count',
+    parser_make.add_argument('--verbose', '-v', default=0, action='count',
         help = 'enables verbose output in underlying build toolchain (e.g. make)')
 
     args = parser.parse_args()
