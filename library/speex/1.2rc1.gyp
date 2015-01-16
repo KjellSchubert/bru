@@ -16,6 +16,9 @@
             "sources": [
                 "1.2rc1/speex-1.2rc1/libspeex/*.c"
             ],
+            "sources!": [
+                "1.2rc1/speex-1.2rc1/libspeex/test*.c"
+            ],
             "direct_dependent_settings": {
                 "include_dirs": [
                     "1.2rc1/speex-1.2rc1/include"

@@ -28,6 +28,9 @@
             "sources": [
                 "1.1/opus-1.1/celt/*.c"
             ],
+            "sources!": [
+                "1.1/opus-1.1/celt/*_demo.c"
+            ],
             "direct_dependent_settings": {
                 "include_dirs": [
                     "1.1/opus-1.1/include",
@@ -64,6 +67,10 @@
             "type": "static_library",
             "sources": [
                 "1.1/opus-1.1/src/*.c"
+            ],
+            "sources!": [
+                "1.1/opus-1.1/src/opus_compare.c",
+                "1.1/opus-1.1/src/*_demo.c"
             ],
             "direct_dependent_settings": {
                 "include_dirs": [

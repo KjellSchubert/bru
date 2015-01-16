@@ -25,6 +25,9 @@
             "sources": [
                 "1.0.25/libsndfile-1.0.25/src/G72x/*.c"
             ],
+            "sources!": [
+                "1.0.25/libsndfile-1.0.25/src/G72x/*test.c"
+            ],
             "direct_dependent_settings": {
                 "include_dirs": [
                     "1.0.25/libsndfile-1.0.25/src/G72x"
@@ -40,6 +43,9 @@
             ],
             "sources": [
                 "1.0.25/libsndfile-1.0.25/src/*.c"
+            ],
+            "sources!": [
+                "1.0.25/libsndfile-1.0.25/src/test_*.c"
             ],
             "dependencies": [
                 "gsm610",
