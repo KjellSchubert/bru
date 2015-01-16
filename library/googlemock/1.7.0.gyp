@@ -14,14 +14,18 @@
                 "1.7.0/gmock-1.7.0/src/gmock-all.cc"
             ],
             "dependencies": [
-                "../googletest/googletest.gyp:*"
+                "../googletest/googletest.gyp:googletest"
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
                     "1.7.0/gmock-1.7.0/include"
                     # 1.7.0/gmock-1.7.0[/src] is not in here on purpose
                 ]
-            }
+            },
+            "export_dependent_settings": [
+                # since gmock #includes refer to gtest #includes:
+                "../googletest/googletest.gyp:googletest"
+            ]
         },
 
         {
