@@ -5,6 +5,11 @@
     "version": "3.1.1",
     "make_command": {
         # generates xercesc/util/Xerces_autoconf_config.hpp and ...
-        "Linux": "cd xerces-c-3.1.1; ./configure --disable-shared --disable-transcoder-icu; cd src; make"
+        "Linux": "cd xerces-c-3.1.1; ./configure --disable-shared --disable-transcoder-icu",
+
+        # On Windows build config 'Static Debug' or 'Static Release' in
+        # via VC10 vcproj. The vcproj has this same copy step here:
+        "Windows": "copy xerces-c-3.1.1\\src\\xercesc\\util\\Xerces_autoconf_config.msvc.hpp xerces-c-3.1.1\\src\\xercesc\\util\\Xerces_autoconf_config.hpp"
     }
 }
+
