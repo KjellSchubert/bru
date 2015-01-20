@@ -10,18 +10,19 @@ import filecmp
 import platform
 import collections
 import brulib.jsonc
+import brulib.make
 import brulib.module_downloader
 
 class Installable:
     def __init__(self, module, version):
         self.module = module
         self.version = version
-        
+
     def __eq__(self, other):
         if not isinstance(other, Installable):
             return False
         return self.module == other.module and self.version == other.version
-        
+
 def get_single_bru_file(dir):
     """ return None of no *.bru file in this dir """
     matches = glob.glob(os.path.join(dir, "*.bru"))
@@ -120,7 +121,7 @@ def create_gyp_file(gyp_filename):
             # bru_common.gypi should in general not be edited, but stay a copy
             # of the original. If you want to override settings in this gypi
             # file then you're better off editing bru_overrides.gypi.
-            # That way if bru_common.gyp gets improvements in git you don't 
+            # That way if bru_common.gyp gets improvements in git you don't
             # need to merge these external changes with your local ones.
             "bru_common.gypi",
             # This is the gypi file you're encourage to edit, bru will always
@@ -184,7 +185,30 @@ def exec_make_command(formula, bru_modules_root, system):
             if not system in make_commands:
                 raise Exception("no key {} in make_command".format(system))
             make_command = make_commands[system]
-            
+
+            # On Windows msvs toolchain build tools are typically not in your
+            # PATH, but are expected to be added to your PATH via
+            # %VS110COMNTOOLS%\vsvars32.bat. Let's call this vsvars32.bat
+            # script here automatically on Windows so that the command line
+            # may call nmake for example without having to hardcode in *.bru
+            # which (of often multiple installed) msvs toolchain to use.
+            if system == 'Windows':
+                # I had trouble with passing cmds like %VS110COMNTOOLS%\\vsvars32.bat
+                # thru os.system to powershell or cmd.exe. So instead let's
+                # write the make_command into a batch file and execute that:
+                make_command_bat = 'make_command.bat'
+                make_command_path = os.path.join(module_dir, make_command_bat)
+                with open(make_command_path, 'w') as batch_file:
+                    msvs_version = brulib.make.get_latest_installed_msvs_version()
+                    if msvs_version != None:
+                        vsvars = 'call "%VS{}COMNTOOLS%\\vsvars32.bat"'.format(
+                                    msvs_version)
+                        print("prefixing make_command with " + vsvars)
+                        batch_file.write(vsvars + '\r\n')
+                    for cmd in make_command.split(';'):
+                        batch_file.write(cmd + '\r\n')
+                make_command = make_command_bat
+
             # exec make_command with cwd being the module_dir (so the dir the
             # gyp file is in, not that the gyp file is used here, but using the
             # same base dir for the gyp & make_command probably makes sense)
@@ -269,7 +293,7 @@ def apply_glob_exprs(formula, sources):
     return list(sorted(result))
 
 def apply_recursive(dic, func):
-    """ param dic is usually a dictionary, e.g. 'target' or 'condition' 
+    """ param dic is usually a dictionary, e.g. 'target' or 'condition'
               child node. It can also be a child dict or child list of
               these nodes/dicts
         param func is a func to be applied to each child dictionary, taking
@@ -440,10 +464,10 @@ def install_from_bru_file(bru_filename, library):
     # copy common.gypi which is referenced by module.gyp files and usually
     # also by the parent *.gyp (e.g. bru-sample:foo.gyp).
     # Should end users be allowed to make changes to bru_common.gypi or
-    # should they rather edit their own optional bru_overrides.gpyi which 
+    # should they rather edit their own optional bru_overrides.gpyi which
     # shadowsbru_common.gypi? Let's do the latter. See comments in
     # create_gyp_file for more details.
-    # Anyway: just in case the user did make changes to bru_common.gypi 
+    # Anyway: just in case the user did make changes to bru_common.gypi
     # let's only copy it if it's new.
     common_gypi = 'bru_common.gypi'
     overrides_gypi = 'bru_overrides.gypi'
@@ -453,7 +477,7 @@ def install_from_bru_file(bru_filename, library):
         shutil.copyfile(common_gypi_src, common_gypi)
     elif not filecmp.cmp(common_gypi_src, common_gypi):
         print('WARNING: {} differs from {}: it is OK but not recommended'
-              ' to modify {}, instead rather modify {}', 
+              ' to modify {}, instead rather modify {}',
               common_gypi, common_gypi_src, common_gypi, overrides_gypi)
 
     # create empty bru_overrides.gypi only if it doesn't exist yet

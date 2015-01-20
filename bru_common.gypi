@@ -10,22 +10,22 @@
     "variables": {
         # That's for switching between 32bit and 64bit builds with msvc
         # on Windows.
-        # E.g. switch to that via 
+        # E.g. switch to that via
         #   >set GYP_DEFINES=target_arch=x64
         # See also https://code.google.com/p/libyuv/wiki/GettingStarted
-        # Alternatively we could allow switching between 32/64 bit 
+        # Alternatively we could allow switching between 32/64 bit
         # compilation via "configurations", but since libuv and nodejs
         # builds don't do that let's not bother doing this here either for now.
         "target_arch%": "ia32"
     },
     "target_defaults": {
-        
+
         # To build config Debug with 'make' run:
         #   >make BUILDTYPE=Debug
         # To build config Debug it with msbuild run:
         #   >msbuild *.sln /p:Configuration=Debug
         "default_configuration": "Release",
-        
+
         # List two configs: Debug & Release:
         "configurations": {
             "Debug": {
@@ -53,9 +53,9 @@
                 },
             },
             "Release": {
-                "cflags": [ 
-                    "-O2", 
-                    #? "-fno-strict-aliasing", 
+                "cflags": [
+                    "-O2",
+                    #? "-fno-strict-aliasing",
                     "-ffunction-sections", "-fdata-sections" ],
                 "ldflags": [ "-Wl,--gc-sections" ],
                 "conditions": [
@@ -88,7 +88,7 @@
                 }
             }
         },
-        
+
         # now settings that are identical across configurations Debug/Release
         "msvs_settings": {
             "VCCLCompilerTool": {
@@ -116,6 +116,7 @@
                 "OptimizeReferences": 2, # /OPT:REF
                 "EnableCOMDATFolding": 2, # /OPT:ICF
                 "LinkIncremental": 1, # disable incremental linking
+                #"ImageHasSafeExceptionHandlers": "false", # /SAFESEH:NO
                 "target_conditions": [
                     ["_type=='executable'", {
                         "SubSystem": 1 # console executable

@@ -3,6 +3,8 @@
 """
 
 import os
+import re
+import glob
 import platform
 import brulib.install
 
@@ -52,10 +54,10 @@ def get_latest_msbuild_exe():
     msbuilds = glob.glob(glob_expr)
     return max(msbuilds)  # not alphanumeric, should be good enough tho
 
-def get_latest_msvs_version():
-    """ e.g. return 2012 (aka VC11) if msvs 2012 is installed. If multiple
-        vs versions are installed then pick latest.
-        Return None if no installs are found?
+def get_latest_installed_msvs_version():
+    """ e.g. return 110 (aka VC11 aka VS 2012)) if msvs 2012 is installed.
+        If multiple vs versions are installed then pick latest.
+        Return None if no installs are found
     """
     # whats a good way to detect the msvs version?
     # a) scan for install dirs like
@@ -75,6 +77,16 @@ def get_latest_msvs_version():
     if len(msvs_versions) > 1:
         print('detected installs of msvs {}, choosing latest {}'.format(
             msvs_versions, latest))
+    return latest
+
+def get_latest_installed_msvs_year():
+    """ e.g. return 2012 (aka VC11) if msvs 2012 is installed. If multiple
+        vs versions are installed then pick latest.
+        Return None if no installs are found
+    """
+    latest = get_latest_installed_msvs_version()
+    if latest == None:
+        return None
     msvs_version2year = {
         80: 2005,
         90: 2008,
@@ -96,10 +108,11 @@ def run_gyp(gyp_cmdline):
 
 def cmd_make_win(gyp_filename, config):
     # TODO: locate msvs version via glob
-    msvs_version = get_latest_msvs_version()
+    msvs_version = get_latest_installed_msvs_year()
     if msvs_version == None:
         print('WARNING: no msvs installation detected, did you install it? '
             'Defaulting to msvs 2012.')
+        msvs_version = 2012
     gyp_cmdline = 'gyp --depth=. {} -G msvs_version={}'.format(
         gyp_filename, msvs_version)
     run_gyp(gyp_cmdline)
@@ -132,19 +145,19 @@ def cmd_make_linux(gyp_filename, config, verbose):
     # project files. But for simplicity's sake let's just use whatever gyp
     # defaults to.
 
-    # For some odd reason passing './package.gyp' as a param to gyp will 
-    # generate garbage, instead you gotta pass 'package.gyp'. Se let's 
+    # For some odd reason passing './package.gyp' as a param to gyp will
+    # generate garbage, instead you gotta pass 'package.gyp'. Se let's
     # explicitly remove a leading ./
     dirname = os.path.dirname(gyp_filename)
     assert dirname == '.' or len(dirname) == 0
     gyp_filename = os.path.basename(gyp_filename)
-    
+
     gyp_cmdline = 'gyp --depth=. {}'.format(gyp_filename)
     run_gyp(gyp_cmdline)
     if not os.path.exists('Makefile'):
         raise Exception('gyp did not generate ./Makefile, no idea how to '
             'build with your toolchain, please build manually')
-    make_cmdline = 'make BUILDTYPE={} V={}'.format(config, 
+    make_cmdline = 'make BUILDTYPE={} V={}'.format(config,
             '1' if verbose >= 1 else '')
     print("running '{}'".format(make_cmdline))
     returncode = os.system(make_cmdline)
