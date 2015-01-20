@@ -4,6 +4,8 @@ import urllib.request
 import urllib.parse # python 2 urlparse
 import tarfile
 import zipfile
+import shutil
+import pdb
 
 def split_all(path):
     (head, tail) = os.path.split(path)
@@ -42,6 +44,18 @@ def wget(url, filename):
     print("wget {} -> {}".format(url, filename))
     urllib.request.urlretrieve(url, filename)
 
+def copy_symlink_members(to_directory, lnk_members):
+    """ instead of creating links copy these archive members """
+    for member in lnk_members:
+        assert member.issym() or member.islnk()
+        if member.isdir():
+            raise Exception("untar cannot deal with linked dirs yet (TODO?)")
+        dst = member.name
+        dstdir = os.path.dirname(dst)
+        os.makedirs(dstdir, exist_ok=True)
+        src = os.path.join(dstdir, member.linkname)
+        shutil.copyfile(os.path.join(to_directory, src).replace('\\', '/'), os.path.join(to_directory, dst).replace('\\', '/'))
+
 def extract_file(path, to_directory):
     # from http://code.activestate.com/recipes/576714-extract-a-compressed-file/
     # with slight modifications (without the cwd mess)
@@ -57,7 +71,24 @@ def extract_file(path, to_directory):
         raise ValueError("Could not extract {} as no appropriate extractor is found".format(path))
 
     with opener(path, mode) as file:
-        file.extractall(to_directory)
+        # initially all I did here was:
+        #   file.extractall(to_directory)
+        # but the openssl tar created annoying symlinks on Windows which
+        # the Windows compiler toolchain couldn't read.
+        # So let's resolve symlinks here, creating a copy instead:
+        nonlnk_members = []
+        lnk_members = []
+        for member in file.getmembers():
+            # TODO: http://stackoverflow.com/questions/10060069/safely-extract-zip-or-tar-using-python
+            if member.name.startswith('..') or member.name.startswith('/') or member.name.startswith('\\'):
+                raise Exception('invalid archive member: ' + member.name)
+            members = lnk_members if member.islnk() or member.issym() else nonlnk_members
+            members.append(member)
+        file.extractall(to_directory, members = nonlnk_members)
+        # Instead of letting the tarfile impl create symlinks create file copies.
+        # This is only needed on Windows (otherwise openssl won't compile),
+        # but doing the same on Linux for consistency's sake:
+        copy_symlink_members(to_directory, lnk_members)
         file.close()
 
 def touch(file_name, times=None):
@@ -80,7 +111,7 @@ def wget_and_untar_once(zip_url, tar_dir, module_dir):
         into the given target dir. Both the wget and unzip will happen only
         if they hadn't completed in the past yet.
         param zip_url e.g. http://bla/foo.tar.gz
-        param tar_dir is the dir in which to stored the downloaded tar 
+        param tar_dir is the dir in which to stored the downloaded tar
               (e.g. ~/.bru/cached_downloads)
         param module_dir is the dir to unpack the tar into
     """

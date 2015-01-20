@@ -28,7 +28,7 @@ def find_single_match(regex, text):
     return match
 
 def read_make_log(make_logfilename):
-    """ reads output of make -n (make sure you generate this output 
+    """ reads output of make -n (make sure you generate this output
         without having a full or partial make before)
     """
     makefile_dir = os.path.dirname(make_logfilename)
@@ -41,20 +41,22 @@ def read_make_log(make_logfilename):
         # to find cpp files
         # This only needs to be good enough for dealing with xerces and
         # openssl make -n output.
-        if not (line.find('clang++') != -1 and line.find(' -I') != -1):
+        if not ((line.find('clang++') != -1 # for Linux makefiles
+            or line.strip().startswith('cl')) # for Windows nmake files
+            and line.find(' -I') != -1):
             continue
-        regex = re.compile(' ([a-zA-Z0-9_\\/]+\\.(cpp|c|cc|cxx))[ ;]')
+        regex = re.compile(' ([a-zA-Z0-9_\\/\\.\\\\]+\\.(cpp|c|cc|cxx))[ ;\n]')
         match = find_single_match(regex, line)
         if match == None:
             continue
         relpath = match.group(1) # rel to makefile (which is assumed next to make log)
         path = os.path.normpath(os.path.join(makefile_dir, relpath))
-        files += [path]
+        files += [path.replace('\\', '/')]
 
     print(json.dumps({
         'targets': [
             {
-                'sources': files
+                'sources': sorted(files)
             }
         ]}, sort_keys=True, indent=4))
 
@@ -65,4 +67,3 @@ if __name__ == "__main__":
     parser.add_argument("make_logfilename", help = "e.g. foo/bar.vcproj")
     args = parser.parse_args()
     read_make_log(args.make_logfilename)
-
