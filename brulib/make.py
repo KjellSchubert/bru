@@ -4,6 +4,7 @@
 
 import os
 import re
+import sys
 import glob
 import platform
 import brulib.install
@@ -132,9 +133,11 @@ def cmd_make_win(gyp_filename, config):
     if msbuild_exe == None:
         raise Exception('did not detect any installs of msbuild, these should'
             ' be part of .NET installations, please install msbuild or .NET')
-    msbuild_cmdline = '{} {} /p:Configuration={}'.format(
+    # TODO? add /toolsversion:<version> ?
+    msbuild_cmdline = '{} {} /p:Configuration={} /verbosity:minimal'.format(
         msbuild_exe, sln_filename, config)
     print("running msvs via msbuild: '{}'".format(msbuild_cmdline))
+    sys.stdout.flush() # otherwise msbuild log lines show up first
     returncode = os.system(msbuild_cmdline)
     if returncode != 0:
         raise Exception('msbuild failed with errors, returncode =', returncode)
