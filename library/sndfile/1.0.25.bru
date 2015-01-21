@@ -1,9 +1,23 @@
 {
     "homepage": " http://www.mega-nerd.com/libsndfile/",
-    "url": "http://www.mega-nerd.com/libsndfile/files/libsndfile-1.0.25.tar.gz",
+    "url": [
+        "http://www.mega-nerd.com/libsndfile/files/libsndfile-1.0.25.tar.gz",
+
+        # needed for windows builds only (no inttypes.h in msvc 2012)
+        "https://msinttypes.googlecode.com/files/msinttypes-r26.zip",
+
+        # needed for Windows only, being canned ./configure output.
+        # I got the contained files via
+        # >cd src
+        # >wget --no-check-certificate https://raw.githubusercontent.com/lordmulder/libsndfile-MSVC/master/src/sndfile.h
+        # >wget --no-check-certificate https://raw.githubusercontent.com/lordmulder/libsndfile-MSVC/master/src/config.h
+        # >wget http://www.mega-nerd.com/FPcast/float_cast.h
+        # Then I edited config.h to #include float_cast.h
+        "file://libsndfile1.0.25-config.tar.gz"
+    ],
     "module": "sndfile",
     "version": "1.0.25",
-    
+
     "make_command": {
         # external libs like speex are disabled atm, assuming you'd pull these
         # in as explicit deps if you wanted speex.
@@ -12,8 +26,14 @@
         # vs big endian and such, but then use gyp instead of make to build
         # libsndfile.a
         # Compare with the opus build that uses 100% gyp, or the speex build
-        # which uses a minimal tar.gz containing captured ./configure output, or 
+        # which uses a minimal tar.gz containing captured ./configure output, or
         # the openssl build which uses configure+make.
-        "Linux": "cd libsndfile-1.0.25; ./configure --disable-shared --disable-external-libs"
+        "Linux": "cd libsndfile-1.0.25; ./configure --disable-shared --disable-external-libs",
+
+        # About compiling on Windows:
+        # http://www.mega-nerd.com/libsndfile/win32.html says msvc is not
+        # supported at all, you need to crosscompile.
+        # https://github.com/lordmulder/libsndfile-MSVC is a msvc port.
+        "Windows": ""
     }
 }

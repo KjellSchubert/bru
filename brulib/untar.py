@@ -76,19 +76,25 @@ def extract_file(path, to_directory):
         # but the openssl tar created annoying symlinks on Windows which
         # the Windows compiler toolchain couldn't read.
         # So let's resolve symlinks here, creating a copy instead:
-        nonlnk_members = []
-        lnk_members = []
-        for member in file.getmembers():
-            # TODO: http://stackoverflow.com/questions/10060069/safely-extract-zip-or-tar-using-python
-            if member.name.startswith('..') or member.name.startswith('/') or member.name.startswith('\\'):
-                raise Exception('invalid archive member: ' + member.name)
-            members = lnk_members if member.islnk() or member.issym() else nonlnk_members
-            members.append(member)
-        file.extractall(to_directory, members = nonlnk_members)
-        # Instead of letting the tarfile impl create symlinks create file copies.
-        # This is only needed on Windows (otherwise openssl won't compile),
-        # but doing the same on Linux for consistency's sake:
-        copy_symlink_members(to_directory, lnk_members)
+        if callable(getattr(file, "getmembers", None)): # e.g. tar files have that
+            nonlnk_members = []
+            lnk_members = []
+            for member in file.getmembers():
+                # TODO: http://stackoverflow.com/questions/10060069/safely-extract-zip-or-tar-using-python
+                if member.name.startswith('..') or member.name.startswith('/') \
+                        or member.name.startswith('\\'):
+                    raise Exception('invalid archive member: ' + member.name)
+                members = lnk_members if member.islnk() or member.issym() \
+                            else nonlnk_members
+                members.append(member)
+            file.extractall(to_directory, members = nonlnk_members)
+            # Instead of letting the tarfile impl create symlinks create file copies.
+            # This is only needed on Windows (otherwise openssl won't compile),
+            # but doing the same on Linux for consistency's sake:
+            copy_symlink_members(to_directory, lnk_members)
+        else:
+            # e.g. zip files don't have getmembers and don't support symlinks
+            file.extractall(to_directory)
         file.close()
 
 def touch(file_name, times=None):
