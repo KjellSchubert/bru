@@ -11,7 +11,7 @@
       >make -n > make.log
       >popd
       >~/bru/makefile2gyp.py 3.1.1/xerces-c-3.1.1/src/make.log > linuxsrc.gyp
-      >~/bru/vcproj2gyp.py 3.1.1\xerces-c-3.1.1\projects\Win32\VC10\xerces-all\XercesLib\XercesLib.vcxproj "Static Release" Win32 > windowssrc.gyp
+      >~/bru/vcproj2gyp.py 3.1.1/xerces-c-3.1.1/projects/Win32/VC10/xerces-all/XercesLib/XercesLib.vcxproj "Static Release" Win32 > windowssrc.gyp
       >~/bru/gyp_sources_intersect.py windowssrc.gyp linuxsrc.gyp
     These steps are kinda tedious, but these are necessary if you're keen on
     compiling a module via gyp instead of a mix of make, nmake, msbuild (which
@@ -53,4 +53,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     combined_target = gyp_sources_intersect([args.gypfile1, args.gypfile2])
     print(json.dumps({'targets':[combined_target]}, indent=4))
-
