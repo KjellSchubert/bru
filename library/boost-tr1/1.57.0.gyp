@@ -30,24 +30,37 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-unordered/boost-unordered.gyp:*"
             ]
-        },
-        
-        {
-            "target_name": "boost-tr1_test_hash",
-            "type": "executable",
-            "test": {},
-            "sources": [ 
-                "1.57.0/tr1-boost-1.57.0/test/test_hash.cpp"
-            ],
-            "dependencies": [ "boost-tr1" ]
         }
+
+        # doesn't compile with msvs 2012 (no std::swap in tr1)
+        #{
+        #    "target_name": "boost-tr1_test_array",
+        #    "type": "executable",
+        #    "test": {},
+        #    "sources": [
+        #        "1.57.0/tr1-boost-1.57.0/test/test_array.cpp"
+        #    ],
+        #    "dependencies": [ "boost-tr1" ]
+        #}
+
+        # compiles with clang 3.4, but not with msvs 2012:
+        #   test_hash.cpp(45): error C2888: 'std::hash<UDT>' : symbol cannot be defined within namespace 'tr1'
+        #{
+        #    "target_name": "boost-tr1_test_hash",
+        #    "type": "executable",
+        #    "test": {},
+        #    "sources": [
+        #        "1.57.0/tr1-boost-1.57.0/test/test_hash.cpp"
+        #    ],
+        #    "dependencies": [ "boost-tr1" ]
+        #}
 
         # Doesn't terminate?
         #{
         #    "target_name": "boost-tr1_test_unordered_set",
         #    "type": "executable",
         #    "test": {},
-        #    "sources": [ 
+        #    "sources": [
         #        "1.57.0/tr1-boost-1.57.0/test/test_unordered_set.cpp"
         #    ],
         #    "dependencies": [ "boost-tr1" ]
@@ -58,7 +71,7 @@
         #    "target_name": "boost-tr1_test_function",
         #    "type": "executable",
         #    "test": {},
-        #    "sources": [ 
+        #    "sources": [
         #        "1.57.0/tr1-boost-1.57.0/test/test_function.cpp"
         #    ],
         #    "dependencies": [ "boost-tr1" ]

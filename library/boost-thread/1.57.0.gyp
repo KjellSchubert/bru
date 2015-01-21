@@ -11,7 +11,11 @@
                     "1.57.0/thread-boost-1.57.0/include"
                 ]
             },
-            
+            "defines": [
+                # necessary for windows build, otherwise you get
+                # unresolved external symbol "void __cdecl boost::tss_cleanup_implemented
+                "BOOST_THREAD_BUILD_LIB"
+            ],
             "sources": [
                 "1.57.0/thread-boost-1.57.0/src/*.cpp"
             ],
@@ -25,11 +29,10 @@
                     "sources": [ "1.57.0/thread-boost-1.57.0/src/pthread/*.cpp" ],
                     "link_settings": {
                         "libraries": [ "-lpthread" ]
-                        #? "ldflags": [ "-pthread" ]
                     }
                 }]
             ],
-            
+
             "dependencies": [
                 "../boost-config/boost-config.gyp:*",
                 "../boost-atomic/boost-atomic.gyp:*",
@@ -58,7 +61,7 @@
                 "../boost-date_time/boost-date_time.gyp:*"
             ]
         },
-        
+
         {
             "target_name": "boost-thread_test_futures",
             "type": "executable",
@@ -67,9 +70,9 @@
             "sources": [
                 "1.57.0/thread-boost-1.57.0/test/test_futures.cpp"
             ],
-            "dependencies": [ 
+            "dependencies": [
                 "../boost-test/boost-test.gyp:*",
-                "boost-thread" 
+                "boost-thread"
             ]
         },
 
@@ -80,9 +83,9 @@
             "sources": [
                 "1.57.0/thread-boost-1.57.0/test/test_thread_launching.cpp"
             ],
-            "dependencies": [ 
+            "dependencies": [
                 "../boost-test/boost-test.gyp:*",
-                "boost-thread" 
+                "boost-thread"
             ]
         }
 

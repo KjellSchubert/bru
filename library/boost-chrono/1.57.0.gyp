@@ -14,9 +14,13 @@
             "sources": [
                 "1.57.0/chrono-boost-1.57.0/src/*.cpp"
             ],
-            "link_settings": {
-                "libraries": [ "-lrt" ] # undefined reference to `clock_gettime'
-            },
+            "conditions": [
+                ["OS=='linux'", {
+                    "link_settings": {
+                        "libraries": [ "-lrt" ] # undefined reference to `clock_gettime'
+                    }
+                }]
+            ],
             "dependencies": [
                 "../boost-config/boost-config.gyp:*",
                 "../boost-predef/boost-predef.gyp:*",
@@ -33,7 +37,7 @@
                 "../boost-ratio/boost-ratio.gyp:*"
             ]
         },
-        
+
         {
             "target_name": "boost-chrono_example_test_duration",
             "type": "executable",
