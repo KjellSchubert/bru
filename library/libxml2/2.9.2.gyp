@@ -29,7 +29,8 @@
             ],
             
             "dependencies": [
-                "../zlib/zlib.gyp:*"
+                "../zlib/zlib.gyp:*",
+                "../iconv/iconv.gyp:iconv"
             ]
         },
         

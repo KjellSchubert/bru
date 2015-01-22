@@ -1,0 +1,13 @@
+{
+    "homepage": "https://www.gnu.org/software/libiconv",
+    "url": "http://ftp.gnu.org/gnu/libiconv/libiconv-1.14.tar.gz",
+    "module": "iconv",
+    "version": "1.14",
+
+    "make_command": {
+        # had compiler error with default --with-threads
+        "Linux": "cd libiconv-1.14 ; ./configure --disable-shared"
+        #TODO: "Windows": ""
+    }
+}
+
