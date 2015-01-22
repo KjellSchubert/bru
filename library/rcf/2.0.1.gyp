@@ -6,16 +6,26 @@
             "include_dirs": [
                 "2.0.1/RCF-2.0.1.101/include"
             ],
-            "defines": [],
-            "sources": [
-                "2.0.1/RCF-2.0.1.101/src/RCF/*.cpp"
+            "defines": [
+                # RCF has a lot of compile time config options, see RCF.cpp, e.g.
+                #"RCF_FEATURE_OPENSSL=1",
+                #"RCF_FEATURE_ZLIB=1"
+                #...
             ],
-            "sources!": [
-                "2.0.1/RCF-2.0.1.101/src/RCF/BoostFilesystem.cpp",
-                "2.0.1/RCF-2.0.1.101/src/RCF/BoostSystem.cpp",
-                "2.0.1/RCF-2.0.1.101/src/RCF/DynamicLib.cpp",
-                "2.0.1/RCF-2.0.1.101/src/RCF/FileStream.cpp",
-                "2.0.1/RCF-2.0.1.101/src/RCF/FileTransferService.cpp"
+            "sources": [
+                # See how RCF.cpp includes a lot of cpp files, this makes
+                # precompiled headers superfluous. Alternatively we could
+                # compile file-by-file, but that's slower and more tedious.
+                "2.0.1/RCF-2.0.1.101/src/RCF/RCF.cpp"
+            ],
+            "conditions": [
+                ["OS=='win'", {
+                    "defines": [
+                        # from vs2003/RCF/RCF.vcproj
+                        "WIN32_LEAN_AND_MEAN",
+                        "_WIN32_WINNT=0x0500" # >= XP? or win 2000?
+                    ]
+                }]
             ],
             "dependencies": [
                 "../boost-asio/boost-asio.gyp:*",
