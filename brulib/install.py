@@ -283,6 +283,7 @@ def apply_glob_exprs(formula, sources):
             raise Exception('Ant-style glob exprs no longer supported: ' + source)
         if is_glob_expr(source):
             matching_sources = [os.path.relpath(filename, start=gyp_target_dir)
+                                .replace('\\', '/') # otherwise sources! on windows will not match
                                 for filename in
                                 glob.glob(os.path.join(gyp_target_dir, source))]
             assert len(matching_sources) > 0, "no matches for glob " + source
