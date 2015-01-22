@@ -20,7 +20,7 @@
             # gyp on Windows (ImageHasSafeExceptionHandlers) and used
             #   >python3 ~/bru/vcproj2gyp.py ..VC10\xerces-all\XercesLib\XercesLib.vcxproj "Static Release" Win32
             # to extract a list of cpp files from the Windows *.vcproj, and
-            # intersected this with Linux files generated from make -n. Exact 
+            # intersected this with Linux files generated from make -n. Exact
             # script steps here:
             #    >cd bru_modules/xerces # here the module's gyp is located
             #    >pushd .
@@ -365,7 +365,7 @@
                     ],
                     "link_settings": {
                         "libraries": [
-                            "Advapi32.lib"
+                            "-ladvapi32.lib"
                         ]
                     },
                     "direct_dependent_settings": {

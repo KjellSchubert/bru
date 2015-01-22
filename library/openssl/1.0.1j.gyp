@@ -705,11 +705,11 @@
                     "link_settings" : {
                         "libraries" : [
                             # external libs (from nt.mak)
-                            "ws2_32.lib",
-                            "gdi32.lib",
-                            "advapi32.lib",
-                            "crypt32.lib",
-                            "user32.lib"
+                            "-lws2_32.lib",
+                            "-lgdi32.lib",
+                            "-ladvapi32.lib",
+                            "-lcrypt32.lib",
+                            "-luser32.lib"
                         ]
                     }
                 },
