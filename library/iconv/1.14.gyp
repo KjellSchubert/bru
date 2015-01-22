@@ -10,11 +10,17 @@
                 "1.14/libiconv-1.14"
             ],
             "defines": [
+                "BUILDING_LIBICONV",
+                "BUILDING_LIBCHARSET",
+                "USING_STATIC_LIBICONV",
                 "LIBDIR='./iconv'" # whats this for? resource file location?
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
                     "1.14/libiconv-1.14/include"
+                ],
+                "defines": [
+                    "USING_STATIC_LIBICONV"
                 ]
             },
             # see also http://www.codeproject.com/Articles/302012/How-to-Build-libiconv-with-Microsoft-Visual-Studio
@@ -23,6 +29,19 @@
                 "1.14/libiconv-1.14/libcharset/lib/localcharset.c",
                 "1.14/libiconv-1.14/lib/relocatable.c",
                 "1.14/libiconv-1.14/lib/iconv.c"
+            ],
+            "conditions": [
+                ["OS=='win'", {
+                    "include_dirs": [
+                        "1.14/libiconv-1.14/windows/include",
+                        "1.14/libiconv-1.14/windows/include_internal"
+                    ],
+                    "direct_dependent_settings": {
+                        "include_dirs": [
+                            "1.14/libiconv-1.14/windows/include"
+                        ]
+                    }
+                }]
             ]
         },
 
@@ -31,7 +50,8 @@
             "type": "executable",
             "test": {},
             "include_dirs": [
-                "1.14/libiconv-1.14"
+                "1.14/libiconv-1.14",
+                "1.14/libiconv-1.14/windows/include_internal" # config.h
             ],
             "sources": [ "1.14/libiconv-1.14/tests/test-to-wchar.c" ],
             "dependencies": [ "iconv" ]
@@ -42,7 +62,8 @@
             "type": "executable",
             "test": {},
             "include_dirs": [
-                "1.14/libiconv-1.14"
+                "1.14/libiconv-1.14",
+                "1.14/libiconv-1.14/windows/include_internal" # config.h
             ],
             "sources": [ "1.14/libiconv-1.14/tests/test-shiftseq.c" ],
             "dependencies": [ "iconv" ]
@@ -63,4 +84,3 @@
 
     ]
 }
-

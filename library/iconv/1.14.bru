@@ -1,13 +1,24 @@
 {
     "homepage": "https://www.gnu.org/software/libiconv",
-    "url": "http://ftp.gnu.org/gnu/libiconv/libiconv-1.14.tar.gz",
+    "url": [
+        "http://ftp.gnu.org/gnu/libiconv/libiconv-1.14.tar.gz",
+
+        # This is needed for Windows only to compile with msvs. With mingw
+        # on Windows you could just ./configure and build.
+        #   >copy libiconv-1.14\libcharset\include\localcharset.h.in libiconv-1.14\windows\include_internal\localcharset.h
+        #   >copy libiconv-1.14\config.h.in libiconv-1.14\windows\include_internal\config.h
+        #   >copy libiconv-1.14\include\iconv.h.in libiconv-1.14\windows\include\iconv.h
+        # Edit as shown in http://www.codeproject.com/Articles/302012/How-to-Build-libiconv-with-Microsoft-Visual-Studio
+        #   >cd iconv\1.14
+        #   >tar czvf /kschubert_gendev/bru/library/iconv/1.14_windows.tar.gz libiconv-1.14/windows/include/* libiconv-1.14/windows/include_internal/*
+        "file://1.14_windows.tar.gz"
+    ],
     "module": "iconv",
     "version": "1.14",
 
     "make_command": {
         # had compiler error with default --with-threads
-        "Linux": "cd libiconv-1.14 ; ./configure --disable-shared"
-        #TODO: "Windows": ""
+        "Linux": "cd libiconv-1.14 ; ./configure --disable-shared",
+        "Windows": ""
     }
 }
-
