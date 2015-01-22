@@ -65,7 +65,7 @@ def read_vcproj(vcproj_filename, config, platform):
             continue
         # paths are relative to vcproj dir
         path = os.path.normpath(os.path.join(vcproj_dir, path))
-        if not path.endswith('.cpp'):
+        if not endswith_any(path, [".cpp", ".c", ".rc"]):
             raise Exception('unexpected ext: ' + path)
 
         # lets check for unexpected props on the ClCompile node:
