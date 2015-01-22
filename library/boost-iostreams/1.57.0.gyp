@@ -14,6 +14,14 @@
             "sources": [
                 "1.57.0/iostreams-boost-1.57.0/src/*.cpp"
             ],
+            "sources!": [
+                # From http://www.boost.org/doc/libs/1_57_0/libs/iostreams/doc/index.html
+                # Compiling on Linux I didn't even realize there was a bzip
+                # and zlib dependency, and Windows compilation failed. I'm
+                # excluding the bzip dep for now to not get compiler errors
+                # on Windows. Could enable this after importing bzip2 into bru.
+                "1.57.0/iostreams-boost-1.57.0/src/bzip2.cpp" # NO_BZIP2
+            ],
             "dependencies": [
                 "../boost-config/boost-config.gyp:*",
                 "../boost-integer/boost-integer.gyp:*",
@@ -29,10 +37,11 @@
                 "../boost-bind/boost-bind.gyp:*",
                 "../boost-preprocessor/boost-preprocessor.gyp:*",
                 "../boost-static_assert/boost-static_assert.gyp:*",
-                "../boost-mpl/boost-mpl.gyp:*"
+                "../boost-mpl/boost-mpl.gyp:*",
+                "../zlib/zlib.gyp:*"
             ]
         },
-        
+
         {
             "target_name": "boost-iostreams_back_inserter_example",
             "type": "executable",
