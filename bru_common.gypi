@@ -45,7 +45,7 @@
                         "BasicRuntimeChecks": 3, #/RTC1
                     },
                     "VCLinkerTool": {
-                        "LinkIncremental": 2, #enable incremental linking
+                        "LinkIncremental": 1, # 2 would enable, but conflicts with LTCG
                     },
                 },
                 "xcode_settings": {
