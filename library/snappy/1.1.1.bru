@@ -1,0 +1,19 @@
+{
+    "homepage": "https://code.google.com/p/snappy",
+    "url": "https://snappy.googlecode.com/files/snappy-1.1.1.tar.gz",
+    "module": "snappy",
+    "version": "1.1.1",
+    "make_command": {
+        "Linux": "cd snappy-1.1.1; ./configure --disable-shared"
+    },
+    
+    # could add a gtest and gflags dependency here for the tests, but this dep
+    # is optional and for the tests only.
+    # On the other hand disabling the slow benchmark suite becomes impossible
+    # without glags (unless we hack the src).
+    "dependencies": {
+        #"gflags": "2.1.1",
+        #"googletest": "1.7.0"
+        # P.S. had trouble compiling with both gflags and gtest enabled, disabling now
+    }
+}
