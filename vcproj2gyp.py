@@ -46,6 +46,10 @@ def is_excluded_File(File, config, platform):
             return True
     return False
 
+def has_expected_ext(path):
+    return endswith_any(path, [".cpp", ".c", ".rc", ".tlh", ".tli", ".rgs",
+                               ".def", ".idl"])
+
 def endswith_any(text, suffixes):
     for suffix in suffixes:
         if text.endswith(suffix):
@@ -65,7 +69,7 @@ def read_vcproj(vcproj_filename, config, platform):
             continue
         # paths are relative to vcproj dir
         path = os.path.normpath(os.path.join(vcproj_dir, path))
-        if not endswith_any(path, [".cpp", ".c", ".rc"]):
+        if not has_expected_ext(path):
             raise Exception('unexpected ext: ' + path)
 
         # lets check for unexpected props on the ClCompile node:
@@ -91,7 +95,7 @@ def read_vcproj(vcproj_filename, config, platform):
         path = os.path.normpath(os.path.join(vcproj_dir, path))
         if path.endswith('.h'):
             continue # ignore .h files (are depends computed OK still?)
-        if not endswith_any(path, [".cpp", ".c", ".rc"]):
+        if not has_expected_ext(path):
             raise Exception('unexpected ext: ' + path)
         if is_excluded_File(File, config, platform):
             print('# excluded file:', path)
