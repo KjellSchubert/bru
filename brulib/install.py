@@ -478,8 +478,8 @@ def install_from_bru_file(bru_filename, library):
         shutil.copyfile(common_gypi_src, common_gypi)
     elif not filecmp.cmp(common_gypi_src, common_gypi):
         print('WARNING: {} differs from {}: it is OK but not recommended'
-              ' to modify {}, instead rather modify {}',
-              common_gypi, common_gypi_src, common_gypi, overrides_gypi)
+              ' to modify {}, instead rather modify {}'.format(
+              common_gypi, common_gypi_src, common_gypi, overrides_gypi))
 
     # create empty bru_overrides.gypi only if it doesn't exist yet
     # One use case for bru_overides.gypi is to tweak the Debug build to
