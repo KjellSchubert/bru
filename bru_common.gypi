@@ -53,6 +53,14 @@
                 },
             },
             "Release": {
+                "defines": [
+                    # should we add this here or not? E.g. rcf won't compile
+                    # unless NDEBUG is set for release builds. This is more of
+                    # a Windows/msvs thing than a Linux thing. Let's have
+                    # downstream projects set this explicitly if they require
+                    # it? Or just set it here? Let's set here for now:
+                    "NDEBUG"
+                ],
                 "cflags": [
                     "-O2",
                     #? "-fno-strict-aliasing",
