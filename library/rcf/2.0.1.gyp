@@ -6,6 +6,11 @@
             "include_dirs": [
                 "2.0.1/RCF-2.0.1.101/include"
             ],
+            "direct_dependent_settings": {
+                "include_dirs": [
+                    "2.0.1/RCF-2.0.1.101/include"
+                ]
+            },
             "defines": [
                 # RCF has a lot of compile time config options, see RCF.cpp, e.g.
                 #"RCF_FEATURE_OPENSSL=1",
