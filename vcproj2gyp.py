@@ -47,8 +47,10 @@ def is_excluded_File(File, config, platform):
     return False
 
 def has_expected_ext(path):
+    """ verifies that the 3rd party lib's vcproj doesn't contain any unexpected
+        file types (via file extension) """
     return endswith_any(path, [".cpp", ".c", ".rc", ".tlh", ".tli", ".rgs",
-                               ".def", ".idl"])
+                               ".def", ".idl", ".config", ".txt"])
 
 def endswith_any(text, suffixes):
     for suffix in suffixes:
