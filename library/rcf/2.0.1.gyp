@@ -13,7 +13,7 @@
             },
             "defines": [
                 # RCF has a lot of compile time config options, see RCF.cpp, e.g.
-                #"RCF_FEATURE_OPENSSL=1",
+                "RCF_FEATURE_OPENSSL=1"
                 #"RCF_FEATURE_ZLIB=1"
                 #...
             ],
@@ -33,6 +33,7 @@
                 }]
             ],
             "dependencies": [
+                "../openssl/openssl.gyp:*",
                 "../boost-asio/boost-asio.gyp:*",
                 "../boost-function/boost-function.gyp:*",
                 "../boost-preprocessor/boost-preprocessor.gyp:*",
