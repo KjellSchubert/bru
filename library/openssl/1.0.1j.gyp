@@ -662,6 +662,11 @@
                 "1.0.1j/openssl-1.0.1j/ssl/*.c"
             ],
             "sources!": [
+                # exclude various tests that provide an impl of main():
+                "1.0.1j/openssl-1.0.1j/crypto/*/*test.c",
+                "1.0.1j/openssl-1.0.1j/crypto/sha/sha256t.c",
+                "1.0.1j/openssl-1.0.1j/crypto/sha/sha512t.c",
+                "1.0.1j/openssl-1.0.1j/crypto/*test.c",
                 "1.0.1j/openssl-1.0.1j/ssl/*test.c",
                 "1.0.1j/openssl-1.0.1j/ssl/ssl_task*.c"
             ],
