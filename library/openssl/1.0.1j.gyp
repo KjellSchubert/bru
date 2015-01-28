@@ -501,9 +501,9 @@
                 "1.0.1j/openssl-1.0.1j/crypto/rc2/rc2cfb64.c",
                 "1.0.1j/openssl-1.0.1j/crypto/rc2/rc2ofb64.c",
                 "1.0.1j/openssl-1.0.1j/crypto/rc2/rc2test.c",
-                "1.0.1j/openssl-1.0.1j/crypto/rc4/rc4_enc.c",
-                "1.0.1j/openssl-1.0.1j/crypto/rc4/rc4_skey.c",
-                "1.0.1j/openssl-1.0.1j/crypto/rc4/rc4_utl.c",
+                #"1.0.1j/openssl-1.0.1j/crypto/rc4/rc4_enc.c",
+                #"1.0.1j/openssl-1.0.1j/crypto/rc4/rc4_skey.c",
+                #"1.0.1j/openssl-1.0.1j/crypto/rc4/rc4_utl.c",
                 "1.0.1j/openssl-1.0.1j/crypto/rc4/rc4test.c",
                 "1.0.1j/openssl-1.0.1j/crypto/ripemd/rmd_dgst.c",
                 "1.0.1j/openssl-1.0.1j/crypto/ripemd/rmd_one.c",
@@ -685,6 +685,7 @@
             ],
             "defines": [
                 # #defines shared across platforms copied from ms\nt.mak
+                "OPENSSL_NO_RC4",
                 "OPENSSL_NO_RC5",
                 "OPENSSL_NO_MD2",
                 "OPENSSL_NO_SSL2",
@@ -727,6 +728,14 @@
                         "HAVE_DLFCN_H",
                         "L_ENDIAN",     # TODO: revisit!
                         "TERMIO",
+
+                        # otherwise with clang 3.5 on Ubuntu it get errors around
+                        # ROTATE() macro's inline asm. Error I had not got on 
+                        # Centos with clang 3.4.
+                        # Note that this is only a problem with cflags -no-integrated-as
+                        # which was necessary for clang 3.4. Messy. TODO: revisit
+                        "OPENSSL_NO_INLINE_ASM",
+
                         "NO_WINDOWS_BRAINDEATH" # for cversion.c, otherwise error (where is buildinf.h?)
                     ],
                     "link_settings" : {
@@ -749,8 +758,15 @@
             "defines": [
                 # without these we get linker errors since the test assumes
                 # by default that SSL2 & 3 was built
+                "OPENSSL_NO_RC4",
+                "OPENSSL_NO_RC5",
+                "OPENSSL_NO_MD2",
                 "OPENSSL_NO_SSL2",
-                "OPENSSL_NO_SSL3"
+                "OPENSSL_NO_SSL3",
+                "OPENSSL_NO_KRB5",
+                "OPENSSL_NO_HW",
+                "OPENSSL_NO_JPAKE",
+                "OPENSSL_NO_DYNAMIC_ENGINE"
             ],
             "include_dirs": [
                 "1.0.1j/openssl-1.0.1j" # e.g. e_os.h
