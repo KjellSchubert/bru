@@ -16,20 +16,6 @@
                 "5.6.2"
             ],
 
-            # WARNING: I ran into these issues here with clang 3.4 on Centos:
-            #   http://permalink.gmane.org/gmane.comp.encryption.cryptopp/6853
-            #   https://groups.google.com/forum/#!topic/cryptopp-users/OWaVmOH6oFY
-            # getting these GNU_ASL errors. Setting env var AS didn't work for
-            # me, so disabling asm for now for this module, which will likely
-            # make the benchmark slower. Only need this module for some legacy
-            # code, so have no incentive to find a faster/better solution.
-            # P.S.: gcc 4.8 doesn't understand this flag, not sure how to make
-            # it conditional most easily. I'm adding -no-integrated-as as
-            # a global option to bru_overrides.gypi for now.
-            #"cflags": [
-            #    "-no-integrated-as"
-            #],
-
             "sources": [
                 "5.6.2/*.cpp"
             ],
@@ -52,6 +38,9 @@
                 "5.6.2/validat3.cpp",
                 "5.6.2/fipsalgt.cpp"
             ],
+
+            # TODO: add msvs pch.h support if possible
+
             "conditions": [
                 ["OS=='win'", {
                     "link_settings" : {
@@ -59,12 +48,37 @@
                             "-lws2_32.lib" # really? socket lib? Link err otherwise
                         ]
                     }
+                }],
+
+                ["OS=='linux'", { # TODO: only for compilation with clang?
+
+                    # WARNING: I ran into these issues here with clang 3.4 on Centos:
+                    #   http://permalink.gmane.org/gmane.comp.encryption.cryptopp/6853
+                    #   https://groups.google.com/forum/#!topic/cryptopp-users/OWaVmOH6oFY
+                    # getting these GNU_ASL errors. Setting env var AS didn't work for
+                    # me, so disabling asm for now for this module, which will likely
+                    # make the benchmark slower. Only need this module for some legacy
+                    # code, so have no incentive to find a faster/better solution.
+                    # P.S.: gcc 4.8 doesn't understand this flag, not sure how to make
+                    # it conditional most easily. I'm adding -no-integrated-as as
+                    # a global option to bru_overrides.gypi for now.
+                    #"cflags": [
+                    #    "-no-integrated-as"
+                    #],
+                    # P.S. this problem showed up again for me on Ubuntu 14 with 
+                    # clang 3.5. Trying solution from http://braumeister.org/formula/cryptopp,
+                    # so no need for cflags -no-integrated-as any more.
+                    "defines": [
+                        "CRYPTOPP_DISABLE_ASM"
+                    ]
+
                 }]
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
                     "5.6.2"
                 ]
+
             }
         },
 
