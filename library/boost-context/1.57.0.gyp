@@ -91,8 +91,10 @@
             "dependencies": [
                 "../boost-config/boost-config.gyp:*"
             ]
-        },
-
+        }
+    ],    
+    "conditions": [
+      ["OS!='iOS'", 
         {
             "target_name": "boost-context_test",
             "type": "executable",
@@ -115,7 +117,9 @@
                 "boost-context",
                 "../boost-assert/boost-assert.gyp:*",
                 "../boost-array/boost-array.gyp:*"
+            
             ]
         }
+      ] 
     ]
 }

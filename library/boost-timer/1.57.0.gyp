@@ -21,8 +21,10 @@
                 "../boost-system/boost-system.gyp:*",
                 "../boost-core/boost-core.gyp:*"
             ]
-        },
-        
+        }        
+    ],
+    "conditions": [
+      ["OS!='iOS'",
         {
             "target_name": "boost-timer_cpu_timer_test",
             "type": "executable",
@@ -42,8 +44,9 @@
             "sources": [
                 "1.57.0/timer-boost-1.57.0/example/timex.cpp"
             ],
-            "dependencies": [ "boost-timer" ]
+            "dependencies": [ "boost-timer"
+            ]
         }
-
+      ] 
     ]
 }

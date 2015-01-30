@@ -21,8 +21,10 @@
                 "../boost-static_assert/boost-static_assert.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*"
             ]
-        },
-        
+        }        
+    ],    
+    "conditions": [
+      ["OS!='iOS'", 
         # this test fails for me with gcc 4.8.1
         #{
         #    "target_name": "boost-fusion_invoke",
@@ -37,7 +39,9 @@
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/fusion-boost-1.57.0/test/functional/make_fused.cpp" ],
-            "dependencies": [ "boost-fusion" ]
+            "dependencies": [ "boost-fusion" 
+            ]
         }
+      ] 
     ]
 }

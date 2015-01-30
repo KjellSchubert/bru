@@ -25,14 +25,18 @@
                 "../boost-unordered/boost-unordered.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        },
-        
+        }
+    ],
+        "conditions": [
+      ["OS!='iOS'", 
         {
             "target_name": "boost-ptr_container_tut1",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/ptr_container-boost-1.57.0/test/tut1.cpp" ],
-            "dependencies": [ "boost-ptr_container" ]
-        }    
+            "dependencies": [ "boost-ptr_container" 
+            ]
+        }
+      ] 
     ]
 }

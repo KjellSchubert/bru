@@ -20,8 +20,10 @@
                 "../boost-mpl/boost-mpl.gyp:*"
                 #"../boost-python/boost-python.gyp:*"
             ]
-        },
-        
+        }
+    ],    
+    "conditions": [
+      ["OS!='iOS'", 
         {
             "target_name": "boost-parameter_test_deduced",
             "type": "executable",
@@ -35,8 +37,9 @@
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/parameter-boost-1.57.0/test/tutorial.cpp" ],
-            "dependencies": [ "boost-parameter" ]
+            "dependencies": [ "boost-parameter" 
+            ]
         }
-
+      ] 
     ]
 }

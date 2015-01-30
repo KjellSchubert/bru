@@ -60,8 +60,10 @@
                 "../boost-intrusive/boost-intrusive.gyp:*",
                 "../boost-date_time/boost-date_time.gyp:*"
             ]
-        },
-
+        }
+    ],
+        "conditions": [
+      ["OS!='iOS'", 
         {
             "target_name": "boost-thread_test_futures",
             "type": "executable",
@@ -88,6 +90,6 @@
                 "boost-thread"
             ]
         }
-
+      ] 
     ]
 }

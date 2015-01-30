@@ -28,9 +28,12 @@
                 "../boost-exception/boost-exception.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        },
+        } 
+    ],
+      
+    "conditions": [
+      ["OS!='iOS'", {
         
-        {
             "target_name": "boost-algorithm_partition_copy_test1",
             "type": "executable",
             "test": {},
@@ -41,7 +44,6 @@
                 "boost-algorithm",
                 "../boost-test/boost-test.gyp:*"
             ]
-        }
-
+        }]
     ]
 }

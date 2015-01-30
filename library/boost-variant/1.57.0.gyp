@@ -26,9 +26,10 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-type_index/boost-type_index.gyp:*"
             ]
-        },
-        
-        {
+        }
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
             "target_name": "boost-variant_recursive_variant_test",
             "type": "executable",
             "test": {},
@@ -40,5 +41,6 @@
                 "../boost-test/boost-test.gyp:*"
             ]
         }
+      ] 
     ]
 }

@@ -19,16 +19,20 @@
                 "../boost-throw_exception/boost-throw_exception.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*"
             ]
-        },
+        }
         
+        # TODO: add tests once boost-test dependency cycles are sorted out
+    ],    
+    "conditions": [
+      ["OS!='iOS'", 
         {
             "target_name": "boost-format_sample_formats",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/format-boost-1.57.0/example/sample_formats.cpp" ],
-            "dependencies": [ "boost-format" ]
+            "dependencies": [ "boost-format" 
+            ]
         }
-        
-        # TODO: add tests once boost-test dependency cycles are sorted out
+      ] 
     ]
 }
