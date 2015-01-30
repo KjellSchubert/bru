@@ -35,6 +35,19 @@
                     ["target_arch=='x64'", {
                         "msvs_configuration_platform": "x64",
                     }],
+                    
+                    ['OS=="iOS"', {
+						'xcode_settings': {
+							'SDKROOT': 'iphoneos',
+							'TARGETED_DEVICE_FAMILY': '1,2',
+							'CODE_SIGN_IDENTITY': 'iPhone Developer',
+							'IPHONEOS_DEPLOYMENT_TARGET': '6.0',
+							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
+							'CLANG_CXX_LANGUAGE_STANDARD' : 'gnu++0x',
+							'CLANG_CXX_LIBRARY' : 'libstdc++',
+							'OTHER_CFLAGS' : '-fvisibility=hidden',
+						}, # xcode_settings
+					}]                    
                 ],
                 "msvs_settings": {
                     "VCCLCompilerTool": {
@@ -49,7 +62,8 @@
                     },
                 },
                 "xcode_settings": {
-                    "GCC_OPTIMIZATION_LEVEL": "0", #stop gyp from defaulting to - Os
+                    "GCC_OPTIMIZATION_LEVEL  ": "0", #stop gyp from defaulting to - Os
+		            "CONFIGURATION_BUILD_DIR" : "../../lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"
                 },
             },
             "Release": {
@@ -69,7 +83,20 @@
                 "conditions": [
                     ["target_arch=='x64'", {
                         "msvs_configuration_platform": "x64",
-                    }]
+                    }],
+                    ['OS=="iOS"', {
+						'xcode_settings': {
+							'SDKROOT': 'iphoneos',
+							'TARGETED_DEVICE_FAMILY': '1,2',
+							'CODE_SIGN_IDENTITY': 'iPhone Developer',
+							'IPHONEOS_DEPLOYMENT_TARGET': '6.0',
+							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
+							'CLANG_CXX_LANGUAGE_STANDARD' : 'gnu++0x',
+							'CLANG_CXX_LIBRARY' : 'libstdc++',
+							'OTHER_CFLAGS' : '-fvisibility=hidden',
+						}, # xcode_settings
+					}]                    
+
                 ],
                 "msvs_settings": {
                     "VCCLCompilerTool": {
@@ -93,7 +120,7 @@
                     "OptimizeReferences": 2, # /OPT:REF
                     "EnableCOMDATFolding": 2, # /OPT:ICF
                     "LinkIncremental": 1 # disable incremental linking
-                }
+                },
             }
         },
 

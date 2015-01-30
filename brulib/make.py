@@ -42,6 +42,9 @@ def cmd_make(config, verbose):
         cmd_make_win(gyp_file, config)
     elif system == 'Linux':
         cmd_make_linux(gyp_file, config, verbose)
+    elif system == 'Darwin':
+        cmd_make_macos(gyp_file, config, verbose)
+        cmd_make_ios(gyp_file, config, verbose)
     else:
         raise Exception('no idea how to invoke gyp & toolchain on platform {}'\
             .format(system))
@@ -166,4 +169,68 @@ def cmd_make_linux(gyp_filename, config, verbose):
     returncode = os.system(make_cmdline)
     if returncode != 0:
         raise Exception('Build failed: make returned', returncode)
+    print('Build complete.')
+
+def cmd_make_macos(gyp_filename, config, verbose):
+    # Here we could check if ninja or some such is installed to generate ninja
+    # project files. But for simplicity's sake let's just use whatever gyp
+    # defaults to.
+
+    # For some odd reason passing './package.gyp' as a param to gyp will
+    # generate garbage, instead you gotta pass 'package.gyp'. Se let's
+    # explicitly remove a leading ./
+    dirname = os.path.dirname(gyp_filename)
+    assert dirname == '.' or len(dirname) == 0
+    gyp_filename = os.path.basename(gyp_filename)
+
+    gyp_cmdline = 'gyp --depth=. -f xcode {} --generator-output=./xcode-macos'.format(gyp_filename)
+    run_gyp(gyp_cmdline)
+    if not os.path.exists('xcode-macos/package.xcodeproj'):
+        raise Exception('gyp did not generate ./xcode-macos/package.xcodeproj, no idea how to '
+            'build with your toolchain, please build manually')
+    xcode_cmdline = 'xCodeBuild -alltargets -project xcode-macos/package.xcodeproj -configuration {}'.format(config)
+    print("running '{}'".format(xcode_cmdline))
+    returncode = os.system(xcode_cmdline)
+    if returncode != 0:
+        raise Exception('Build failed: make returned', returncode)
+    print('Build complete.')
+
+def cmd_make_ios(gyp_filename, config, verbose):
+    # Here we could check if ninja or some such is installed to generate ninja
+    # project files. But for simplicity's sake let's just use whatever gyp
+    # defaults to.
+
+    # For some odd reason passing './package.gyp' as a param to gyp will
+    # generate garbage, instead you gotta pass 'package.gyp'. Se let's
+    # explicitly remove a leading ./
+    dirname = os.path.dirname(gyp_filename)
+    assert dirname == '.' or len(dirname) == 0
+    gyp_filename = os.path.basename(gyp_filename)
+    gyp_cmdline = 'gyp --depth=. -f xcode -DOS=iOS {} --generator-output=./xcode-ios'.format(gyp_filename)
+    run_gyp(gyp_cmdline)
+    if not os.path.exists('xcode-ios/package.xcodeproj'):
+        raise Exception('gyp did not generate ./xcode-ios/package.xcodeproj, no idea how to '
+            'build with your toolchain, please build manually')
+    xcode_cmdline = 'xCodeBuild -alltargets -project xcode-ios/package.xcodeproj -configuration {} -sdk iphonesimulator'.format(config)
+    print("running '{}'".format(xcode_cmdline))
+    returncode = os.system(xcode_cmdline)
+    if returncode != 0:
+        raise Exception('Build failed: make for device returned', returncode)
+    xcode_cmdline = 'xCodeBuild -alltargets -project xcode-ios/package.xcodeproj -configuration {} -sdk iphoneos'.format(config)
+    print("running '{}'".format(xcode_cmdline))
+    returncode = os.system(xcode_cmdline)
+    if returncode != 0:
+        raise Exception('Build failed: make for simulator returned', returncode)        
+    mkdir_cmdline = 'mkdir lib/{}-Universial'.format(config)
+    returncode = os.system(mkdir_cmdline)
+    filepattern = './lib/{}-iphoneos/lib*.a'.format(config)
+    print (filepattern)
+    print (glob.glob(filepattern))
+    for file in glob.glob(filepattern):
+    	name = os.path.basename(os.path.normpath(file))
+    	command = 'lipo -create lib/{}-iphoneos/{} lib/{}-iphonesimulator/{} -output lib/{}-Universial/{}'.format(config,name,config,name,config,name)
+    	print("running '{}'".format(command))
+    	returncode = os.system(command)
+    	if returncode != 0:
+    		raise Exception('Build failed: lipo returned', returncode)
     print('Build complete.')

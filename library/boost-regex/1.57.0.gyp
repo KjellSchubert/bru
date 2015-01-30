@@ -41,7 +41,7 @@
                 "../boost-core/boost-core.gyp:*",
                 "../boost-functional/boost-functional.gyp:*"
             ]
-        },
+        }
 
         # Adding this test will cause circular dep problems, since pulling
         # in boost-test will cause lots of additional deps, including to 
@@ -58,11 +58,16 @@
         #    "dependencies": [
         #        "boost-regex"
         #    ]
-        #}
-        
+        #}        
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
+
         # more of an example than a test, better than nothing as long as
         # the unit test isnt being run:
-        {
+
+        "targets": [
+          {
             "target_name": "boost_regex_grep_example_3",
             "type": "executable",
             "test": {
@@ -73,6 +78,9 @@
                 "1.57.0/regex-boost-1.57.0/example/snippets/regex_grep_example_3.cpp"
             ],
             "dependencies": [ "boost-regex" ]
-        }
+        }  
+        ]
+      }
+      ]
     ]
 }
