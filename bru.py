@@ -42,13 +42,15 @@ def main():
         help = 'config Debug | Release')
     parser_make.add_argument('--verbose', '-v', default=0, action='count',
         help = 'enables verbose output in underlying build toolchain (e.g. make)')
+    parser_make.add_argument('--targetPlatform', default='Native', required=False,
+        help = 'targetPlatform Native | iOS')
 
     args = parser.parse_args()
     library = get_library()
     if args.command == 'install':
         brulib.install.cmd_install(library, args.installables)
     elif args.command == 'make':
-        brulib.make.cmd_make(args.config, args.verbose)
+        brulib.make.cmd_make(args.config, args.verbose, args.targetPlatform)
     elif args.command == 'test':
         brulib.runtests.cmd_test(args.testables)
     else:

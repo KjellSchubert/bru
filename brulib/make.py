@@ -9,7 +9,7 @@ import glob
 import platform
 import brulib.install
 
-def cmd_make(config, verbose):
+def cmd_make(config, verbose, targetPlatform):
     """ this command makes some educated guesses about which toolchain
         the user probably wants to run, then invokes gyp to create the
         makefiles for this toolchain and invokes the build. On Linux
@@ -25,7 +25,7 @@ def cmd_make(config, verbose):
         param verbose 0 means not verbose, >= 1 means higher verbosity level
             (whatever that means in the underlying toolchain)
     """
-    print("running 'bru make --config {}'".format(config))
+    print("running 'bru make --config {} --os {}'".format(config,os))
 
     # first locate the single gyp in the cwd
     bru_file = brulib.install.get_single_bru_file('.')
@@ -39,12 +39,25 @@ def cmd_make(config, verbose):
 
     system = platform.system()
     if system == 'Windows':
-        cmd_make_win(gyp_file, config)
+    	if targetPlatform == 'Native':
+    		cmd_make_win(gyp_file, config)
+    	else:
+    		raise Exception('targetPlatform {} not supported on platform {}'\
+    		.format(targetPlatform, system))
     elif system == 'Linux':
-        cmd_make_linux(gyp_file, config, verbose)
+    	if targetPlatform == 'Native':
+    		cmd_make_linux(gyp_file, config, verbose)
+    	else: 
+        	raise Exception('targetPlatform {} not supported on platform {}'\
+        	.format(targetPlatform, system))
     elif system == 'Darwin':
-        cmd_make_macos(gyp_file, config, verbose)
-        cmd_make_ios(gyp_file, config, verbose)
+    	if targetPlatform == 'iOS':
+    		cmd_make_ios(gyp_file, config, verbose)
+    	elif targetPlatform == 'Native':
+    		cmd_make_macos(gyp_file, config, verbose)
+    	else:
+        	raise Exception('targetPlatform {} not supported on platform {}'\
+            .format(targetPlatform, system))
     else:
         raise Exception('no idea how to invoke gyp & toolchain on platform {}'\
             .format(system))
