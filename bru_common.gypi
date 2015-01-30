@@ -110,6 +110,9 @@
                         "EnableIntrinsicFunctions": "true"
                     }
                 },
+                "xcode_settings": {
+		            "CONFIGURATION_BUILD_DIR" : "../../lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"
+                },
                 "VCLibrarianTool": {
                     "AdditionalOptions": [
                         "/LTCG" # link time code generation
