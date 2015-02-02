@@ -3,6 +3,10 @@
     "url": "http://curl.haxx.se/download/curl-7.40.0.tar.gz",
     "module": "curl",
     "version": "7.40.0",
+    "make_command": {
+        "Linux": "cd curl-7.40.0 && ./configure --without-libssh2 --without-zlib --without-librtmp --without-libidn --disable-ldap --disable-gopher",
+        "Windows": ""
+    },
     "dependencies": {
         "openssl": "1.0.1j"
         # not adding libssl2, only needed for sftp support?

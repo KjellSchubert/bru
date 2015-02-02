@@ -24,6 +24,13 @@
                 # not: "USE_LIBSSH2"
                 # What would libssh2 provide? Only sftp support I think.
             ],
+            "conditions": [
+                ["OS=='linux'", {
+                    "defines": [
+                        "HAVE_CONFIG_H"
+                    ]
+                }]
+            ],
             # sources list generated for Windows build via
             # ~\bru\vcproj2gyp.py 7.40.0/curl-7.40.0/projects/Windows/VC11/lib/libcurl.vcxproj "LIB Release - LIB OpenSSL" Win32
             # TODO: only was verified to work on Windows, make it work on Linux also.
@@ -158,7 +165,7 @@
         },
 
         {
-            "target_name": "curl_example_https.c",
+            "target_name": "curl_example_https",
             "type" : "executable",
             "defines": [
                 # otherwise cert verify will fail
