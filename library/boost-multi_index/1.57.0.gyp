@@ -33,7 +33,8 @@
         }
     ],    
     "conditions": [
-      ["OS!='iOS'", 
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-multi_index_test_basic",
             "type": "executable",
@@ -52,9 +53,10 @@
             "sources": [ 
                 "1.57.0/multi_index-boost-1.57.0/example/basic.cpp" 
             ],
-            "dependencies": [ "boost-multi_index" 
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-multi_index" ]
+        }  
+        ]
+      }
+      ]
     ]
 }

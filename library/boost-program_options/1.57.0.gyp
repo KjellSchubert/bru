@@ -31,7 +31,8 @@
         }
     ],    
     "conditions": [
-      ["OS!='iOS'", 
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-program_options_positional_options_test",
             "type": "executable",
@@ -39,9 +40,10 @@
             "sources": [
                 "1.57.0/program_options-boost-1.57.0/test/positional_options_test.cpp"
             ],
-            "dependencies": [ "boost-program_options" 
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-program_options" ]
+        }  
+        ]
+      }
+      ]
     ]
 }

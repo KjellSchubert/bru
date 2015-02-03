@@ -28,17 +28,20 @@
             ]
         }        
     ],
-        "conditions": [
+    "conditions": [
       ["OS!='iOS'", {
+        "targets": [
+         {
             "target_name": "boost-unordered_erase_tests",
             "type": "executable",
             "test": {},
             "sources": [ 
                 "1.57.0/unordered-boost-1.57.0/test/unordered/erase_tests.cpp"
             ],
-            "dependencies": [ "boost-unordered"             
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-unordered"]
+        }  
+        ]
+      }
+      ]
     ]
 }

@@ -62,8 +62,10 @@
             ]
         }
     ],
-        "conditions": [
-      ["OS!='iOS'", 
+    "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
+
         {
             "target_name": "boost-thread_test_futures",
             "type": "executable",
@@ -87,9 +89,10 @@
             ],
             "dependencies": [
                 "../boost-test/boost-test.gyp:*",
-                "boost-thread"
-            ]
-        }
-      ] 
+                "boost-thread"]
+        }  
+        ]
+      }
+      ]
     ]
 }

@@ -43,7 +43,9 @@
         }
     ],
     "conditions": [
-      ["OS!='iOS'", 
+      ["OS!='iOS'", {
+        "targets": [
+
         {
             "target_name": "boost-test_unit_test_example_01",
             "type": "executable",
@@ -86,9 +88,10 @@
             "sources": [
                 "1.57.0/test-boost-1.57.0/test/test_case_template_test.cpp"
             ],
-            "dependencies": [ "boost-test" 
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-test" ]
+        }  
+        ]
+      }
+      ]
     ]
 }

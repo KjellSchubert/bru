@@ -22,15 +22,17 @@
         }        
     ],    
     "conditions": [
-      ["OS!='iOS'", 
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-pool_time_pool_alloc",
             "type": "executable",
             "test": {},
             "sources": ["1.57.0/pool-boost-1.57.0/example/time_pool_alloc.cpp"],
-            "dependencies": [ "boost-pool" 
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-pool" ]
+        }  
+        ]
+      }
+      ]
     ]
 }

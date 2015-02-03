@@ -62,12 +62,11 @@
     ],
     "conditions": [
       ["OS!='iOS'", {
-
-        # more of an example than a test, better than nothing as long as
-        # the unit test isnt being run:
-
         "targets": [
           {
+	        # more of an example than a test, better than nothing as long as
+    	    # the unit test isnt being run:
+
             "target_name": "boost_regex_grep_example_3",
             "type": "executable",
             "test": {

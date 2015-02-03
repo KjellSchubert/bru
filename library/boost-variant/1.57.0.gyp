@@ -30,6 +30,8 @@
     ],
     "conditions": [
       ["OS!='iOS'", {
+        "targets": [ 
+        {
             "target_name": "boost-variant_recursive_variant_test",
             "type": "executable",
             "test": {},
@@ -38,9 +40,10 @@
             ],
             "dependencies": [ 
                 "boost-variant",
-                "../boost-test/boost-test.gyp:*"
-            ]
-        }
-      ] 
+                "../boost-test/boost-test.gyp:*"]
+        }  
+        ]
+      }
+      ]
     ]
 }

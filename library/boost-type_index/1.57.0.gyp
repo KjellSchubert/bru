@@ -24,15 +24,18 @@
     ],
     "conditions": [
       ["OS!='iOS'", {
+        "targets": [
+        {
             "target_name": "boost-type_index_ctti_print_name",
             "type": "executable",
             "test": {},
             "sources": [
                 "1.57.0/type_index-boost-1.57.0/test/ctti_print_name.cpp"
             ],
-            "dependencies": [ "boost-type_index" 
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-type_index" ]
+        }  
+        ]
+      }
+      ]
     ]
 }

@@ -34,6 +34,8 @@
     ],
     "conditions": [
       ["OS!='iOS'", {
+        "targets": [
+        {
         # This requires an additional dep to boost-assign.
         # The test also compiles pretty slowly (30secs), so I was tempted 
         # to disable it again.
@@ -47,5 +49,7 @@
                 "../boost-assign/boost-assign.gyp:*"]
         }  
         ]
+      }
       ]
+    ]
 }

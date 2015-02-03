@@ -23,7 +23,8 @@
         }
     ],
     "conditions": [
-      ["OS!='iOS'",
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-system_error_test",
             "type": "executable",
@@ -31,9 +32,10 @@
             "sources": [
                 "1.57.0/system-boost-1.57.0/test/system_error_test.cpp"
             ],
-            "dependencies": [ "boost-system" 
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-system" ]
+        }  
+        ]
+      }
+      ]
     ]
 }

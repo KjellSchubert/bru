@@ -28,8 +28,9 @@
         }
         
     ],
-        "conditions": [
-      ["OS!='iOS'", 
+  "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-random_test_histogram",
             "type": "executable",
@@ -52,7 +53,8 @@
         #    ]
         #}
 
-      ] 
+        ]
+      }
+      ]
     ]
 }
-

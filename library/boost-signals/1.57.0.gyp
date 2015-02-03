@@ -27,15 +27,17 @@
         }        
     ],
     "conditions": [
-      ["OS!='iOS'", 
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-signals_example_disconnect_all",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/signals-boost-1.57.0/example/disconnect_all.cpp"  ],
-            "dependencies": ["boost-signals"
-            ]
-        }
-      ] 
+            "dependencies": ["boost-signals"]
+        }  
+        ]
+      }
+      ]
     ]
 }

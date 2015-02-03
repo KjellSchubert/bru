@@ -40,7 +40,8 @@
         }
     ],
     "conditions": [
-      ["OS!='iOS'", 
+      ["OS!='iOS'", {
+        "targets": [
         # fails on Windows with
         #   "filesystem::unique_path: The profile for the user is a temporary profile"
         # Probably should fix my profile...
@@ -61,9 +62,10 @@
                 "1.57.0/serialization-boost-1.57.0/example/portable_binary_oarchive.cpp",
                 "1.57.0/serialization-boost-1.57.0/example/portable_binary_iarchive.cpp"
             ],
-            "dependencies": [ "boost-serialization" 
-            ]
-        }
-      ] 
+            "dependencies": [ "boost-serialization"]
+        }  
+        ]
+      }
+      ]
     ]
 }
