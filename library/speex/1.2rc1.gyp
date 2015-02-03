@@ -43,7 +43,11 @@
                     "1.2rc1/speex-1.2rc1/include"
                 ]
             }
-        },
+        }
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
 
         # this is one of speex's sample apps, is not exactly a unit test suite
         # P.S.: I can't get this to link on Windows, getting link errors
@@ -76,7 +80,12 @@
             "sources": [
                 "1.2rc1/speex-1.2rc1/libspeex/testenc.c"
             ],
-            "dependencies": [ "speex" ]
-        }
+            "dependencies": [ "speex" 
+            
+            ]        
+        }  
+        ]
+      }
+      ]
     ]
 }
