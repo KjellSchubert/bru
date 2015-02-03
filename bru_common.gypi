@@ -44,7 +44,7 @@
 							'IPHONEOS_DEPLOYMENT_TARGET': '6.0',
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'gnu++0x',
-							'CLANG_CXX_LIBRARY' : 'libstdc++',
+							'CLANG_CXX_LIBRARY' : 'libc++',
 							'OTHER_CFLAGS' : '-fvisibility=hidden',
 						}, # xcode_settings
 					}]                    
@@ -92,7 +92,7 @@
 							'IPHONEOS_DEPLOYMENT_TARGET': '6.0',
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'gnu++0x',
-							'CLANG_CXX_LIBRARY' : 'libstdc++',
+							'CLANG_CXX_LIBRARY' : 'libc++',
 							'OTHER_CFLAGS' : '-fvisibility=hidden',
 						}, # xcode_settings
 					}]                    
