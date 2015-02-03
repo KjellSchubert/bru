@@ -25,7 +25,7 @@ def cmd_make(config, verbose, targetPlatform):
         param verbose 0 means not verbose, >= 1 means higher verbosity level
             (whatever that means in the underlying toolchain)
     """
-    print("running 'bru make --config {} --os {}'".format(config,os))
+    print("running 'bru make --config {} --targetPlatform {}'".format(config,targetPlatform))
 
     # first locate the single gyp in the cwd
     bru_file = brulib.install.get_single_bru_file('.')
