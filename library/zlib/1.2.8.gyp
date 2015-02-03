@@ -39,7 +39,10 @@
                     "1.2.8/zlib-1.2.8/include"
                 ]
             }
-        },
+        }
+    ],
+    "conditions": [
+      ["OS!='iOS'", 
 
         # this is one of zlib's tests
         {
@@ -54,5 +57,5 @@
 
         # there's also a minigzip in the test dir, but that's more of an
         # interactive test, I only care about automated tests here
-    ]
+        ]]
 }
