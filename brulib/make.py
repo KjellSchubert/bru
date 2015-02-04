@@ -195,13 +195,16 @@ def cmd_make_macos(gyp_filename, config, verbose):
     dirname = os.path.dirname(gyp_filename)
     assert dirname == '.' or len(dirname) == 0
     gyp_filename = os.path.basename(gyp_filename)
-
     gyp_cmdline = 'gyp --depth=. -f xcode {} --generator-output=./xcode-macos'.format(gyp_filename)
     run_gyp(gyp_cmdline)
-    if not os.path.exists('xcode-macos/package.xcodeproj'):
-        raise Exception('gyp did not generate ./xcode-macos/package.xcodeproj, no idea how to '
-            'build with your toolchain, please build manually')
-    xcode_cmdline = 'xCodeBuild -alltargets -project xcode-macos/package.xcodeproj -configuration {}'.format(config)
+    filepattern = './xcode-macos/*.xcodeproj'
+    files = glob.glob(filepattern)
+    print(filepattern)
+    print(files)
+    if len(files) == 0:
+        raise Exception('gyp did not generate {}, no idea how to '
+            'build with your toolchain, please build manually').format(filepattern)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {}'.format(files[0],config)
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
     if returncode != 0:
@@ -221,15 +224,18 @@ def cmd_make_ios(gyp_filename, config, verbose):
     gyp_filename = os.path.basename(gyp_filename)
     gyp_cmdline = 'gyp --depth=. -f xcode -DOS=iOS {} --generator-output=./xcode-ios'.format(gyp_filename)
     run_gyp(gyp_cmdline)
-    if not os.path.exists('xcode-ios/package.xcodeproj'):
-        raise Exception('gyp did not generate ./xcode-ios/package.xcodeproj, no idea how to '
-            'build with your toolchain, please build manually')
-    xcode_cmdline = 'xCodeBuild -alltargets -project xcode-ios/package.xcodeproj -configuration {} -sdk iphonesimulator'.format(config)
+
+    filepattern = './xcode-ios/*.xcodeproj'
+    files = glob.glob(filepattern)
+    if len(files) == 0:
+        raise Exception('gyp did not generate {}, no idea how to '
+            'build with your toolchain, please build manually').format(filepattern)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphonesimulator'.format(files[0],config)
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
     if returncode != 0:
         raise Exception('Build failed: make for device returned', returncode)
-    xcode_cmdline = 'xCodeBuild -alltargets -project xcode-ios/package.xcodeproj -configuration {} -sdk iphoneos'.format(config)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphoneos'.format(files[0],config)
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
     if returncode != 0:
@@ -237,8 +243,6 @@ def cmd_make_ios(gyp_filename, config, verbose):
     mkdir_cmdline = 'mkdir lib/{}-Universial'.format(config)
     returncode = os.system(mkdir_cmdline)
     filepattern = './lib/{}-iphoneos/lib*.a'.format(config)
-    print (filepattern)
-    print (glob.glob(filepattern))
     for file in glob.glob(filepattern):
     	name = os.path.basename(os.path.normpath(file))
     	command = 'lipo -create lib/{}-iphoneos/{} lib/{}-iphonesimulator/{} -output lib/{}-Universial/{}'.format(config,name,config,name,config,name)
