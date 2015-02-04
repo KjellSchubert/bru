@@ -398,6 +398,29 @@
           			  }
                     }
                 }],
+                ["OS=='iOS'", {
+                    "defines": [
+                        "HAVE_CONFIG_H"
+                    ],
+                    "sources": [
+						"3.1.1/xerces-c-3.1.1/src/stricmp.c",
+						"3.1.1/xerces-c-3.1.1/src/strnicmp.c",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/FileManagers/PosixFileMgr.cpp",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/MutexManagers/PosixMutexMgr.cpp",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Curl/CurlNetAccessor.cpp",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Curl/CurlURLInputStream.cpp",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/Transcoders/MacOSUnicodeConverter/MacOSUnicodeConverter.cpp"
+                    ],
+                    "direct_dependent_settings": {
+					"xcode_settings": {
+                		"OTHER_LDFLAGS" : [ "-lpthread", 
+                			  				"-lcurl", 
+                							"-framework CoreFoundation", 
+                							"-framework CoreServices" 
+                				  			]
+          			  }
+                    }
+                }],
 
 
                 ["OS=='linux'", {
