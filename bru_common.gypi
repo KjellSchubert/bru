@@ -35,7 +35,13 @@
                     ["target_arch=='x64'", {
                         "msvs_configuration_platform": "x64",
                     }],
-                    
+                    ['OS=="mac"', {
+						'xcode_settings': {
+							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
+							'CLANG_CXX_LIBRARY' : 'libc++',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden',
+						}, # xcode_settings
+					}],                    
                     ['OS=="iOS"', {
 						'xcode_settings': {
 							'SDKROOT': 'iphoneos',
@@ -45,7 +51,7 @@
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
 							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-fvisibility=hidden',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden',
 						}, # xcode_settings
 					}]                    
                 ],
@@ -84,6 +90,13 @@
                     ["target_arch=='x64'", {
                         "msvs_configuration_platform": "x64",
                     }],
+                    ['OS=="mac"', {
+						'xcode_settings': {
+							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
+							'CLANG_CXX_LIBRARY' : 'libc++',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden',
+						}, # xcode_settings
+					}],                    
                     ['OS=="iOS"', {
 						'xcode_settings': {
 							'SDKROOT': 'iphoneos',
@@ -93,10 +106,9 @@
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
 							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-fvisibility=hidden',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden',
 						}, # xcode_settings
 					}]                    
-
                 ],
                 "msvs_settings": {
                     "VCCLCompilerTool": {
