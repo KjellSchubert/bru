@@ -406,17 +406,16 @@
 						"3.1.1/xerces-c-3.1.1/src/stricmp.c",
 						"3.1.1/xerces-c-3.1.1/src/strnicmp.c",
 						"3.1.1/xerces-c-3.1.1/src/xercesc/util/FileManagers/PosixFileMgr.cpp",
-						"3.1.1/xerces-c-3.1.1/src/xercesc/util/MutexManagers/PosixMutexMgr.cpp",
-						"3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Curl/CurlNetAccessor.cpp",
-						"3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Curl/CurlURLInputStream.cpp",
-						"3.1.1/xerces-c-3.1.1/src/xercesc/util/Transcoders/MacOSUnicodeConverter/MacOSUnicodeConverter.cpp"
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/MutexManagers/NoThreadMutexMgr.cpp",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Socket/SocketNetAccessor.cpp",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Socket/UnixHTTPURLInputStream.cpp",
+						"3.1.1/xerces-c-3.1.1/src/xercesc/util/Transcoders/Iconv/IconvTransService.cpp"
                     ],
                     "direct_dependent_settings": {
 					"xcode_settings": {
                 		"OTHER_LDFLAGS" : [ "-lpthread", 
                 			  				"-lcurl", 
-                							"-framework CoreFoundation", 
-                							"-framework CoreServices" 
+                							"-framework CoreFoundation" 
                 				  			]
           			  }
                     }
