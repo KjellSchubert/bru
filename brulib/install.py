@@ -219,12 +219,15 @@ def exec_make_command(formula, bru_modules_root, system):
                     raise ValueError("build failed with error code {}".format(error_code))
             touch(make_done_file)
 
-def download_module(library, module_name, module_version):
+def download_module(library, module_name, module_version, targetPlatform):
     bru_modules_root = "./bru_modules"
     formula = library.load_formula(module_name, module_version)
     brulib.module_downloader.get_urls(library, formula, bru_modules_root)
-    exec_make_command(formula, bru_modules_root, platform.system())
-
+    if targetPlatform == 'Native':
+    	exec_make_command(formula, bru_modules_root, platform.system())
+    else:
+    	exec_make_command(formula, bru_modules_root, targetPlatform)
+		
 def verify_resolved_dependencies(formula, target, resolved_dependencies):
     """ param formula is the formula with a bunch of desired(!) dependencies
         which after conflict resolution across the whole set of diverse deps
@@ -448,7 +451,7 @@ def resolve_conflicts(library, dependencies, root_requestor):
     return [(module, resolved['version'], resolved['requestor'])
             for (module, resolved) in recursive_deps.items()]
 
-def install_from_bru_file(bru_filename, library):
+def install_from_bru_file(bru_filename, library, targetPlatform):
     """ this gets executed when you 'bru install': it looks for a *.bru file
         in cwd and downloads the listed deps """
     package_jso = brulib.jsonc.loadfile(bru_filename)
@@ -459,7 +462,7 @@ def install_from_bru_file(bru_filename, library):
         print('processing dependency {} version {} requested by {}'
               .format(module_name, module_version, requestor))
         formula = library.load_formula(module_name, module_version)
-        download_module(library, module_name, module_version)
+        download_module(library, module_name, module_version, targetPlatform)
         copy_gyp(library, formula, resolved_dependencies)
 
     # copy common.gypi which is referenced by module.gyp files and usually
@@ -495,7 +498,7 @@ def install_from_bru_file(bru_filename, library):
 
     # todo: clean up unused module dependencies from /bru_modules?
 
-def cmd_install(library, installables):
+def cmd_install(library, installables, targetPlatform):
     """ param installables: e.g. [] or ['googlemock@1.7.0', 'boost-regex']
         This is supposed to mimic 'npm install' syntax, see
         https://docs.npmjs.com/cli/install. Examples:
@@ -518,7 +521,7 @@ def cmd_install(library, installables):
         if bru_filename == None:
             raise Exception("no file *.bru in cwd")
         print('installing dependencies listed in', bru_filename)
-        install_from_bru_file(bru_filename, library)
+        install_from_bru_file(bru_filename, library, targetPlatform)
     else:
         # installables are ['googlemock', 'googlemock@1.7.0']
         # In this case we simply add deps to the *.bru (and *.gyp) file in
@@ -537,4 +540,4 @@ def cmd_install(library, installables):
                 bru_filename, gyp_filename))
         # now download the new dependency just like 'bru install' would do
         # after we added the dep to the bru & gyp file:
-        install_from_bru_file(bru_filename, library)
+        install_from_bru_file(bru_filename, library, targetPlatform)
