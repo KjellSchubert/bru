@@ -17,7 +17,8 @@
     "make_command": {
         "Linux": "cd openssl-1.0.1j; ./config no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads",
         "Darwin":"cd openssl-1.0.1j; ./Configure darwin64-x86_64-cc no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads  -Wno-c++11-narrowing -stdlib=libc++ ",
-
+        "iOS":"   cd openssl-1.0.1j; ./Configure darwin64-x86_64-cc no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads  -Wno-c++11-narrowing -stdlib=libc++ ",
+        #"iOS":"cd openssl-1.0.1j; ./config --host=arm-apple-darwin CXX=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin/g++ CXXFLAGS=-Wno-c++11-narrowing -arch armv7 -arch armv7s -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk -fvisibility=hidden -miphoneos-version-min=6.0 CC=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin/gcc CFLAGS=-Wno-c++11-narrowing -arch armv7 -arch armv7s -arch arm64 -pipe -std=c99 -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -fmessage-length=0 -fvisibility=hidden -miphoneos-version-min=6.0 -gdwarf-2 -mthumb -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk LIBTOOL=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/libtool STRIP=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/strip",
         # Why no-asm? Because otherwise you need to install yet another
         # buildtool for compiling openssl (see INSTALL.W32). I'm not sure
         # how much performance we sacrifice by not using asm, hopefully

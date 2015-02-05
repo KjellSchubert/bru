@@ -734,7 +734,7 @@
                      	"OPENSSL_NO_UNIT_TEST",
                      	"NO_WINDOWS_BRAINDEATH"
                     ]
-                },
+                }],
                 ["OS=='iOS'", {
                     "defines": [
                      	"OPENSSL_NO_EC_NISTP_64_GCC_128",
@@ -750,10 +750,9 @@
                      	"OPENSSL_NO_UNIT_TEST",
                      	"NO_WINDOWS_BRAINDEATH"
                     ]
-                },
+                }],
 
-                # OS!='win'
-                {
+                ["OS=='linux'", {            
                     "defines": [
                         # from Linux Makefile after ./configure
                         "DSO_DLFCN",
