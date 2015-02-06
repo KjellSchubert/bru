@@ -9,6 +9,7 @@ import shutil
 import filecmp
 import platform
 import collections
+import subprocess
 import brulib.jsonc
 import brulib.make
 import brulib.module_downloader
@@ -184,7 +185,18 @@ def exec_make_command(formula, bru_modules_root, system):
             make_commands = formula['make_command']
             if not system in make_commands:
                 raise Exception("no key {} in make_command".format(system))
+                                    
             make_command = make_commands[system]
+
+            if system == 'iOS':
+            	# xcode installation dir might vary -- we need to find the right location to pass to the config script
+            	xcode_path=subprocess.check_output(['xcode-select', '-p'],universal_newlines=True).strip()
+            	# the path that we need to pass to the config script depends on the latest supported iOS version of xcode
+            	xcode_iOS=subprocess.check_output('xcodebuild -showsdks | grep iphoneos | cut -d " " -f 2', shell=True,universal_newlines=True).strip()
+            	print ("Found xcode here: '{}'".format(xcode_path))
+            	print ("iOS Version from xcode: '{}'".format(xcode_iOS))
+            	# if the make command contains a placeholder for the xcode path and/or iOS version, we need to replace it.
+            	make_command = make_command.replace("__BRU_XCODE__",xcode_path).replace("__BRU_IOS_VERSION__",xcode_iOS)
 
             # On Windows msvs toolchain build tools are typically not in your
             # PATH, but are expected to be added to your PATH via
