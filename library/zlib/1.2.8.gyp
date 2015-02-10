@@ -39,10 +39,7 @@
                     "1.2.8/zlib-1.2.8/include"
                 ]
             }
-        }
-    ],
-    "conditions": [
-      ["OS!='iOS'", 
+        },
 
         # this is one of zlib's tests
         {
@@ -52,10 +49,16 @@
             "sources": [ "1.2.8/zlib-1.2.8/test/example.c" ],
             "dependencies": [
                 "zlib"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+              ["OS=='iOS'", {
+                "type": "none"
+              }]
             ]
         }
 
         # there's also a minigzip in the test dir, but that's more of an
         # interactive test, I only care about automated tests here
-        ]]
+    ]
 }
