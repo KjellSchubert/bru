@@ -19,6 +19,8 @@
     "make_command": {
         # had compiler error with default --with-threads
         "Linux": "cd libiconv-1.14 ; ./configure --disable-shared",
-        "Windows": ""
+        "Windows": "",
+        "Darwin": "cd libiconv-1.14 ; ./configure --disable-shared",
+        "iOS"   : "cd libiconv-1.14 ; ./configure  --host=arm-apple-darwin --disable-shared CXX=__BRU_XCODE__/Platforms/iPhoneSimulator.platform/Developer/usr/bin/g++ CXXFLAGS='-I../opus/opus/include/ -I ../libogg-1.3.1/include/ -I../openssl-1.0.1e/include -Wno-c++11-narrowing -std=c++11 -stdlib=libc++ -arch armv7 -arch armv7s -arch arm64   -isysroot __BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS__BRU_IOS_VERSION__.sdk -fvisibility=hidden -miphoneos-version-min=6.0' CC=__BRU_XCODE__/Platforms/iPhoneSimulator.platform/Developer/usr/bin/gcc CFLAGS='-I../opus/opus/include/ -I ../libogg-1.3.1/include/ -I../openssl-1.0.1e/include -Wno-c++11-narrowing -std=c++11 -stdlib=libc++ -arch armv7 -arch armv7s -arch arm64 -pipe -std=c99 -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -fmessage-length=0 -fvisibility=hidden -miphoneos-version-min=6.0 -gdwarf-2 -mthumb -I/Library/iPhone/include -isysroot __BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS__BRU_IOS_VERSION__.sdk' LIBTOOL=__BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/usr/bin/libtool STRIP=__BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/usr/bin/strip"
     }
 }

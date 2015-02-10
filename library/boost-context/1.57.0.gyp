@@ -76,8 +76,21 @@
                         #"1.57.0/context-boost-1.57.0/src/asm/jump_x86_64_ms_pe_masm.asm",
                         #"1.57.0/context-boost-1.57.0/src/asm/make_x86_64_ms_pe_masm.asm"
                     ]
-                }, {
-                    # OS!='win'
+                }], 
+                ["OS=='mac'", {
+                    "sources": [
+                        "1.57.0/context-boost-1.57.0/src/asm/jump_x86_64_ms_pe_masm.asm",
+                        "1.57.0/context-boost-1.57.0/src/asm/make_x86_64_ms_pe_masm.asm"
+                    ]
+                }], 
+                ["OS=='iOS'", {
+                    "sources": [
+                        "1.57.0/context-boost-1.57.0/src/asm/jump_arm_aapcs_pe_armasm.asm",
+                        "1.57.0/context-boost-1.57.0/src/asm/make_arm_aapcs_pe_armasm.asm"
+                    ]
+                }], 
+
+                ["OS=='linux'", {
                     "sources": [
                         # 64bit elf
                         "1.57.0/context-boost-1.57.0/src/asm/jump_x86_64_sysv_elf_gas.S",
