@@ -9,7 +9,7 @@ import glob
 import platform
 import brulib.install
 
-def cmd_make(config, verbose, targetPlatform):
+def cmd_make(config, verbose, targetPlatform="Native"):
     """ this command makes some educated guesses about which toolchain
         the user probably wants to run, then invokes gyp to create the
         makefiles for this toolchain and invokes the build. On Linux

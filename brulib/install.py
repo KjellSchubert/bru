@@ -510,7 +510,7 @@ def install_from_bru_file(bru_filename, library, targetPlatform):
 
     # todo: clean up unused module dependencies from /bru_modules?
 
-def cmd_install(library, installables, targetPlatform):
+def cmd_install(library, installables, targetPlatform="Native"):
     """ param installables: e.g. [] or ['googlemock@1.7.0', 'boost-regex']
         This is supposed to mimic 'npm install' syntax, see
         https://docs.npmjs.com/cli/install. Examples:
