@@ -53,6 +53,7 @@ def locate_executable(target_name):
     """
     for config in ['Release', 'Debug']:
         candidates = [
+            os.path.join('lib', config, target_name),
             os.path.join('out', config, target_name),
             os.path.join('out', config, target_name + '.exe'),
             os.path.join(config, target_name),
