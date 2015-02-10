@@ -16,8 +16,13 @@
                     "rev81/clone"
                 ]
             }
-        },
-        
+        }        
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
+          
+
         # interactive repl
         {
             "target_name": "tiny-js-script",
@@ -26,6 +31,7 @@
             "dependencies": [ "tiny-js" ]
         },
 
+      
         # must be run from rev81/clone dir
         {
             "target_name": "tiny-js-test",
@@ -34,7 +40,11 @@
             },
             "type": "executable",
             "sources": [ "rev81/clone/run_tests.cpp" ],
-            "dependencies": [ "tiny-js" ]
-        }
+            "dependencies": [ "tiny-js" 
+            ]        
+        }  
+        ]
+      }
+      ]
     ]
 }

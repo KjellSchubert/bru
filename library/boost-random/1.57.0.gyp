@@ -25,17 +25,22 @@
                 "../boost-static_assert/boost-static_assert.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*"
             ]
-        },
+        }
         
+    ],
+  "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-random_test_histogram",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/random-boost-1.57.0/test/histogram.cpp" ],
-            "dependencies" : [ "boost-random" ]
+            "dependencies" : [ "boost-random" 
+            ]
         }
-
-        # this test requires boost-test, which is a pretty heavy-weight 
+        
+                # this test requires boost-test, which is a pretty heavy-weight 
         # dependency, so not enabling this test by default
         #{
         #    "target_name": "boost-random_test_normal_distribution",
@@ -47,5 +52,9 @@
         #        "../boost-test/boost-test.gyp:*"
         #    ]
         #}
+
+        ]
+      }
+      ]
     ]
 }

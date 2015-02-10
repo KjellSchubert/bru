@@ -718,10 +718,41 @@
                             "-luser32.lib"
                         ]
                     }
-                },
+                }],
+                ["OS=='mac'", {
+                    "defines": [
+                     	"OPENSSL_NO_EC_NISTP_64_GCC_128",
+                     	"OPENSSL_NO_GMP",
+                     	"OPENSSL_NO_JPAKE",
+                     	"OPENSSL_NO_MD2",
+                     	"OPENSSL_NO_RC5",
+                     	"OPENSSL_NO_RFC3779",
+                     	"OPENSSL_NO_SCTP",
+                     	"OPENSSL_NO_SSL2",
+                     	"OPENSSL_NO_SSL3",
+                     	"OPENSSL_NO_STORE",
+                     	"OPENSSL_NO_UNIT_TEST",
+                     	"NO_WINDOWS_BRAINDEATH"
+                    ]
+                }],
+                ["OS=='iOS'", {
+                    "defines": [
+                     	"OPENSSL_NO_EC_NISTP_64_GCC_128",
+                     	"OPENSSL_NO_GMP",
+                     	"OPENSSL_NO_JPAKE",
+                     	"OPENSSL_NO_MD2",
+                     	"OPENSSL_NO_RC5",
+                     	"OPENSSL_NO_RFC3779",
+                     	"OPENSSL_NO_SCTP",
+                     	"OPENSSL_NO_SSL2",
+                     	"OPENSSL_NO_SSL3",
+                     	"OPENSSL_NO_STORE",
+                     	"OPENSSL_NO_UNIT_TEST",
+                     	"NO_WINDOWS_BRAINDEATH"
+                    ]
+                }],
 
-                # OS!='win'
-                {
+                ["OS=='linux'", {            
                     "defines": [
                         # from Linux Makefile after ./configure
                         "DSO_DLFCN",
@@ -743,8 +774,10 @@
                     }
                 }]
             ]
-        },
-
+        }
+    ],
+    "conditions": [
+      ["OS!='iOS'", 
         # openssl has code for many separate test executables in the /test
         # dir, let's build a small subset of these via gyp to verify the
         # correctness of link_settings specified in the openssl gyp target.
@@ -798,5 +831,6 @@
         #    ],
         #    "dependencies": [ "openssl" ]
         #}
+        ]
     ]
 }

@@ -71,30 +71,37 @@
             "export_dependent_settings": [
                 "../iconv/iconv.gyp:iconv"
             ]
-        },
-
-        {
-            "target_name": "libxml2-testSAX",
-            "type": "executable",
-            "test": {},
-            "sources": [ "2.9.2/libxml2-2.9.2/testSAX.c" ],
-            "dependencies": [ "libxml2" ]
-        },
-
-        {
-            "target_name": "libxml2-testXPath",
-            "type": "executable",
-            "test": {},
-            "sources": [ "2.9.2/libxml2-2.9.2/testXPath.c" ],
-            "dependencies": [ "libxml2" ]
-        },
-
-        {
-            "target_name": "libxml2-example",
-            "type": "executable",
-            "test": {},
-            "sources": [ "2.9.2/libxml2-2.9.2/example/gjobread.c" ],
-            "dependencies": [ "libxml2" ]
         }
+    ],
+	"conditions": [
+      	["OS!='iOS'", 
+      		{      		
+      			 "targets": [
+			        {
+        			    "target_name": "libxml2-testSAX",
+		        	    "type": "executable",
+		            	"test": {},
+			            "sources": [ "2.9.2/libxml2-2.9.2/testSAX.c" ],
+			            "dependencies": [ "libxml2" ]
+			        },
+		
+		    	    {
+		        	    "target_name": "libxml2-testXPath",
+		            	"type": "executable",
+			            "test": {},
+			            "sources": [ "2.9.2/libxml2-2.9.2/testXPath.c" ],
+			            "dependencies": [ "libxml2" ]
+		    	    },
+
+		        	{
+			            "target_name": "libxml2-example",
+			            "type": "executable",
+			            "test": {},
+		    	        "sources": [ "2.9.2/libxml2-2.9.2/example/gjobread.c" ],
+		        	    "dependencies": [ "libxml2" ]
+		        	}    
+		        ]
+        	}
+        ]
     ]
 }

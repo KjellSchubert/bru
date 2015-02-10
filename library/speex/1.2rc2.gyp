@@ -20,10 +20,14 @@
                     "1.2rc2/speex-1.2rc2/include"
                 ]
             }
-        },
+        }
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
+          {
+	        # this is one of speex's sample apps, is not exactly a unit test suite
 
-        # this is one of speex's sample apps, is not exactly a unit test suite
-        {
             "target_name": "speexenc",
             "type": "executable",
             
@@ -40,7 +44,11 @@
                 # libspeex itself has no dependency on ogg, but this sample
                 # app here has
                 "../ogg/ogg.gyp:*"
-            ]
-        }
+            
+            ]        
+        }  
+        ]
+      }
+      ]
     ]
 }

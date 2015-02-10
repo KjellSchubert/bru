@@ -82,8 +82,13 @@
                 "silk",
                 "celt"
             ]
-        },
+        }
         
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
+
         # opus has multiple tests, the encode one here is pretty slow (runs 
         # several minutes)
         {
@@ -121,30 +126,29 @@
                 "opus"
             ]
         },
-        
+
+        # test needs cmd line args, in fact it's not much of a test, it's
+        # doing a speexenc/speexdec equivalent, encoding pcm as opus and
+        # back. Format is 16bit PCM LittleEndian aka ffmpeg's s16le. 
+        # Not much of a test, only verifies the codec won't crash/hang. 
+        # Listen to output PCM to gauge codec quality 'manually'.
+        # Since the opus tar.gz doesn't include PCM files afaik we pretend
+        # some arbitrary file from this repo is s16le (terribly noisy :) PCM.
         {
             "target_name" : "opus_trivial_example",
             "type" : "executable",
-            
-            # test needs cmd line args, in fact it's not much of a test, it's
-            # doing a speexenc/speexdec equivalent, encoding pcm as opus and
-            # back. Format is 16bit PCM LittleEndian aka ffmpeg's s16le. 
-            # Not much of a test, only verifies the codec won't crash/hang. 
-            # Listen to output PCM to gauge codec quality 'manually'.
-            # Since the opus tar.gz doesn't include PCM files afaik we pretend
-            # some arbitrary file from this repo is s16le (terribly noisy :) PCM.
             "test": {
                 "cwd": "1.1/opus-1.1",
                 "args": ["configure", "configure.pretend.s16le.pcm"]
             },
-
             "sources" : [
                 "1.1/opus-1.1/doc/trivial_example.c"
             ],
             "dependencies": [
-                "opus"
-            ]
-        }
-
+                "opus" ]        
+        }  
+        ]
+      }
+      ]
     ]
 }

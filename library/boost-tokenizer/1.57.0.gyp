@@ -17,8 +17,11 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        },
-        
+        }       
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-tokenizer_simple_example_1",
             "type": "executable",
@@ -27,6 +30,9 @@
                 "1.57.0/tokenizer-boost-1.57.0/test/simple_example_1.cpp"
             ],
             "dependencies": [ "boost-tokenizer" ]
-        }
+        }  
+        ]
+      }
+      ]
     ]
 }

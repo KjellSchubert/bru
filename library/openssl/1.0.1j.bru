@@ -15,8 +15,9 @@
     # compile with gyp. WARNING: the gyp file will not necessarily end up using
     # the same options ./configure had configured. TODO: revisit this process.
     "make_command": {
-        "Linux": "cd openssl-1.0.1j; ./config no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads",
-
+        "Linux" : "cd openssl-1.0.1j; ./config no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads",
+        "Darwin": "cd openssl-1.0.1j; ./Configure darwin64-x86_64-cc no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads  -Wno-c++11-narrowing -stdlib=libc++ -fvisibility=hidden ",
+        "iOS"   : "cd openssl-1.0.1j; ./Configure iphoneos-cross     no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads  -Wno-c++11-narrowing -stdlib=libc++ -fvisibility=hidden",
         # Why no-asm? Because otherwise you need to install yet another
         # buildtool for compiling openssl (see INSTALL.W32). I'm not sure
         # how much performance we sacrifice by not using asm, hopefully

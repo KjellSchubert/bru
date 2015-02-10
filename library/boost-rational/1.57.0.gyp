@@ -18,8 +18,11 @@
                 "../boost-math/boost-math.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*"
             ]
-        },
-        
+        }
+    ],
+    "conditions": [
+      ["OS!='iOS'", {
+        "targets": [
         {
             "target_name": "boost-rational_example",
             "type": "executable",
@@ -27,8 +30,10 @@
             "sources": [
                 "1.57.0/rational-boost-1.57.0/test/rational_example.cpp"
             ],
-            "dependencies": [ "boost-rational" ]
-        }
-
+            "dependencies": [ "boost-rational"]
+        }  
+        ]
+      }
+      ]
     ]
 }

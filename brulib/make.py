@@ -9,7 +9,7 @@ import glob
 import platform
 import brulib.install
 
-def cmd_make(config, verbose):
+def cmd_make(config, verbose, targetPlatform="Native"):
     """ this command makes some educated guesses about which toolchain
         the user probably wants to run, then invokes gyp to create the
         makefiles for this toolchain and invokes the build. On Linux
@@ -25,7 +25,7 @@ def cmd_make(config, verbose):
         param verbose 0 means not verbose, >= 1 means higher verbosity level
             (whatever that means in the underlying toolchain)
     """
-    print("running 'bru make --config {}'".format(config))
+    print("running 'bru make --config {} --targetPlatform {}'".format(config,targetPlatform))
 
     # first locate the single gyp in the cwd
     bru_file = brulib.install.get_single_bru_file('.')
@@ -39,9 +39,25 @@ def cmd_make(config, verbose):
 
     system = platform.system()
     if system == 'Windows':
-        cmd_make_win(gyp_file, config)
+    	if targetPlatform == 'Native':
+    		cmd_make_win(gyp_file, config)
+    	else:
+    		raise Exception('targetPlatform {} not supported on platform {}'\
+    		.format(targetPlatform, system))
     elif system == 'Linux':
-        cmd_make_linux(gyp_file, config, verbose)
+    	if targetPlatform == 'Native':
+    		cmd_make_linux(gyp_file, config, verbose)
+    	else: 
+        	raise Exception('targetPlatform {} not supported on platform {}'\
+        	.format(targetPlatform, system))
+    elif system == 'Darwin':
+    	if targetPlatform == 'iOS':
+    		cmd_make_ios(gyp_file, config, verbose)
+    	elif targetPlatform == 'Native':
+    		cmd_make_macos(gyp_file, config, verbose)
+    	else:
+        	raise Exception('targetPlatform {} not supported on platform {}'\
+            .format(targetPlatform, system))
     else:
         raise Exception('no idea how to invoke gyp & toolchain on platform {}'\
             .format(system))
@@ -166,4 +182,72 @@ def cmd_make_linux(gyp_filename, config, verbose):
     returncode = os.system(make_cmdline)
     if returncode != 0:
         raise Exception('Build failed: make returned', returncode)
+    print('Build complete.')
+
+def cmd_make_macos(gyp_filename, config, verbose):
+    # Here we could check if ninja or some such is installed to generate ninja
+    # project files. But for simplicity's sake let's just use whatever gyp
+    # defaults to.
+
+    # For some odd reason passing './package.gyp' as a param to gyp will
+    # generate garbage, instead you gotta pass 'package.gyp'. Se let's
+    # explicitly remove a leading ./
+    dirname = os.path.dirname(gyp_filename)
+    assert dirname == '.' or len(dirname) == 0
+    gyp_filename = os.path.basename(gyp_filename)
+    gyp_cmdline = 'gyp --depth=. -f xcode {} --generator-output=./xcode-macos'.format(gyp_filename)
+    run_gyp(gyp_cmdline)
+    filepattern = './xcode-macos/*.xcodeproj'
+    files = glob.glob(filepattern)
+    print(filepattern)
+    print(files)
+    if len(files) == 0:
+        raise Exception('gyp did not generate {}, no idea how to '
+            'build with your toolchain, please build manually').format(filepattern)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {}'.format(files[0],config)
+    print("running '{}'".format(xcode_cmdline))
+    returncode = os.system(xcode_cmdline)
+    if returncode != 0:
+        raise Exception('Build failed: make returned', returncode)
+    print('Build complete.')
+
+def cmd_make_ios(gyp_filename, config, verbose):
+    # Here we could check if ninja or some such is installed to generate ninja
+    # project files. But for simplicity's sake let's just use whatever gyp
+    # defaults to.
+
+    # For some odd reason passing './package.gyp' as a param to gyp will
+    # generate garbage, instead you gotta pass 'package.gyp'. Se let's
+    # explicitly remove a leading ./
+    dirname = os.path.dirname(gyp_filename)
+    assert dirname == '.' or len(dirname) == 0
+    gyp_filename = os.path.basename(gyp_filename)
+    gyp_cmdline = 'gyp --depth=. -f xcode -DOS=iOS {} --generator-output=./xcode-ios'.format(gyp_filename)
+    run_gyp(gyp_cmdline)
+
+    filepattern = './xcode-ios/*.xcodeproj'
+    files = glob.glob(filepattern)
+    if len(files) == 0:
+        raise Exception('gyp did not generate {}, no idea how to '
+            'build with your toolchain, please build manually').format(filepattern)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphonesimulator'.format(files[0],config)
+    print("running '{}'".format(xcode_cmdline))
+    returncode = os.system(xcode_cmdline)
+    if returncode != 0:
+        raise Exception('Build failed: make for device returned', returncode)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphoneos'.format(files[0],config)
+    print("running '{}'".format(xcode_cmdline))
+    returncode = os.system(xcode_cmdline)
+    if returncode != 0:
+        raise Exception('Build failed: make for simulator returned', returncode)        
+    mkdir_cmdline = 'mkdir lib/{}-Universial'.format(config)
+    returncode = os.system(mkdir_cmdline)
+    filepattern = './lib/{}-iphoneos/lib*.a'.format(config)
+    for file in glob.glob(filepattern):
+    	name = os.path.basename(os.path.normpath(file))
+    	command = 'lipo -create lib/{}-iphoneos/{} lib/{}-iphonesimulator/{} -output lib/{}-Universial/{}'.format(config,name,config,name,config,name)
+    	print("running '{}'".format(command))
+    	returncode = os.system(command)
+    	if returncode != 0:
+    		raise Exception('Build failed: lipo returned', returncode)
     print('Build complete.')

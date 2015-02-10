@@ -10,9 +10,14 @@
 
 # http://unix.stackexchange.com/questions/17499/get-path-of-current-script-when-executed-through-a-symlink
 # This is brittle & frowned upon, I might change this some time...
-script_dir="$(dirname "$(readlink -f "$0")")"
 
+if [ "$(uname)" == "Darwin" ]; then
+script_dir="$(dirname "$(readlink "$0")")"
+else
+script_dir="$(dirname "$(readlink -f "$0")")"
+fi
 $script_dir/autoupdate.py --hours 24
+
 
 # after the autoupdate run bru.py, forwarding all cmd line params
 $script_dir/bru.py $@

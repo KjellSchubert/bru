@@ -9,6 +9,7 @@ import shutil
 import filecmp
 import platform
 import collections
+import subprocess
 import brulib.jsonc
 import brulib.make
 import brulib.module_downloader
@@ -184,7 +185,18 @@ def exec_make_command(formula, bru_modules_root, system):
             make_commands = formula['make_command']
             if not system in make_commands:
                 raise Exception("no key {} in make_command".format(system))
+                                    
             make_command = make_commands[system]
+
+            if system == 'iOS':
+            	# xcode installation dir might vary -- we need to find the right location to pass to the config script
+            	xcode_path=subprocess.check_output(['xcode-select', '-p'],universal_newlines=True).strip()
+            	# the path that we need to pass to the config script depends on the latest supported iOS version of xcode
+            	xcode_iOS=subprocess.check_output('xcodebuild -showsdks | grep iphoneos | cut -d " " -f 2', shell=True,universal_newlines=True).strip()
+            	print ("Found xcode here: '{}'".format(xcode_path))
+            	print ("iOS Version from xcode: '{}'".format(xcode_iOS))
+            	# if the make command contains a placeholder for the xcode path and/or iOS version, we need to replace it.
+            	make_command = make_command.replace("__BRU_XCODE__",xcode_path).replace("__BRU_IOS_VERSION__",xcode_iOS)
 
             # On Windows msvs toolchain build tools are typically not in your
             # PATH, but are expected to be added to your PATH via
@@ -219,12 +231,15 @@ def exec_make_command(formula, bru_modules_root, system):
                     raise ValueError("build failed with error code {}".format(error_code))
             touch(make_done_file)
 
-def download_module(library, module_name, module_version):
+def download_module(library, module_name, module_version, targetPlatform):
     bru_modules_root = "./bru_modules"
     formula = library.load_formula(module_name, module_version)
     brulib.module_downloader.get_urls(library, formula, bru_modules_root)
-    exec_make_command(formula, bru_modules_root, platform.system())
-
+    if targetPlatform == 'Native':
+    	exec_make_command(formula, bru_modules_root, platform.system())
+    else:
+    	exec_make_command(formula, bru_modules_root, targetPlatform)
+		
 def verify_resolved_dependencies(formula, target, resolved_dependencies):
     """ param formula is the formula with a bunch of desired(!) dependencies
         which after conflict resolution across the whole set of diverse deps
@@ -448,7 +463,7 @@ def resolve_conflicts(library, dependencies, root_requestor):
     return [(module, resolved['version'], resolved['requestor'])
             for (module, resolved) in recursive_deps.items()]
 
-def install_from_bru_file(bru_filename, library):
+def install_from_bru_file(bru_filename, library, targetPlatform):
     """ this gets executed when you 'bru install': it looks for a *.bru file
         in cwd and downloads the listed deps """
     package_jso = brulib.jsonc.loadfile(bru_filename)
@@ -459,7 +474,7 @@ def install_from_bru_file(bru_filename, library):
         print('processing dependency {} version {} requested by {}'
               .format(module_name, module_version, requestor))
         formula = library.load_formula(module_name, module_version)
-        download_module(library, module_name, module_version)
+        download_module(library, module_name, module_version, targetPlatform)
         copy_gyp(library, formula, resolved_dependencies)
 
     # copy common.gypi which is referenced by module.gyp files and usually
@@ -495,7 +510,7 @@ def install_from_bru_file(bru_filename, library):
 
     # todo: clean up unused module dependencies from /bru_modules?
 
-def cmd_install(library, installables):
+def cmd_install(library, installables, targetPlatform="Native"):
     """ param installables: e.g. [] or ['googlemock@1.7.0', 'boost-regex']
         This is supposed to mimic 'npm install' syntax, see
         https://docs.npmjs.com/cli/install. Examples:
@@ -518,7 +533,7 @@ def cmd_install(library, installables):
         if bru_filename == None:
             raise Exception("no file *.bru in cwd")
         print('installing dependencies listed in', bru_filename)
-        install_from_bru_file(bru_filename, library)
+        install_from_bru_file(bru_filename, library, targetPlatform)
     else:
         # installables are ['googlemock', 'googlemock@1.7.0']
         # In this case we simply add deps to the *.bru (and *.gyp) file in
@@ -537,4 +552,4 @@ def cmd_install(library, installables):
                 bru_filename, gyp_filename))
         # now download the new dependency just like 'bru install' would do
         # after we added the dep to the bru & gyp file:
-        install_from_bru_file(bru_filename, library)
+        install_from_bru_file(bru_filename, library, targetPlatform)

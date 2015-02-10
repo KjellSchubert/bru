@@ -28,8 +28,10 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        },
-        
+        }
+    ],    
+    "conditions": [
+      ["OS!='iOS'", 
         {
             "target_name": "boost-filesystem_fstream_test",
             "type": "executable",
@@ -51,8 +53,9 @@
             ],
             "dependencies": [
                 "boost-filesystem"
+            
             ]
         }
-
+      ] 
     ]
 }
