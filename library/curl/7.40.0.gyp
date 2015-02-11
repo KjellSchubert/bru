@@ -189,6 +189,12 @@
             ],
             "dependencies" : [
                 "curl"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+              ["OS=='iOS'", {
+                "type": "none"
+              }]
             ]
         }
     ]
