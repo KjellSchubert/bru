@@ -429,6 +429,8 @@
                     "sources": [
                         "3.1.1/xerces-c-3.1.1/src/xercesc/util/FileManagers/PosixFileMgr.cpp",
                         "3.1.1/xerces-c-3.1.1/src/xercesc/util/MutexManagers/PosixMutexMgr.cpp",
+                        "3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Curl/CurlNetAccessor.cpp",
+                        "3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Curl/CurlURLInputStream.cpp",
                         "3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Socket/SocketNetAccessor.cpp",
                         "3.1.1/xerces-c-3.1.1/src/xercesc/util/NetAccessors/Socket/UnixHTTPURLInputStream.cpp",
                         "3.1.1/xerces-c-3.1.1/src/xercesc/util/Transcoders/IconvGNU/IconvGNUTransService.cpp",
@@ -440,6 +442,7 @@
                     "link_settings": {
                         "libraries": [
                             "-lpthread",
+                            "-lcurl",
                             "-lnsl"
                         ]
                     }

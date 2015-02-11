@@ -66,7 +66,7 @@ def read_vcproj(vcproj_filename, config, platform):
     assert root.tag.endswith('Project')
     sources = []
     for ClCompile in root.findall('.//{http://schemas.microsoft.com/developer/msbuild/2003}ClCompile'):
-        path = ClCompile.get('Include')
+        path = ClCompile.get('Include').replace('\\', '/')
         if path == None:
             continue
         # paths are relative to vcproj dir
@@ -92,7 +92,7 @@ def read_vcproj(vcproj_filename, config, platform):
     #     ExcludedFromBuild="true"
     #   />
     for File in root.findall('.//File'):
-        path = File.get('RelativePath')
+        path = File.get('RelativePath').replace('\\', '/')
         assert path != None
         path = os.path.normpath(os.path.join(vcproj_dir, path))
         if path.endswith('.h'):

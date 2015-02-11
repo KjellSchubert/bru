@@ -11,7 +11,7 @@
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
-                    "1.1.5/double-conversion-1.1.5/src"
+                    "1.1.5/double-conversion-1.1.5/include"
                 ]
             }
         },
@@ -33,6 +33,7 @@
                     "test-strtod"]
             },
             "include_dirs" : [
+                "1.1.5/double-conversion-1.1.5/src",
                 "1.1.5/double-conversion-1.1.5/test/cctest"
             ],
             "sources" : [

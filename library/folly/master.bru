@@ -1,0 +1,44 @@
+{
+    "homepage": "https://github.com/facebook/folly",
+    "url": "git+https://github.com/facebook/folly.git",
+    "module": "folly",
+    "version": "master",
+    # Apparently these python script generate cpp src for some utils, but also
+    # some library cpp files.
+    "make_command": {
+        "Linux": "cd clone/folly && python build/generate_escape_tables.py && python build/generate_format_tables.py && python build/generate_varint_tables.py"
+    },
+    "dependencies": {
+        "boost-algorithm": "1.57.0",
+        "boost-bind": "1.57.0",
+        "boost-container": "1.57.0",
+        "boost-conversion": "1.57.0",
+        "boost-core": "1.57.0",
+        "boost-crc": "1.57.0",
+        "boost-filesystem": "1.57.0",
+        "boost-function_types": "1.57.0",
+        "boost-functional": "1.57.0",
+        "boost-intrusive": "1.57.0",
+        "boost-iterator": "1.57.0",
+        "boost-lexical_cast-math": "1.57.0",
+        "boost-mpl-type_traits-typeof-utility": "1.57.0",
+        "boost-multi_index": "1.57.0",
+        "boost-numeric_conversion": "1.57.0",
+        "boost-optional": "1.57.0",
+        "boost-preprocessor": "1.57.0",
+        "boost-random": "1.57.0",
+        "boost-range": "1.57.0",
+        "boost-regex": "1.57.0",
+        "boost-smart_ptr": "1.57.0",
+        "boost-static_assert": "1.57.0",
+        "boost-thread": "1.57.0",
+        "boost-variant": "1.57.0",
+        "googlemock": "1.7.0",
+        "googletest": "1.7.0",
+        "glog": "0.3.3",
+        "gflags": "2.1.1",
+        "double-conversion": "1.1.5"
+        # TODO: 
+        # libevent (for Windows builds at least, otherwise apt-get install libevent-dev)
+    }
+}
