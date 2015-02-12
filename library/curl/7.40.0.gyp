@@ -29,7 +29,19 @@
                     "defines": [
                         "HAVE_CONFIG_H"
                     ]
+                }],
+				["OS=='iOS'", {
+                    "defines": [
+                        "HAVE_CONFIG_H"
+                    ]
+                }],
+				["OS=='mac'", {
+                    "defines": [
+                        "HAVE_CONFIG_H"
+                    ]
                 }]
+
+
             ],
             # sources list generated for Windows build via
             # ~\bru\vcproj2gyp.py 7.40.0/curl-7.40.0/projects/Windows/VC11/lib/libcurl.vcxproj "LIB Release - LIB OpenSSL" Win32
@@ -177,6 +189,12 @@
             ],
             "dependencies" : [
                 "curl"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+              ["OS=='iOS'", {
+                "type": "none"
+              }]
             ]
         }
     ]

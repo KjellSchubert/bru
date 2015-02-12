@@ -26,11 +26,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        }        
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
          {
             "target_name": "boost-unordered_erase_tests",
             "type": "executable",
@@ -38,10 +34,15 @@
             "sources": [ 
                 "1.57.0/unordered-boost-1.57.0/test/unordered/erase_tests.cpp"
             ],
-            "dependencies": [ "boost-unordered"]
+            "dependencies": [ "boost-unordered"],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }  
-        ]
-      }
-      ]
     ]
 }

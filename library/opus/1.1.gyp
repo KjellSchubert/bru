@@ -82,12 +82,7 @@
                 "silk",
                 "celt"
             ]
-        }
-        
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
 
         # opus has multiple tests, the encode one here is pretty slow (runs 
         # several minutes)
@@ -106,6 +101,14 @@
             ],
             "dependencies": [
                 "opus"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         },
         
@@ -124,6 +127,14 @@
             ],
             "dependencies": [
                 "opus"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         },
 
@@ -145,10 +156,16 @@
                 "1.1/opus-1.1/doc/trivial_example.c"
             ],
             "dependencies": [
-                "opus" ]        
+                "opus"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }  
-        ]
-      }
-      ]
     ]
 }

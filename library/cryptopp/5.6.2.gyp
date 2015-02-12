@@ -89,48 +89,48 @@
                 "include_dirs": [
                     "5.6.2"
                 ]
-
             }
+
+        },
+
+        # 'cryptest v' runs a sort-of-quick set of tests: it's quick in
+        # release builds with asm enabled, but 1 min if you enable clangs
+        # address sanitizer and disable asm.
+        {
+            "target_name": "cryptest",
+            "type": "executable",
+
+            # this single test executable bundles a lot of tests and tools:
+            #   * v runs a 1min unit test suite: valuable, but slow
+		    #   * b runs benchmarks, even slower
+            # I couldn't find a faster test, so tempted to disable this for now.
+            "test": {
+                "cwd": "5.6.2",
+                "args": [ "v" ]
+            },
+            "sources": [
+                "5.6.2/bench.cpp",
+                "5.6.2/bench2.cpp",
+                "5.6.2/datatest.cpp",
+                "5.6.2/dlltest.cpp",
+                "5.6.2/regtest.cpp",
+                "5.6.2/test.cpp",
+                "5.6.2/validat1.cpp",
+                "5.6.2/validat2.cpp",
+                "5.6.2/validat3.cpp",
+                "5.6.2/fipsalgt.cpp"
+            ],
+            "dependencies": [
+                "cryptopp"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }
-    ],    
-	"conditions": [
-		["OS!='iOS'", 
-			{		
-      			 "targets": [
-        			# 'cryptest v' runs a sort-of-quick set of tests: it's quick in
-			        # release builds with asm enabled, but 1 min if you enable clangs
-			        # address sanitizer and disable asm.
-			        {
-			            "target_name": "cryptest",
-				         "type": "executable",
-
-			            # this single test executable bundles a lot of tests and tools:
-		    	        #   * v runs a 1min unit test suite: valuable, but slow
-		        	    #   * b runs benchmarks, even slower
-		            	# I couldn't find a faster test, so tempted to disable this for now.
-			            "test": {
-    			            "cwd": "5.6.2",
-			                "args": [ "v" ]
-			            },
-
-			            "sources": [
-			                "5.6.2/bench.cpp",
-			                "5.6.2/bench2.cpp",
-			                "5.6.2/datatest.cpp",
-			                "5.6.2/dlltest.cpp",
-			                "5.6.2/regtest.cpp",
-			                "5.6.2/test.cpp",
-			                "5.6.2/validat1.cpp",
-			                "5.6.2/validat2.cpp",
-			                "5.6.2/validat3.cpp",
-			                "5.6.2/fipsalgt.cpp"
-			            ],
-			            "dependencies": [
-			                "cryptopp"
-			            ]
-			        }
-	        	]
-    	    }
-        ]
     ]
 }

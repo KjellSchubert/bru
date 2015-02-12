@@ -30,11 +30,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-foreach/boost-foreach.gyp:*"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
         {
             "target_name": "boost-multi_index_test_basic",
             "type": "executable",
@@ -43,9 +39,16 @@
                 "1.57.0/multi_index-boost-1.57.0/test/test_basic.cpp",
                 "1.57.0/multi_index-boost-1.57.0/test/test_basic_main.cpp" 
             ],
-            "dependencies": [ "boost-multi_index" ]
+            "dependencies": [ "boost-multi_index" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         },
-        
         {
             "target_name": "boost-multi_index_example_basic",
             "type": "executable",
@@ -53,10 +56,15 @@
             "sources": [ 
                 "1.57.0/multi_index-boost-1.57.0/example/basic.cpp" 
             ],
-            "dependencies": [ "boost-multi_index" ]
-        }  
-        ]
-      }
-      ]
+            "dependencies": [ "boost-multi_index" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
+        }
     ]
 }
