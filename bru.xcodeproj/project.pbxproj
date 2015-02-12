@@ -1,0 +1,112 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		C60C157F1A8CED200084C042 /* autoupdate.last */ = {isa = PBXFileReference; lastKnownFileType = text; path = autoupdate.last; sourceTree = "<group>"; };
+		C60C15801A8CED200084C042 /* autoupdate.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = autoupdate.py; sourceTree = "<group>"; };
+		C60C15811A8CED200084C042 /* bru_common.gypi */ = {isa = PBXFileReference; lastKnownFileType = text; path = bru_common.gypi; sourceTree = "<group>"; };
+		C60C15821A8CED200084C042 /* bru.bat */ = {isa = PBXFileReference; lastKnownFileType = text; path = bru.bat; sourceTree = "<group>"; };
+		C60C15831A8CED200084C042 /* bru.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = bru.py; sourceTree = "<group>"; };
+		C60C15841A8CED200084C042 /* bru.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = bru.sh; sourceTree = "<group>"; };
+		C60C15851A8CED200084C042 /* brulib */ = {isa = PBXFileReference; lastKnownFileType = folder; path = brulib; sourceTree = "<group>"; };
+		C60C15861A8CED200084C042 /* detect_cycles.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = detect_cycles.py; sourceTree = "<group>"; };
+		C60C15871A8CED200084C042 /* graph_cycles.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = graph_cycles.py; sourceTree = "<group>"; };
+		C60C15881A8CED200084C042 /* gyp_sources_intersect.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = gyp_sources_intersect.py; sourceTree = "<group>"; };
+		C60C15891A8CED200084C042 /* import_boost.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = import_boost.py; sourceTree = "<group>"; };
+		C60C158A1A8CED200084C042 /* library */ = {isa = PBXFileReference; lastKnownFileType = folder; path = library; sourceTree = "<group>"; };
+		C60C158B1A8CED200084C042 /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		C60C158C1A8CED200084C042 /* makefilelog2gyp.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = makefilelog2gyp.py; sourceTree = "<group>"; };
+		C60C158D1A8CED200084C042 /* merge_boost_cycles.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = merge_boost_cycles.py; sourceTree = "<group>"; };
+		C60C158E1A8CED200084C042 /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
+		C60C158F1A8CED200084C042 /* requirements-dev.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "requirements-dev.txt"; sourceTree = "<group>"; };
+		C60C15901A8CED200084C042 /* requirements.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = requirements.txt; sourceTree = "<group>"; };
+		C60C15911A8CED200084C042 /* scan_deps.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = scan_deps.py; sourceTree = "<group>"; };
+		C60C15921A8CED200084C042 /* tests */ = {isa = PBXFileReference; lastKnownFileType = folder; path = tests; sourceTree = "<group>"; };
+		C60C15931A8CED200084C042 /* vcproj2gyp.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = vcproj2gyp.py; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		C60C15781A8CECFE0084C042 = {
+			isa = PBXGroup;
+			children = (
+				C60C157F1A8CED200084C042 /* autoupdate.last */,
+				C60C15801A8CED200084C042 /* autoupdate.py */,
+				C60C15811A8CED200084C042 /* bru_common.gypi */,
+				C60C15821A8CED200084C042 /* bru.bat */,
+				C60C15831A8CED200084C042 /* bru.py */,
+				C60C15841A8CED200084C042 /* bru.sh */,
+				C60C15851A8CED200084C042 /* brulib */,
+				C60C15861A8CED200084C042 /* detect_cycles.py */,
+				C60C15871A8CED200084C042 /* graph_cycles.py */,
+				C60C15881A8CED200084C042 /* gyp_sources_intersect.py */,
+				C60C15891A8CED200084C042 /* import_boost.py */,
+				C60C158A1A8CED200084C042 /* library */,
+				C60C158B1A8CED200084C042 /* LICENSE.txt */,
+				C60C158C1A8CED200084C042 /* makefilelog2gyp.py */,
+				C60C158D1A8CED200084C042 /* merge_boost_cycles.py */,
+				C60C158E1A8CED200084C042 /* readme.md */,
+				C60C158F1A8CED200084C042 /* requirements-dev.txt */,
+				C60C15901A8CED200084C042 /* requirements.txt */,
+				C60C15911A8CED200084C042 /* scan_deps.py */,
+				C60C15921A8CED200084C042 /* tests */,
+				C60C15931A8CED200084C042 /* vcproj2gyp.py */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		C60C15791A8CECFE0084C042 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+			};
+			buildConfigurationList = C60C157C1A8CECFE0084C042 /* Build configuration list for PBXProject "bru" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = C60C15781A8CECFE0084C042;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		C60C157D1A8CECFE0084C042 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		C60C157E1A8CECFE0084C042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C60C157C1A8CECFE0084C042 /* Build configuration list for PBXProject "bru" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C60C157D1A8CECFE0084C042 /* Debug */,
+				C60C157E1A8CECFE0084C042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C60C15791A8CECFE0084C042 /* Project object */;
+}
