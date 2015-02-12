@@ -62,7 +62,7 @@
                   }
                 }]
             ]
-        }
+        },
 
         # This is one of the lib's own tests, it compiles but has
         # one failure 'OutputFileHelpersTest.GetCurrentExecutableName'
@@ -81,12 +81,7 @@
         #        "googletest"
         #    ]
         #}
-
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
-          {
+        {
             "target_name": "googletest_sample1",
             "type" : "executable",
             "test": {},
@@ -99,10 +94,15 @@
             ],
             "dependencies" : [
                 "googletest"
-            ]        
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }  
-        ]
-      }
-      ]
     ]
 }

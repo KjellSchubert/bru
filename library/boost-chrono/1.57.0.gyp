@@ -36,10 +36,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-ratio/boost-ratio.gyp:*"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "boost-chrono_example_test_duration",
             "type": "executable",
@@ -47,9 +44,16 @@
             "sources": [
                 "1.57.0/chrono-boost-1.57.0/example/test_duration.cpp"
             ],
-            "dependencies": [ "boost-chrono" ]
+            "dependencies": [ "boost-chrono" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         },
-
         {
             "target_name": "boost-chrono_example_test_clock",
             "type": "executable",
@@ -57,9 +61,17 @@
             "sources": [
                 "1.57.0/chrono-boost-1.57.0/example/test_clock.cpp"
             ],
-            "dependencies": [ "boost-chrono" 
+            "dependencies": [
+                "boost-chrono"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

@@ -31,10 +31,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-intrusive/boost-intrusive.gyp:*"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         # this test compiles ridiculously slowly btw (about 1min)
         # So I disabled it for now.
         #{
@@ -44,15 +41,22 @@
         #    "sources": [ "1.57.0/container-boost-1.57.0/test/vector_test.cpp" ],
         #    "dependencies": [ "boost-container" ]
         #},
-        
         {
             "target_name": "boost-container_string_test",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/container-boost-1.57.0/test/string_test.cpp" ],
-            "dependencies": [ "boost-container" 
+            "dependencies": [
+                "boost-container"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

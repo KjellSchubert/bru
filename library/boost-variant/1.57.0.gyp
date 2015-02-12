@@ -26,11 +26,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-type_index/boost-type_index.gyp:*"
             ]
-        }
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [ 
+        },
         {
             "target_name": "boost-variant_recursive_variant_test",
             "type": "executable",
@@ -40,10 +36,16 @@
             ],
             "dependencies": [ 
                 "boost-variant",
-                "../boost-test/boost-test.gyp:*"]
+                "../boost-test/boost-test.gyp:*"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }  
-        ]
-      }
-      ]
     ]
 }

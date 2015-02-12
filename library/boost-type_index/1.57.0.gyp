@@ -20,11 +20,7 @@
                 "../boost-static_assert/boost-static_assert.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*"
             ]
-        }
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
         {
             "target_name": "boost-type_index_ctti_print_name",
             "type": "executable",
@@ -32,10 +28,15 @@
             "sources": [
                 "1.57.0/type_index-boost-1.57.0/test/ctti_print_name.cpp"
             ],
-            "dependencies": [ "boost-type_index" ]
-        }  
-        ]
-      }
-      ]
+            "dependencies": [ "boost-type_index" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
+        }
     ]
 }

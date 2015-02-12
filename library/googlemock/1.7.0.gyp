@@ -26,12 +26,8 @@
                 # since gmock #includes refer to gtest #includes:
                 "../googletest/googletest.gyp:googletest"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
-          {
+        },
+        {
             "target_name": "googlemock_test",
             "type": "executable",
             "test": {},
@@ -45,10 +41,15 @@
             "dependencies": [
                 "googlemock",
                 "../googletest/googletest.gyp:*"
-        	]        
+        	],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }  
-        ]
-      }
-      ]
     ]
 }

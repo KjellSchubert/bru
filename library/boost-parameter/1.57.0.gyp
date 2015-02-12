@@ -20,28 +20,36 @@
                 "../boost-mpl/boost-mpl.gyp:*"
                 #"../boost-python/boost-python.gyp:*"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
         {
             "target_name": "boost-parameter_test_deduced",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/parameter-boost-1.57.0/test/deduced.cpp" ],
-            "dependencies": [ "boost-parameter" ]
+            "dependencies": [ "boost-parameter" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         },
-        
         {
             "target_name": "boost-parameter_tutorial",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/parameter-boost-1.57.0/test/tutorial.cpp" ],
-            "dependencies": [ "boost-parameter"]
-        }  
-        ]
-      }
-      ]
+            "dependencies": [ "boost-parameter"],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
+        }
     ]
 }

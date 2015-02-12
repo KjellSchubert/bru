@@ -19,10 +19,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-type_index/boost-type_index.gyp:*"
             ]
-        }        
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "boost-any_test",
             "type": "executable",
@@ -31,8 +28,15 @@
                 "1.57.0/any-boost-1.57.0/test/any_test.cpp"
             ],
             "dependencies": [ "boost-any" 
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

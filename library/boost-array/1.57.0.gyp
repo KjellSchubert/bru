@@ -18,18 +18,22 @@
                 "../boost-assert/boost-assert.gyp:*",
                 "../boost-core/boost-core.gyp:*"
             ]
-        }        
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "boost-array_array2",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/array-boost-1.57.0/test/array2.cpp" ],
             "dependencies": [ "boost-array" 
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

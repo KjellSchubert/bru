@@ -40,18 +40,21 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../zlib/zlib.gyp:*"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "boost-iostreams_back_inserter_example",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/iostreams-boost-1.57.0/example/boost_back_inserter_example.cpp" ],
-            "dependencies": [ "boost-iostreams" 
+            "dependencies": [ "boost-iostreams"],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

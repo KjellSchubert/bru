@@ -20,19 +20,21 @@
                 "../boost-static_assert/boost-static_assert.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*"
             ]
-        }    
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [        {
+        },
+        {
             "target_name": "boost-proto_example_calc2",
             "type": "executable",
             "test": {},
             "sources": [ "1.57.0/proto-boost-1.57.0/example/calc2.cpp" ],
-            "dependencies": [ "boost-proto"]
-        }  
-        ]
-      }
-      ]
+            "dependencies": [ "boost-proto"],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
+        }
     ]
 }

@@ -23,10 +23,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        }        
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "boost-circular_buffer_example",
             "type": "executable",
@@ -34,9 +31,17 @@
             "sources": [ 
                 "1.57.0/circular_buffer-boost-1.57.0/example/circular_buffer_example.cpp" 
             ],
-            "dependencies": [ "boost-circular_buffer" 
+            "dependencies": [
+                "boost-circular_buffer"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

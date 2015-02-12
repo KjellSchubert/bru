@@ -774,14 +774,7 @@
                     }
                 }]
             ]
-        }
-    ],
-    "conditions": [
-      ["OS!='iOS'", 
-        # openssl has code for many separate test executables in the /test
-        # dir, let's build a small subset of these via gyp to verify the
-        # correctness of link_settings specified in the openssl gyp target.
-        # This test loads data file and must be run with cwd=./test
+        },
         {
             "target_name": "ssltest",
             "type": "executable",
@@ -810,7 +803,15 @@
                 # explicitly? Apparently not.
                 "1.0.1j/openssl-1.0.1j/ssl/ssltest.c"
             ],
-            "dependencies": [ "openssl" ]
+            "dependencies": [ "openssl" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }
 
         # compile one of the (interactive) openssl demo apps to verify correct
@@ -831,6 +832,5 @@
         #    ],
         #    "dependencies": [ "openssl" ]
         #}
-        ]
     ]
 }

@@ -104,10 +104,7 @@
             "dependencies": [
                 "../boost-config/boost-config.gyp:*"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "boost-context_test",
             "type": "executable",
@@ -118,9 +115,16 @@
                 "../boost-assert/boost-assert.gyp:*",
                 "../boost-array/boost-array.gyp:*",
                 "../boost-test/boost-test.gyp:*"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         },
-
         {
             "target_name": "boost-context_example_transfer",
             "type": "executable",
@@ -131,8 +135,15 @@
                 "../boost-assert/boost-assert.gyp:*",
                 "../boost-array/boost-array.gyp:*"
             
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

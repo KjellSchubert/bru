@@ -28,12 +28,8 @@
                 "../boost-exception/boost-exception.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        } 
-    ],
-      
-    "conditions": [
-      ["OS!='iOS'", {
-        
+        },
+        {
             "target_name": "boost-algorithm_partition_copy_test1",
             "type": "executable",
             "test": {},
@@ -43,7 +39,15 @@
             "dependencies": [ 
                 "boost-algorithm",
                 "../boost-test/boost-test.gyp:*"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
-        }]
+        }
     ]
 }

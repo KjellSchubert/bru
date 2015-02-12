@@ -79,11 +79,7 @@
                     "1.0.25/libsndfile-1.0.25/src"
                 ]
             }
-        }
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
         {
             "target_name": "sndfile-ulaw-test",
             "type": "executable",
@@ -94,10 +90,15 @@
                 "1.0.25/libsndfile-1.0.25/tests/ulaw_test.c",
                 "1.0.25/libsndfile-1.0.25/tests/utils.c"
             ],
-            "dependencies": [ "sndfile" ]        
+            "dependencies": [ "sndfile" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }  
-        ]
-      }
-      ]
     ]
 }

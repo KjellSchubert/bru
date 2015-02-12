@@ -28,10 +28,7 @@
                 "../boost-static_assert/boost-static_assert.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*"
             ]
-        }        
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "gregorian_testparse_date",
             "type": "executable",
@@ -39,9 +36,17 @@
             "sources": [
                 "1.57.0/date_time-boost-1.57.0/test/gregorian/testparse_date.cpp" 
             ],
-            "dependencies": [ "boost-date_time" 
+            "dependencies": [
+                "boost-date_time"
+            ],
+            # this disables building the example on iOS
+                "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

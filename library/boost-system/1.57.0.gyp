@@ -20,11 +20,7 @@
                 "../boost-assert/boost-assert.gyp:*",
                 "../boost-core/boost-core.gyp:*"
             ]
-        }
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
         {
             "target_name": "boost-system_error_test",
             "type": "executable",
@@ -32,10 +28,15 @@
             "sources": [
                 "1.57.0/system-boost-1.57.0/test/system_error_test.cpp"
             ],
-            "dependencies": [ "boost-system" ]
-        }  
-        ]
-      }
-      ]
+            "dependencies": [ "boost-system" ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
+        }
     ]
 }

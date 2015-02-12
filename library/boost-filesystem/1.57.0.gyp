@@ -28,10 +28,7 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
-        }
-    ],    
-    "conditions": [
-      ["OS!='iOS'", 
+        },
         {
             "target_name": "boost-filesystem_fstream_test",
             "type": "executable",
@@ -41,9 +38,16 @@
             ],
             "dependencies": [
                 "boost-filesystem"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         },
-        
         {
             "target_name": "boost-filesystem_path_test",
             "type": "executable",
@@ -54,8 +58,15 @@
             "dependencies": [
                 "boost-filesystem"
             
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-      ] 
     ]
 }

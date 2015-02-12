@@ -448,12 +448,7 @@
                     }
                 }]
             ]
-        }
-    ],
-    
-	"conditions": [
-      	["OS!='iOS'", {      		
-      		 "targets": [
+        },
         {
             "target_name": "xerces_sample_PParse",
             "type": "executable",
@@ -466,10 +461,15 @@
              ],
             "dependencies": [
                 "xerces"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
             ]
         }
-
-        ]
-        }]
     ]
 }

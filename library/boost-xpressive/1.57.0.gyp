@@ -30,15 +30,11 @@
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-exception/boost-exception.gyp:*"
             ]
-        }       
-    ],
-    "conditions": [
-      ["OS!='iOS'", {
-        "targets": [
+        },
         {
-        # This requires an additional dep to boost-assign.
-        # The test also compiles pretty slowly (30secs), so I was tempted 
-        # to disable it again.
+            # This requires an additional dep to boost-assign.
+            # The test also compiles pretty slowly (30secs), so I was tempted
+            # to disable it again.
         
             "target_name": "boost-xpressive_example_numbers",
             "type": "executable",
@@ -46,10 +42,16 @@
             "sources": [ "1.57.0/xpressive-boost-1.57.0/example/numbers.cpp" ],
             "dependencies": [ 
                 "boost-xpressive" ,
-                "../boost-assign/boost-assign.gyp:*"]
+                "../boost-assign/boost-assign.gyp:*"
+            ],
+            # this disables building the example on iOS
+            "conditions": [
+                ["OS=='iOS'",
+                    {
+                        "type": "none"
+                    }
+                ]
+            ]
         }  
-        ]
-      }
-      ]
     ]
 }
