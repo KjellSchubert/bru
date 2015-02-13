@@ -25,7 +25,6 @@
         # To build config Debug it with msbuild run:
         #   >msbuild *.sln /p:Configuration=Debug
         "default_configuration": "Release",
-
         # List two configs: Debug & Release:
         "configurations": {
             "Debug": {
@@ -68,8 +67,9 @@
                     },
                 },
                 "xcode_settings": {
-                    "GCC_OPTIMIZATION_LEVEL  ": "0", #stop gyp from defaulting to - Os
-		            "CONFIGURATION_BUILD_DIR" : "../../lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"
+                    "GCC_OPTIMIZATION_LEVEL  " : "0", #stop gyp from defaulting to - Os
+		            "CONFIGURATION_BUILD_DIR"  : "../../bru_modules/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+                    "OBJROOT"                  : "bru_build"
                 },
             },
             "Release": {
@@ -123,7 +123,9 @@
                     }
                 },
                 "xcode_settings": {
-		            "CONFIGURATION_BUILD_DIR" : "../../lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"
+		            "CONFIGURATION_BUILD_DIR" : "../../bru_modules/lib/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+                    "OBJROOT"                 : "bru_build"
+
                 },
                 "VCLibrarianTool": {
                     "AdditionalOptions": [
