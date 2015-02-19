@@ -30,6 +30,16 @@
                         "WIN32_LEAN_AND_MEAN",
                         "_WIN32_WINNT=0x0500" # >= XP? or win 2000?
                     ]
+                }],
+                ["OS=='mac'", {
+                    "defines": [
+                        "RCF_OPENSSL_STATIC"
+                    ]
+                }],
+                ["OS=='iOS'", {
+                    "defines": [
+                        "RCF_OPENSSL_STATIC"
+                    ]
                 }]
             ],
             "dependencies": [
