@@ -239,15 +239,27 @@ def cmd_make_ios(gyp_filename, config, verbose):
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
     if returncode != 0:
-        raise Exception('Build failed: make for simulator returned', returncode)        
-    mkdir_cmdline = 'mkdir lib/{}-Universial'.format(config)
-    returncode = os.system(mkdir_cmdline)
-    filepattern = './lib/{}-iphoneos/lib*.a'.format(config)
-    for file in glob.glob(filepattern):
-    	name = os.path.basename(os.path.normpath(file))
-    	command = 'lipo -create lib/{}-iphoneos/{} lib/{}-iphonesimulator/{} -output lib/{}-Universial/{}'.format(config,name,config,name,config,name)
-    	print("running '{}'".format(command))
-    	returncode = os.system(command)
-    	if returncode != 0:
-    		raise Exception('Build failed: lipo returned', returncode)
+        raise Exception('Build failed: make for simulator returned', returncode)
+    if os.path.exists("./lib"):
+        mkdir_cmdline = 'mkdir lib/{}-Universial'.format(config)
+        returncode = os.system(mkdir_cmdline)
+        filepattern = './lib/{}-iphoneos/lib*.a'.format(config)
+        for file in glob.glob(filepattern):
+            name = os.path.basename(os.path.normpath(file))
+            command = 'lipo -create lib/{}-iphoneos/{} lib/{}-iphonesimulator/{} -output lib/{}-Universial/{}'.format(config,name,config,name,config,name)
+            print("running '{}'".format(command))
+            returncode = os.system(command)
+            if returncode != 0:
+                raise Exception('Build failed: lipo returned', returncode)
+    if os.path.exists("./bru_modules/lib"):
+        mkdir_cmdline = 'mkdir bru_modules/lib/{}-Universial'.format(config)
+        returncode = os.system(mkdir_cmdline)
+        filepattern = './bru_modules/lib/{}-iphoneos/lib*.a'.format(config)
+        for file in glob.glob(filepattern):
+            name = os.path.basename(os.path.normpath(file))
+            command = 'lipo -create bru_modules/lib/{}-iphoneos/{} bru_modules/lib/{}-iphonesimulator/{} -output bru_modules/lib/{}-Universial/{}'.format(config,name,config,name,config,name)
+            print("running '{}'".format(command))
+            returncode = os.system(command)
+            if returncode != 0:
+                raise Exception('Build failed: lipo returned', returncode)
     print('Build complete.')
