@@ -14,10 +14,37 @@ optional patch & configure, build, apache-ivy publish to Artifactory, and
 updating Ivy files for each combination of toolchain & library. Which makes
 toolchain upgrades less fun than they should be :)
 
+Usage example:
+```
+>bru install googlemock
+created foo\package.bru
+added dependency googlemock@1.7.0 to foo\package.bru and foo\package.gyp
+processing dependency googlemock version 1.7.0 requested by foo\package.bru
+unpacking C:\Users\<me>\.bru\downloads\googlemock\1.7.0\files_gmock-1.7.0.zip
+processing dependency googletest version 1.7.0 requested by googlemock
+unpacking C:\Users\<me>\.bru\downloads\googletest\1.7.0\files_gtest-1.7.0.zip
+copying bru_common.gypi
+creating empty bru_overrides.gypi
+
+>bru test
+executable for googlemock:googlemock_test not found
+running 'bru make --config Debug --targetPlatform Native'
+running 'gyp --depth=. .\package.gyp -G msvs_version=2012'
+running msvs via msbuild: 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\msbuild.exe .\package.sln /p:Configuration=Debug /verbosity:minimal'
+...
+Build complete.
+running googlemock_test
+...
+The following 2 tests succeeded:
+  googlemock:googlemock_test after 119 ms
+  googletest:googletest_sample1 after 46 ms
+All 2 tests successful.
+```
+
 Existing projects like
 [Homebrew](http://brew.sh/) already download & build Boost, e.g. see 
 [here](https://github.com/Homebrew/homebrew/blob/master/Library/Formula/boost.rb).
-Why not just use Homebrew? Homebrew appears to be MacOS-specific. Besides Homebrew
+Why not just use Homebrew? Homebrew appears to be MacOS-specific. Besides 
 since Homebrew seems to be more like apt-get/yum than npm it doesn't seem to be
 dealing with different versions of products, e.g. atm it
 always downloads Boost 1.56, so downstream projects that for whatever reason
@@ -50,14 +77,11 @@ Requirements:
 * is supposed to be able to download & build different versions of dependencies 
   like Boost & resolve conflicts if different downstream dependencies ask for 
   different versions of Boost.
-* is supposed to be able to store successful builds of dependencies in a 
-  hierarchy of caches, e.g. in the user's home directory, and optionally in an
-  organization-internal cache (e.g. a simple webserver that can deal with HTTP 
-  GET and PUT of boost-v110-s.lib.gz and boost-includes.tar.gz). That allows
-  developers in the organization to fetch upstream OSS dependencies without
-  having to rebuild them locally. Besides that it allows a single developer to
-  use e.g. cryptopp 1.99 in multiple C++ projects without having to rebuild it
-  individually for each.
+* should build upstream modules in-place, there's no requirement for sharing 
+  binaries of upstream modules to reduce the number of local builds. Initially
+  I had planned to share binaries, but this would be a lot of effort for
+  questionable value. Compiler ABI compatibilty and dependencies on
+  different std libs are complex topics.
 * is supposed to deal with multiple C++ standard libs gracefully: e.g. if one
   project happens to use Clang 3.5 with GCC 4.9's C++ standard library and 
   another uses an incompatible standard lib like http://libcxx.llvm.org/ or
@@ -65,28 +89,20 @@ Requirements:
   This is not much different from resolving e.g. Boost version conflicts in
   different dependencies, except often people aren't even aware of which 
   stdlib they are using.
-* is supposed to deal with compilation of dependencies for different C++ 
-  standards: if one project needs boost 1.56 compiled for a C++98 project and 
-  and another for C++14 then different Boost libs need to be downloaded for each.
-* is supposed to deal with different & ABI-incompatible toolchains on the same
-  machine: e.g. if a machine has installed an old ICC and a recent Clang that
-  happen to be ABI-incompatible then different Boost libs need to be downloaded 
-  for each.
 * is supposed to be able to optionally run tests of upstream dependencies to
-  get some confidence that a downloaded or just built dependency works as 
-  advertised.
+  get some confidence that a dependency works as advertised.
 * should use existing cross-platform build tools like [CMake](http://www.cmake.org/)
   or Chromium's [gyp](https://code.google.com/p/gyp/) or
   [gn](https://code.google.com/p/chromium/wiki/gn) or hilarious 
-  [tup](http://gittup.org/tup/) as much as possible.
+  [tup](http://gittup.org/tup/) as much as possible. 
+  Of these I ended up depending on gyp.
 * should specify dependencies similar as nodejs:npm's package.json or 
   python:pip's requirements.txt
-* should rather generate compiler or linker errors than silent ODR violations with
-  crashes at runtime
 * the tool should be easy to install, e.g. 'python3:pip install bru' would be
   desirable, especially since build tools like gyp already depend on Python(2).
-* do we want support for debug vs release builds? Probably.
-* do we want support for /MT vs /MD, static vs dynamic lib builds? Yes.
+  Atm installations consists of a 'git clone', update via 'git pull'.
+* support debug vs release builds
+* needs to deal with msvs's /MT vs /MD, static vs dynamic CRT builds
 * do we want support for project-specific configurations beyond debug/release?
   Probably. E.g. for SSE2 vs non-SSE builds.
 * do we want support for different OS versions? Some Windows libraries do
@@ -204,3 +220,24 @@ gyp.exe or gyp.bat are in your path (via c:\tools\python2\Scripts).
 
 See [here](https://github.com/KjellSchubert/bru-sample) for how to build a small
 sample application using bru.
+
+Installing bru itself
+===
+
+On Ubuntu:
+---
+
+```
+cd ~
+git clone https://github.com/KjellSchubert/bru.git
+sudo ln `pwd`/bru/bru.sh /usr/bin/bru
+```
+
+On Windows:
+---
+
+```
+cd c:\tools # this is where choco installs many apps like python for example
+git clone https://github.com/KjellSchubert/bru.git
+set PATH=%PATH%;c:\tools\bru # to make bru[.bat] accessible from anywhere
+```
