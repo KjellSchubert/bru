@@ -197,14 +197,15 @@ def cmd_make_macos(gyp_filename, config, verbose):
     gyp_filename = os.path.basename(gyp_filename)
     gyp_cmdline = 'gyp --depth=. -f xcode {} --generator-output=./xcode-macos'.format(gyp_filename)
     run_gyp(gyp_cmdline)
-    filepattern = './xcode-macos/*.xcodeproj'
+    xcodeprj = './xcode-macos/{}xcodeproj'.format(gyp_filename[:-3])
+    filepattern = xcodeprj
     files = glob.glob(filepattern)
     print(filepattern)
     print(files)
     if len(files) == 0:
         raise Exception('gyp did not generate {}, no idea how to '
             'build with your toolchain, please build manually').format(filepattern)
-    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {}'.format(files[0],config)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {}'.format(xcodeprj,config)
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
     if returncode != 0:
@@ -224,18 +225,18 @@ def cmd_make_ios(gyp_filename, config, verbose):
     gyp_filename = os.path.basename(gyp_filename)
     gyp_cmdline = 'gyp --depth=. -f xcode -DOS=iOS {} --generator-output=./xcode-ios'.format(gyp_filename)
     run_gyp(gyp_cmdline)
-
-    filepattern = './xcode-ios/*.xcodeproj'
+    xcodeprj = './xcode-ios/{}xcodeproj'.format(gyp_filename[:-3])
+    filepattern = xcodeprj
     files = glob.glob(filepattern)
     if len(files) == 0:
         raise Exception('gyp did not generate {}, no idea how to '
             'build with your toolchain, please build manually').format(filepattern)
-    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphonesimulator'.format(files[0],config)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphonesimulator'.format(xcodeprj,config)
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
     if returncode != 0:
         raise Exception('Build failed: make for device returned', returncode)
-    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphoneos'.format(files[0],config)
+    xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {} -sdk iphoneos'.format(xcodeprj,config)
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
     if returncode != 0:
