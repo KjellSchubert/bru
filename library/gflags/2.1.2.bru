@@ -1,13 +1,18 @@
 {
     "homepage": "https://code.google.com/p/gflags",
     # releases moved to github
-    "url": "https://github.com/schuhschuh/gflags/archive/v2.1.1.tar.gz",
+
+    # was: "url": "https://github.com/schuhschuh/gflags/archive/v2.1.2.tar.gz",
+    # but this doesn't build with vs 2015, here's the patch:
+    "url": "git+https://github.com/KjellSchubert/gflags.git@4a56d614cfd21d33c7d65ebc3c4ed0eb3cda0807",
+
     "module": "gflags",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "make_command": {
         # Requires 'sudo apt-get install cmake' if you didn't install that yet.
         # This is the equivalent of ./configure, it doesn't compile the code.
-        "Linux": "cd gflags-2.1.1 ; cmake ."
+        "Linux": "cd clone ; cmake .",
+        "Windows": "cd clone ; cmake ."
     },
     "dependencies": {
         "googletest": "1.7.0"
