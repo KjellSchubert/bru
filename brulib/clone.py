@@ -1,8 +1,17 @@
 """ code responsible for creating svn and git clones for modules which don't
     offer tar.gz or zip downloads of their releases """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
-import urllib.parse
+import sys
+if sys.version_info >= (3, 0):
+    from urllib.parse import urlparse
+if sys.version_info < (3, 0):
+    from urlparse import urlparse
 import subprocess
     
 def remove_url_prefix(url, prefix):
@@ -17,7 +26,7 @@ def svn_checkout(repo_url, clone_root_dir):
 def split_off_changeset(repo_url):
     """ splits http://foo.com/bar@xyz into tuple (http://foo.com/bar, xyz),
         with the 2nd tuple elem being None if there's no '@' in the URL """
-    parse = urllib.parse.urlparse(repo_url)
+    parse = urlparse(repo_url)
     at_index = parse.path.rfind('@')
     if at_index != -1:
         changeset_len = len(parse.path) - at_index # includes '@'

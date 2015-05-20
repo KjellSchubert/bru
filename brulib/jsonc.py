@@ -6,9 +6,15 @@
     commas that are illegal in JSON.
 """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import json
 import collections
 import os
+import brulib.util
 
 def drop_hash_comment(line):
     """ Getting a line with '#' comment it drops the comment.
@@ -62,7 +68,7 @@ def savefile(filename, jso):
     json_text = json.dumps(jso, indent = 4)
     dirname = os.path.dirname(filename)
     if len(dirname) > 0:
-        os.makedirs(dirname, exist_ok=True)
+        brulib.util.mkdir_p(dirname)
     with open(filename, 'w') as json_file:
         json_file.write(json_text)
         #print("saved " + filename)

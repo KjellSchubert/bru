@@ -2,6 +2,11 @@
     'bru install package.json' or 'bru install protobug googlemock@1.7.0'.
 """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
 import re
 import glob

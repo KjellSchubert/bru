@@ -1,11 +1,23 @@
 """ code for downloading and caching and unpacking tar files """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
-import urllib.request
-import urllib.parse # python 2 urlparse
+import sys
+if sys.version_info >= (3, 0):
+    from urllib.parse import urlparse
+    from urllib.request import urlretrieve
+if sys.version_info < (3, 0):
+    from urlparse import urlparse
+    from urllib import urlretrieve
 import tarfile
 import zipfile
 import shutil
 import pdb
+import brulib.util
 
 def split_all(path):
     (head, tail) = os.path.split(path)
@@ -17,7 +29,7 @@ def split_all(path):
 def url2filename(url):
     """ e.g. maps http://zlib.net/zlib-1.2.8.tar.gz to zlib-1.2.8.tar.gz,
         and http://boost.../foo/1.57.0.tgz to foo_1.57.0.tgz"""
-    parse = urllib.parse.urlparse(url)
+    parse = urlparse(url)
     if parse.scheme == 'file':
         path = parse.netloc
         assert len(path) > 0
@@ -42,7 +54,7 @@ def wget(url, filename):
     """ typically to download tar.gz or zip """
     # from http://stackoverflow.com/questions/7243750/download-file-from-web-in-python-3
     print("wget {} -> {}".format(url, filename))
-    urllib.request.urlretrieve(url, filename)
+    urlretrieve(url, filename)
 
 def copy_symlink_members(to_directory, lnk_members):
     """ instead of creating links copy these archive members """
@@ -52,7 +64,7 @@ def copy_symlink_members(to_directory, lnk_members):
             raise Exception("untar cannot deal with linked dirs yet (TODO?)")
         dst = member.name
         dstdir = os.path.dirname(dst)
-        os.makedirs(dstdir, exist_ok=True)
+        brulib.util.mkdir_p(dstdir)
         src = os.path.join(dstdir, member.linkname)
         shutil.copyfile(os.path.join(to_directory, src).replace('\\', '/'), os.path.join(to_directory, dst).replace('\\', '/'))
 
@@ -123,7 +135,7 @@ def wget_and_untar_once(zip_url, tar_dir, module_dir):
     """
     zip_file = os.path.join(tar_dir, url2filename(zip_url))
     if not os.path.exists(zip_file):
-        os.makedirs(tar_dir, exist_ok=True)
+        brulib.util.mkdir_p(tar_dir)
         zip_file_temp = zip_file + ".tmp"
         wget(zip_url, zip_file_temp)
         os.rename(zip_file_temp, zip_file)
