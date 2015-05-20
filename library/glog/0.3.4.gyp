@@ -4,30 +4,34 @@
             "target_name": "glog",
             "type": "static_library",
             "include_dirs": [
-                "0.3.3/glog-0.3.3/src"
+                "0.3.4/clone/src"
             ],
             "sources": [
-                "0.3.3/glog-0.3.3/src/*.cc"
+                "0.3.4/clone/src/*.cc"
             ],
             "sources!": [
-                "0.3.3/glog-0.3.3/src/*test*.cc"
+                "0.3.4/clone/src/*test*.cc"
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
-                    "0.3.3/glog-0.3.3/src"
+                    "0.3.4/clone/src"
                 ]
             },
             "conditions": [
 
                 ["OS=='win'", {
-                  "defines": [
-                    # TODO
-                  ],
-                  "direct_dependent_settings": {
-                    "defines": [
-                      # TODO
+                    "include_dirs": [
+                        "0.3.4/clone/src/windows"
+                    ],
+                    "sources": [
+                        "0.3.4/clone/src/windows/*.cc"
                     ]
-                  }
+                }],
+
+                ["OS!='win'", {
+                    "link_settings": {
+                        "libraries": [ "-lpthread" ]
+                    }
                 }]
             ]
         },
@@ -37,12 +41,19 @@
             "target_name": "glog_logging_unittest",
             "type" : "executable",
             "test": {
-                "cwd": "0.3.3/glog-0.3.3"
+                "cwd": "0.3.4/clone/src/glog"
             },
             "sources" : [
-                "0.3.3/glog-0.3.3/src/logging_unittest.cc"
+                "0.3.4/clone/src/logging_unittest.cc"
             ],
-            "libraries": [ "-lpthread" ],
+            "conditions": [
+
+                ["OS=='win'", {
+                    "include_dirs": [
+                        "0.3.4/clone/src/windows"
+                    ]
+                }]
+            ],
             "dependencies" : [
                 "glog",
                 "../googletest/googletest.gyp:*"
