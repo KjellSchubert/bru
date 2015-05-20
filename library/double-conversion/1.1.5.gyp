@@ -41,7 +41,13 @@
             ],
             "dependencies" : [
                 "double-conversion"
-            ]
+            ],
+            "msvs_settings": {
+                "VCCLCompilerTool": {
+                    # needed for msvs 2015 RC
+                    "AdditionalOptions": [ "/bigobj" ]
+                }
+            }
         }
     ]
 }
