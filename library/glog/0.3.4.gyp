@@ -12,11 +12,6 @@
             "sources!": [
                 "0.3.4/clone/src/*test*.cc"
             ],
-            "direct_dependent_settings": {
-                "include_dirs": [
-                    "0.3.4/clone/src"
-                ]
-            },
             "conditions": [
 
                 ["OS=='win'", {
@@ -25,10 +20,20 @@
                     ],
                     "sources": [
                         "0.3.4/clone/src/windows/*.cc"
-                    ]
+                    ],
+                    "direct_dependent_settings": {
+                        "include_dirs": [
+                            "0.3.4/clone/src/windows"
+                        ]
+                    }
                 }],
 
                 ["OS!='win'", {
+                    "direct_dependent_settings": {
+                        "include_dirs": [
+                            "0.3.4/clone/src"
+                        ]
+                    },
                     "link_settings": {
                         "libraries": [ "-lpthread" ]
                     }

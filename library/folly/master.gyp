@@ -30,7 +30,6 @@
             ],
             "defines": [
                 "FOLLY_NO_CONFIG", # unless you run ./configure
-                "FOLLY_HAVE_CLOCK_GETTIME",
                 "FOLLY_VERSION=\"1\"", # ??? TODO
                 "FOLLY_HAVE_MALLOC_USABLE_SIZE"
                 # on ios?: "FOLLY_HAVE_MALLOC_SIZE"
@@ -45,15 +44,28 @@
                 ],
                 "defines": [
                     "FOLLY_NO_CONFIG",
-                    "FOLLY_HAVE_CLOCK_GETTIME",
                     #"FOLLY_VERSION=\"1\"",
                     "FOLLY_HAVE_MALLOC_USABLE_SIZE"
                     # on ios?:
                     #"FOLLY_HAVE_MALLOC_SIZE"
                 ]
             },
-            "link_settings" : {
-                "libraries" : [ "-ldl" ]
+            "conditions": [
+                ["OS=='linux'", {
+                    "defines": ["FOLLY_HAVE_CLOCK_GETTIME"],
+                    "link_settings" : {
+                        "libraries" : [ "-ldl" ]
+                    }
+                }
+                ],
+                ["OS=='win'", {
+                    #"defines": []
+                }]
+            ],
+            "msvs_settings": {
+                "VCCLCompilerTool": {
+                    "WarningLevel": "0" # temporary!
+                }
             },
             "export_dependent_settings": [
                 "../glog/glog.gyp:*",
@@ -87,6 +99,7 @@
                 "../boost-random/boost-random.gyp:*",
                 "../gflags/gflags.gyp:*",
                 "../glog/glog.gyp:*",
+                #"../openssl/openssl.gyp:*",
                 "../double-conversion/double-conversion.gyp:*"
             ]
         },

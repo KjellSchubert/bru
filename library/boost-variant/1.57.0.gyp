@@ -44,7 +44,10 @@
                     {
                         "type": "none"
                     }
-                ]
+                ],
+                ["OS=='win'", {
+                    "defines": [ "BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES" ]
+                }]
             ]
         }  
     ]

@@ -10,3 +10,4 @@ __pycache__
 autoupdate.last
 bru_modules
 *.swp
+*.pyc

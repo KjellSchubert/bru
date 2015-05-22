@@ -6,7 +6,8 @@
     # Apparently these python script generate cpp src for some utils, but also
     # some library cpp files.
     "make_command": {
-        "Linux": "cd clone/folly && python build/generate_escape_tables.py && python build/generate_format_tables.py && python build/generate_varint_tables.py"
+        "Linux": "cd clone/folly && python build/generate_escape_tables.py && python build/generate_format_tables.py && python build/generate_varint_tables.py",
+        "Windows": "cd clone\\folly && python build/generate_escape_tables.py && python build/generate_format_tables.py && python build/generate_varint_tables.py"
     },
     "dependencies": {
         "boost-algorithm": "1.57.0",
@@ -35,8 +36,9 @@
         "boost-variant": "1.57.0",
         "googlemock": "1.7.0",
         "googletest": "1.7.0",
-        "glog": "0.3.3",
-        "gflags": "2.1.1",
+        "glog": "0.3.4",
+        "gflags": "2.1.2",
+        "openssl": "1.0.1j",
         "double-conversion": "1.1.5"
         # TODO: 
         # libevent (for Windows builds at least, otherwise apt-get install libevent-dev)
