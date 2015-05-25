@@ -31,9 +31,8 @@
             "defines": [
                 "FOLLY_NO_CONFIG", # unless you run ./configure
                 "FOLLY_VERSION=\"1\"", # ??? TODO
-                "FOLLY_HAVE_MALLOC_USABLE_SIZE",
+                "FOLLY_HAVE_MALLOC_USABLE_SIZE"
                 # on ios?: "FOLLY_HAVE_MALLOC_SIZE"
-                "FOLLY_HAVE_PTHREAD_ATFORK"
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
@@ -45,15 +44,17 @@
                 "defines": [
                     "FOLLY_NO_CONFIG",
                     #"FOLLY_VERSION=\"1\"",
-                    "FOLLY_HAVE_MALLOC_USABLE_SIZE",
+                    "FOLLY_HAVE_MALLOC_USABLE_SIZE"
                     # on ios?:
                     #"FOLLY_HAVE_MALLOC_SIZE"
-                    "FOLLY_HAVE_PTHREAD_ATFORK"
                 ]
             },
             "conditions": [
                 ["OS=='linux'", {
-                    "defines": ["FOLLY_HAVE_CLOCK_GETTIME"],
+                    "defines": [
+                        "FOLLY_HAVE_CLOCK_GETTIME",
+                        "FOLLY_HAVE_PTHREAD_ATFORK"
+                    ],
                     "link_settings" : {
                         "libraries" : [ "-ldl" ]
                     }
@@ -71,6 +72,7 @@
                 "../glog/glog.gyp:*",
                 "../gflags/gflags.gyp:*",
                 "../pthread/pthread.gyp:*",
+                "../libevent/libevent.gyp:*",
                 "../double-conversion/double-conversion.gyp:*"
             ],
             "dependencies": [

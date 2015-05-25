@@ -4,17 +4,16 @@
             "target_name": "libevent",
             "type": "static_library",
             "include_dirs": [
-                "2.0.22/libevent-release-2.0.22-stable",
-                "2.0.22/libevent-release-2.0.22-stable/include"
+                "1.4.15/libevent-release-1.4.15-stable"
             ],
             "sources": [
-                "2.0.22/libevent-release-2.0.22-stable/*.c"
+                "1.4.15/libevent-release-1.4.15-stable/*.c"
             ],
             "defines": [
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
-                    "2.0.22/libevent-release-2.0.22-stable/include"
+                    "1.4.15/libevent-release-1.4.15-stable"
                 ]
             },
             "link_settings": {
@@ -25,18 +24,20 @@
             "conditions": [
                 ["OS=='win'", {
                     "include_dirs": [
-                        "2.0.22/libevent-release-2.0.22-stable/WIN32-Code",
-                        "2.0.22/libevent-release-2.0.22-stable/compat"
+                        "1.4.15/libevent-release-1.4.15-stable/WIN32-Code",
+                        "1.4.15/libevent-release-1.4.15-stable/compat"
                     ],
                     "sources!": [
                         # exclude files not in Makefile.nmake
-                        "2.0.22/libevent-release-2.0.22-stable/arc4random.c",
-                        "2.0.22/libevent-release-2.0.22-stable/kqueue.c",
-                        "2.0.22/libevent-release-2.0.22-stable/select.c",
-                        "2.0.22/libevent-release-2.0.22-stable/evport.c",
-                        "2.0.22/libevent-release-2.0.22-stable/bufferevent_openssl.c",
-                        "2.0.22/libevent-release-2.0.22-stable/*poll*.c",
-                        "2.0.22/libevent-release-2.0.22-stable/*pthread*.c"
+                        "1.4.15/libevent-release-1.4.15-stable/arc4random.c",
+                        "1.4.15/libevent-release-1.4.15-stable/kqueue.c",
+                        "1.4.15/libevent-release-1.4.15-stable/select.c",
+                        "1.4.15/libevent-release-1.4.15-stable/evport.c",
+                        "1.4.15/libevent-release-1.4.15-stable/bufferevent_openssl.c",
+                        "1.4.15/libevent-release-1.4.15-stable/*poll*.c"
+                    ],
+                    "sources": [
+                        "1.4.15/libevent-release-1.4.15-stable/WIN32-Code/win32.c"
                     ],
                     "defines": [
                         "WIN32",
@@ -47,7 +48,7 @@
                             "WIN32"
                         ],
                         "include_dirs": [
-                            "2.0.22/libevent-release-2.0.22-stable/WIN32-Code"
+                            "1.4.15/libevent-release-1.4.15-stable/WIN32-Code"
                         ]
                     }
                 }]
@@ -55,10 +56,11 @@
         },
         
         {
-            "target_name": "libevent_hello_world",
+            "target_name": "libevent_event_test",
             "type": "executable",
+            "test": {},
             "sources": [
-                "2.0.22/libevent-release-2.0.22-stable/sample/hello-world.c"
+                "1.4.15/libevent-release-1.4.15-stable/sample/event-test.c"
             ],
             "dependencies": [
                 "libevent"
