@@ -3,11 +3,12 @@
     "url": "https://github.com/floitsch/double-conversion/archive/v1.1.5.tar.gz",
     "module": "double-conversion",
     "version": "1.1.5",
-    # folly includes double_conversion/double_conversion.h, even though 
+    # folly includes double_conversion/double_conversion.h, even though
     # double-conversion's own tests include "double_conversion.h". Also
     # the rpm uses the parent dir. So let's copy the #includes to create
     # the same dir structure.
     "make_command": {
-        "Linux": "cd double-conversion-1.1.5 && mkdir -p include/double-conversion && cp src/*.h include/double-conversion/"
+        "Linux": "cd double-conversion-1.1.5 && mkdir -p include/double-conversion && cp src/*.h include/double-conversion/",
+        "Windows": "cd double-conversion-1.1.5 && mkdir include\\double-conversion && copy src\\*.h include\\double-conversion\\"
     }
 }

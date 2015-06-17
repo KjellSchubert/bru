@@ -30,11 +30,9 @@
             ],
             "defines": [
                 "FOLLY_NO_CONFIG", # unless you run ./configure
-                "FOLLY_HAVE_CLOCK_GETTIME",
                 "FOLLY_VERSION=\"1\"", # ??? TODO
                 "FOLLY_HAVE_MALLOC_USABLE_SIZE"
                 # on ios?: "FOLLY_HAVE_MALLOC_SIZE"
-                # TODO?: FOLLY_HAVE_PTHREAD_ATFORK
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
@@ -45,19 +43,36 @@
                 ],
                 "defines": [
                     "FOLLY_NO_CONFIG",
-                    "FOLLY_HAVE_CLOCK_GETTIME",
                     #"FOLLY_VERSION=\"1\"",
                     "FOLLY_HAVE_MALLOC_USABLE_SIZE"
                     # on ios?:
                     #"FOLLY_HAVE_MALLOC_SIZE"
                 ]
             },
-            "link_settings" : {
-                "libraries" : [ "-ldl" ]
+            "conditions": [
+                ["OS=='linux'", {
+                    "defines": [
+                        "FOLLY_HAVE_CLOCK_GETTIME",
+                        "FOLLY_HAVE_PTHREAD_ATFORK"
+                    ],
+                    "link_settings" : {
+                        "libraries" : [ "-ldl" ]
+                    }
+                }],
+                ["OS=='win'", {
+                    "defines": []
+                }]
+            ],
+            "msvs_settings": {
+                "VCCLCompilerTool": {
+                    "WarningLevel": "0" # temporary!
+                }
             },
             "export_dependent_settings": [
                 "../glog/glog.gyp:*",
                 "../gflags/gflags.gyp:*",
+                "../pthread/pthread.gyp:*",
+                "../libevent/libevent.gyp:*",
                 "../double-conversion/double-conversion.gyp:*"
             ],
             "dependencies": [
@@ -68,6 +83,7 @@
                 "../boost-core/boost-core.gyp:*",
                 "../boost-smart_ptr/boost-smart_ptr.gyp:*",
                 "../boost-container/boost-container.gyp:*",
+                "../boost-context/boost-context.gyp:*",
                 "../boost-bind/boost-bind.gyp:*",
                 "../boost-variant/boost-variant.gyp:*",
                 "../boost-thread/boost-thread.gyp:*",
@@ -87,7 +103,10 @@
                 "../boost-random/boost-random.gyp:*",
                 "../gflags/gflags.gyp:*",
                 "../glog/glog.gyp:*",
-                "../double-conversion/double-conversion.gyp:*"
+                "../pthread/pthread.gyp:*",
+                #"../openssl/openssl.gyp:*",
+                "../double-conversion/double-conversion.gyp:*",
+                "../libevent/libevent.gyp:*"
             ]
         },
         

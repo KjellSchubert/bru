@@ -2,12 +2,22 @@
     tar.gz files or clones the corresponding repo.
 """
 
-import urllib.parse
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import sys
+if sys.version_info >= (3, 0):
+    from urllib.parse import urlparse
+if sys.version_info < (3, 0):
+    from urlparse import urlparse
 import os
 import json
 import brulib.library
 import brulib.clone
 import brulib.untar
+import brulib.util
 
 def get_user_home_dir():
     """ work both on Linux & Windows, this dir will be the parent dir of
@@ -18,14 +28,14 @@ def unpack_dependency(library, module_name, module_version, zip_url, bru_modules
     """ downloads tar.gz or zip file as given by zip_url, then unpacks it
         under bru_modules_root """
     module_dir = os.path.join(bru_modules_root, module_name, module_version)
-    os.makedirs(module_dir, exist_ok=True)
+    brulib.util.mkdir_p(module_dir)
 
-    parse = urllib.parse.urlparse(zip_url)
-    if parse.scheme in ['svn+http', 'svn+https','git+http', 'git+https']:
+    parse = urlparse(zip_url)
+    if parse.scheme in [u'svn+http', u'svn+https', u'git+http', u'git+https']:
         brulib.clone.atomic_clone_repo(zip_url, module_dir)
         return
 
-    if parse.scheme == 'file':
+    if parse.scheme == u'file':
         # this is typically used to apply a patch in the form of a targ.gz
         # on top of a larger downloaded file. E.g. for ogg & speex this
         # patch does approximately what ./configure would have done.
@@ -46,7 +56,7 @@ def unpack_dependency(library, module_name, module_version, zip_url, bru_modules
     # MOdules for which we must clone an svn or git repo are not sharable that
     # easily btw, they actually are cloned multiple times atm (could clone them
     # once into ~/.bru and copy, but I'm not doing this atm).
-    if parse.scheme in ['http', 'https', 'ftp']:
+    if parse.scheme in [u'http', u'https', u'ftp']:
         tar_dir = os.path.join(get_user_home_dir(), ".bru", "downloads",
                                module_name, module_version)
         brulib.untar.wget_and_untar_once(zip_url, tar_dir, module_dir)
@@ -68,7 +78,7 @@ def get_urls(library, formula, bru_modules_root):
     zip_urls = formula['url']
 
     # 'url' can be a single string or a list
-    if isinstance(zip_urls, str):
+    if not isinstance(zip_urls, list):
         zip_urls = [zip_urls]
 
     for zip_url in zip_urls:
