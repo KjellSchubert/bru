@@ -2,7 +2,7 @@
     "targets": [
         {
             "target_name": "boost-signals2",
-            "type": "static_library",
+            "type": "none",
             "include_dirs": [
                 "1.57.0/signals2-boost-1.57.0/include"
             ],
@@ -21,6 +21,7 @@
                 "../boost-core/boost-core.gyp:*",
                 "../boost-mpl/boost-mpl.gyp:*",
                 "../boost-any/boost-any.gyp:*",
+                "../boost-parameter/boost-parameter.gyp:*",
                 "../boost-iterator/boost-iterator.gyp:*"
             ]
         }
