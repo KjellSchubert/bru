@@ -1,0 +1,38 @@
+{
+    "homepage": "https://www.openssl.org",
+    "url": "https://www.openssl.org/source/openssl-1.0.1m.tar.gz",
+    "module": "openssl",
+    "version": "1.0.1m",
+
+    # Creating a *.gyp file for building openssl is possible but tedious
+    # work. Instead let's build via configure/make. Note that a *.gyp file
+    # is still used to declare openssl's include_dirs and library artifacts
+    # for downstream clients.
+    # P.S.: I created this gyp file after all since using the regular nmake
+    # based build on Windows turned into a mess: nmake (probably) ended up
+    # using a different toolchain than gyp used downstream, resulting in the
+    # corresponding linker errors. So now on we only run ./configure here and
+    # compile with gyp. WARNING: the gyp file will not necessarily end up using
+    # the same options ./configure had configured. TODO: revisit this process.
+    "make_command": {
+        "Linux" : "cd openssl-1.0.1m; ./config  no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads",
+        "Darwin": "cd openssl-1.0.1m; ./Configure darwin64-x86_64-cc no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib no-threads  -Wno-c++11-narrowing -stdlib=libc++ -fvisibility=hidden ",
+        "iOS"   : "cd openssl-1.0.1m; ./Configure iphoneos-cross  no-asm no-shared no-ssl2 no-ssl3 no-hw no-zlib -Wno-c++11-narrowing -stdlib=libc++ -fvisibility=hidden",
+        # Why no-asm? Because otherwise you need to install yet another
+        # buildtool for compiling openssl (see INSTALL.W32). I'm not sure
+        # how much performance we sacrifice by not using asm, hopefully
+        # negligible.
+        # About perl: supposedly ActivePerl (which sadly you cannot install
+        # thru choco install as of Jan 2015) or cygwin Perl works. You have to
+        # have this in your path. I had installed ActivePerl.
+        # About nmake: bru will execute %VS110COMNTOOLS%\vsvars32.bat before
+        # it executes this command line here, which will add nmake to your
+        # path automatically.
+        # See also http://stackoverflow.com/questions/18486243/how-do-i-build-openssl-statically-linked-against-windows-runtime
+        # For a full build via nmake run:
+        #   "Windows": "cd openssl-1.0.1m; perl Configure VC-WIN32 no-asm no-ssl2 no-ssl3 no-hw; call ms\\do_ms.bat; nmake -f ms\\nt.mak"
+        # P.S. since I switched the build from nmake to gyp these comments on
+        # ActivePerl are now moot.
+        "Windows": ""
+    }
+}
