@@ -13,6 +13,7 @@ if sys.version_info >= (3, 0):
 if sys.version_info < (3, 0):
     from urlparse import urlparse
 import subprocess
+import shutil
     
 def remove_url_prefix(url, prefix):
     """ param prefix e.g. 'git+' """
