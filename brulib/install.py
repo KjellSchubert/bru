@@ -202,6 +202,13 @@ def exec_make_command(formula, bru_modules_root, system):
             	print ("iOS Version from xcode: '{}'".format(xcode_iOS))
             	# if the make command contains a placeholder for the xcode path and/or iOS version, we need to replace it.
             	make_command = make_command.replace("__BRU_XCODE__",xcode_path).replace("__BRU_IOS_VERSION__",xcode_iOS)
+                if xcode_iOS == '9.0':
+                    print ("HACK FOR iOS9 compiler !!!!")
+                    print ("TODO: check if the compiler also works with iOS8 and earlier and if, updated the configs as needed")
+                    # MAYBE THIS compiler should be inserted by this script and not come from the confg ???
+                    make_command = make_command.replace("Platforms/iPhoneSimulator.platform/Developer/usr/bin/g++","Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
+                    make_command = make_command.replace("Platforms/iPhoneSimulator.platform/Developer/usr/bin/gcc","Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
+                print ("Executing {}".format(make_command))
 
             # On Windows msvs toolchain build tools are typically not in your
             # PATH, but are expected to be added to your PATH via
