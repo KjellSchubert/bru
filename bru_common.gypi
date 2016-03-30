@@ -38,7 +38,7 @@
 						'xcode_settings': {
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
 							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}],                    
                     ['OS=="iOS"', {
@@ -50,7 +50,7 @@
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
 							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}]                    
                 ],
@@ -94,7 +94,7 @@
 						'xcode_settings': {
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
 							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}],                    
                     ['OS=="iOS"', {
@@ -106,7 +106,7 @@
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
 							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
 							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden',
+							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}]                    
                 ],

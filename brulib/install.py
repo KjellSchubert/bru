@@ -194,20 +194,14 @@ def exec_make_command(formula, bru_modules_root, system):
             make_command = make_commands[system]
 
             if system == 'iOS':
-            	# xcode installation dir might vary -- we need to find the right location to pass to the config script
-            	xcode_path=subprocess.check_output(['xcode-select', '-p'],universal_newlines=True).strip()
-            	# the path that we need to pass to the config script depends on the latest supported iOS version of xcode
-            	xcode_iOS=subprocess.check_output('xcodebuild -showsdks | grep iphoneos | cut -d " " -f 2', shell=True,universal_newlines=True).strip()
-            	print ("Found xcode here: '{}'".format(xcode_path))
-            	print ("iOS Version from xcode: '{}'".format(xcode_iOS))
-            	# if the make command contains a placeholder for the xcode path and/or iOS version, we need to replace it.
-            	make_command = make_command.replace("__BRU_XCODE__",xcode_path).replace("__BRU_IOS_VERSION__",xcode_iOS)
-                if xcode_iOS == '9.0':
-                    print ("HACK FOR iOS9 compiler !!!!")
-                    print ("TODO: check if the compiler also works with iOS8 and earlier and if, updated the configs as needed")
-                    # MAYBE THIS compiler should be inserted by this script and not come from the confg ???
-                    make_command = make_command.replace("Platforms/iPhoneSimulator.platform/Developer/usr/bin/g++","Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
-                    make_command = make_command.replace("Platforms/iPhoneSimulator.platform/Developer/usr/bin/gcc","Toolchains/XcodeDefault.xctoolchain/usr/bin/clang")
+                # xcode installation dir might vary -- we need to find the right location to pass to the config script
+                xcode_path=subprocess.check_output(['xcode-select', '-p'],universal_newlines=True).strip()
+                # the path that we need to pass to the config script depends on the latest supported iOS version of xcode
+                xcode_iOS=subprocess.check_output('xcodebuild -showsdks | grep iphoneos | cut -d " " -f 2', shell=True,universal_newlines=True).strip()
+                print ("Found xcode here: '{}'".format(xcode_path))
+                print ("iOS Version from xcode: '{}'".format(xcode_iOS))
+                # if the make command contains a placeholder for the xcode path and/or iOS version, we need to replace it.
+                make_command = make_command.replace("__BRU_XCODE__",xcode_path).replace("__BRU_IOS_VERSION__",xcode_iOS)
                 print ("Executing {}".format(make_command))
 
             # On Windows msvs toolchain build tools are typically not in your
@@ -248,10 +242,10 @@ def download_module(library, module_name, module_version, targetPlatform):
     formula = library.load_formula(module_name, module_version)
     brulib.module_downloader.get_urls(library, formula, bru_modules_root)
     if targetPlatform == 'Native':
-    	exec_make_command(formula, bru_modules_root, platform.system())
+        exec_make_command(formula, bru_modules_root, platform.system())
     else:
-    	exec_make_command(formula, bru_modules_root, targetPlatform)
-		
+        exec_make_command(formula, bru_modules_root, targetPlatform)
+        
 def verify_resolved_dependencies(formula, target, resolved_dependencies):
     """ param formula is the formula with a bunch of desired(!) dependencies
         which after conflict resolution across the whole set of diverse deps
