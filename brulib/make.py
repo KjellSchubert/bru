@@ -153,7 +153,7 @@ def cmd_make_win(gyp_filename, config):
     # or alternatively to msbuild. Lets do msbuild here:
     # TODO locate msbuild via glob
     msbuild_exe = get_latest_msbuild_exe()
-    msbuild_exe = "\"c:\\Program Files (x86)\\MSBuild\\14.0\\Bin\\MSBuild.exe\"" #xxx see http://stackoverflow.com/questions/20661943/build-on-tfs-2013-failed-but-okay-locally
+    #msbuild_exe = "\"c:\\Program Files (x86)\\MSBuild\\14.0\\Bin\\MSBuild.exe\"" #xxx see http://stackoverflow.com/questions/20661943/build-on-tfs-2013-failed-but-okay-locally
     if msbuild_exe == None:
         raise Exception('did not detect any installs of msbuild, these should'
             ' be part of .NET installations, please install msbuild or .NET')
@@ -161,7 +161,7 @@ def cmd_make_win(gyp_filename, config):
     msbuild_cmdline = ('{} {} '
 	    + '/verbosity:minimal '  # or diag
 		+ '/p:Configuration={} '
-        + '/p:VisualStudioVersion=14.0 '  # TODO: why doesn't 14.0 work for VS 2015?
+        + '/p:VisualStudioVersion=11.0 '  # TODO: why doesn't 14.0 work for VS 2015?
 		+ '/p:Platform=Win32').format(
         msbuild_exe, sln_filename, config)
     print("running msvs via msbuild: '{}'".format(msbuild_cmdline))
