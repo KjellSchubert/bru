@@ -19,7 +19,7 @@
             "target_name": "sonic",
             "type": "static_library",
             "sources": [
-                "1.0/sonic-master/sonic.c",
+                "1.0/sonic-master/sonic.c"
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
