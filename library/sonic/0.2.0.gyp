@@ -8,7 +8,7 @@
             "type": "none",
             "direct_dependent_settings" : {
                 "include_dirs": [
-                    "1.0/sonic-71bdf26c55716a45af50c667c0335a9519e952dd/include"
+                    "0.2.0/sonic-0.2.0/include"
                 ],
                 "defines" : [
                 ]
@@ -19,11 +19,11 @@
             "target_name": "sonic",
             "type": "static_library",
             "sources": [
-                "1.0/sonic-71bdf26c55716a45af50c667c0335a9519e952dd/sonic.c"
+                "0.2.0/sonic-0.2.0/sonic.c"
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
-                    "1.0/sonic-71bdf26c55716a45af50c667c0335a9519e952dd"
+                    "0.2.0/sonic-0.2.0"
                 ]
             },
             "dependencies" : [
