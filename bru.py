@@ -35,7 +35,7 @@ def main():
     parser_install.add_argument("installables", default = [], nargs = '*',
                                 help = 'e.g. googlemock@1.7.0')
     parser_install.add_argument('--targetPlatform', default='Native', required=False,
-        help = 'targetPlatform Native | iOS')
+        help = 'targetPlatform Native | iOS | Android')
 
     parser_test = subparsers.add_parser('test')
     parser_test.add_argument("testables", default = [], nargs = '*',
@@ -50,7 +50,7 @@ def main():
     parser_make.add_argument('--verbose', '-v', default=0, action='count',
         help = 'enables verbose output in underlying build toolchain (e.g. make)')
     parser_make.add_argument('--targetPlatform', default='Native', required=False,
-        help = 'targetPlatform Native | iOS')
+        help = 'targetPlatform Native | iOS | Android ')
 
     args = parser.parse_args()
     library = get_library()

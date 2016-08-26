@@ -59,6 +59,8 @@ def cmd_make(config, verbose, targetPlatform="Native"):
     elif system == 'Darwin':
     	if targetPlatform == 'iOS':
     		cmd_make_ios(gyp_file, config, verbose)
+        elif targetPlatform == 'Android':
+            cmd_make_android(gyp_file, config, verbose)
     	elif targetPlatform == 'Native':
     		cmd_make_macos(gyp_file, config, verbose)
     	else:
@@ -197,13 +199,6 @@ def cmd_make_linux(gyp_filename, config, verbose):
     print('Build complete.')
 
 def cmd_make_macos(gyp_filename, config, verbose):
-    # Here we could check if ninja or some such is installed to generate ninja
-    # project files. But for simplicity's sake let's just use whatever gyp
-    # defaults to.
-
-    # For some odd reason passing './package.gyp' as a param to gyp will
-    # generate garbage, instead you gotta pass 'package.gyp'. Se let's
-    # explicitly remove a leading ./
     dirname = os.path.dirname(gyp_filename)
     assert dirname == '.' or len(dirname) == 0
     gyp_filename = os.path.basename(gyp_filename)
@@ -216,7 +211,7 @@ def cmd_make_macos(gyp_filename, config, verbose):
     print(files)
     if len(files) == 0:
         raise Exception('gyp did not generate {}, no idea how to '
-            'build with your toolchain, please build manually').format(filepattern)
+                        'build with your toolchain, please build manually').format(filepattern)
     xcode_cmdline = 'xCodeBuild -alltargets -project {} -configuration {}'.format(xcodeprj,config)
     print("running '{}'".format(xcode_cmdline))
     returncode = os.system(xcode_cmdline)
@@ -224,14 +219,25 @@ def cmd_make_macos(gyp_filename, config, verbose):
         raise Exception('Build failed: make returned', returncode)
     print('Build complete.')
 
-def cmd_make_ios(gyp_filename, config, verbose):
-    # Here we could check if ninja or some such is installed to generate ninja
-    # project files. But for simplicity's sake let's just use whatever gyp
-    # defaults to.
+def cmd_make_android(gyp_filename, config, verbose):
+    dirname = os.path.dirname(gyp_filename)
+    assert dirname == '.' or len(dirname) == 0
+    gyp_filename = os.path.basename(gyp_filename)
+    gyp_cmdline = 'gyp --depth=. {} -f make -DOS=android -Gandroid_ndk_version=r9d'.format(gyp_filename)
+    run_gyp(gyp_cmdline)
+    if not os.path.exists('Makefile'):
+        raise Exception('gyp did not generate ./Makefile, no idea how to '
+                        'build with your toolchain, please build manually')
+    make_cmdline = 'make BUILDTYPE={} V={}'.format(config,
+                                                   '1' if verbose >= 1 else '')
+    print("running '{}'".format(make_cmdline))
+    returncode = os.system(make_cmdline)
+    if returncode != 0:
+        raise Exception('Build failed: make returned', returncode)
+print('Build complete.')
 
-    # For some odd reason passing './package.gyp' as a param to gyp will
-    # generate garbage, instead you gotta pass 'package.gyp'. Se let's
-    # explicitly remove a leading ./
+
+def cmd_make_ios(gyp_filename, config, verbose):
     dirname = os.path.dirname(gyp_filename)
     assert dirname == '.' or len(dirname) == 0
     gyp_filename = os.path.basename(gyp_filename)
