@@ -36,9 +36,7 @@
                     }],
                     ['OS=="mac"', {
 						'xcode_settings': {
-							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
-							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden -fembed-bitcode',
+							'OTHER_CFLAGS' : '  -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}],                    
                     ['OS=="iOS"', {
@@ -46,11 +44,9 @@
 							'SDKROOT': 'iphoneos',
 							'TARGETED_DEVICE_FAMILY': '1,2',
 							'CODE_SIGN_IDENTITY': 'iPhone Developer',
-							'IPHONEOS_DEPLOYMENT_TARGET': '6.0',
+							'IPHONEOS_DEPLOYMENT_TARGET': '8.0',
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
-							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
-							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing  -fvisibility=hidden -fembed-bitcode',
+							'OTHER_CFLAGS' : '  -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}]                    
                 ],
@@ -92,9 +88,7 @@
                     }],
                     ['OS=="mac"', {
 						'xcode_settings': {
-							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
-							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden -fembed-bitcode',
+							'OTHER_CFLAGS' : ' -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}],                    
                     ['OS=="iOS"', {
@@ -102,11 +96,9 @@
 							'SDKROOT': 'iphoneos',
 							'TARGETED_DEVICE_FAMILY': '1,2',
 							'CODE_SIGN_IDENTITY': 'iPhone Developer',
-							'IPHONEOS_DEPLOYMENT_TARGET': '6.0',
+							'IPHONEOS_DEPLOYMENT_TARGET': '8.0',
 							'ARCHS': '$(ARCHS_STANDARD_32_64_BIT) armv7s',
-							'CLANG_CXX_LANGUAGE_STANDARD' : 'c++0x',
-							'CLANG_CXX_LIBRARY' : 'libc++',
-							'OTHER_CFLAGS' : '-Wno-c++11-narrowing -fvisibility=hidden -fembed-bitcode',
+							'OTHER_CFLAGS' : ' -fvisibility=hidden -fembed-bitcode',
 						}, # xcode_settings
 					}]                    
                 ],

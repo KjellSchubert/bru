@@ -6,7 +6,7 @@
             "target_name": "folly",
             "type": "static_library",
             "cflags": [ 
-                "-std=c++11" # refuses to compile otherwise 
+                "" # refuses to compile otherwise 
             ],
             "include_dirs": [
                 "master/clone/"
@@ -39,7 +39,7 @@
                     "master/clone"
                 ],
                 "cflags": [ 
-                    "-std=c++11" # refuses to compile otherwise 
+                    "" # refuses to compile otherwise 
                 ],
                 "defines": [
                     "FOLLY_NO_CONFIG",

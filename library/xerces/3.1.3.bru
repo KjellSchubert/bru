@@ -1,0 +1,17 @@
+{
+    "homepage": "http://xerces.apache.org/xerces-c",
+    "url": "http://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.3.tar.gz",
+    "module": "xerces",
+    "version": "3.1.3",
+    "make_command": {
+        # generates xercesc/util/Xerces_autoconf_config.hpp and ...
+        "Linux": "cd xerces-c-3.1.3; ./configure --disable-shared --disable-transcoder-icu",
+        "Darwin": "cd xerces-c-3.1.3; ./configure --disable-shared --disable-transcoder-icu",
+        "iOS" :   "cd xerces-c-3.1.3; ./configure --host=arm-apple-darwin --disable-shared CXX=__BRU_XCODE__/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang CXXFLAGS='-I../opus/opus/include/ -I ../libogg-1.3.1/include/ -I../openssl-1.0.1e/include    -arch armv7 -arch armv7s -arch arm64   -isysroot __BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS__BRU_IOS_VERSION__.sdk -fvisibility=hidden -fembed-bitcode -miphoneos-version-min=8.0' CC=__BRU_XCODE__/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang CFLAGS='-I../opus/opus/include/ -I ../libogg-1.3.1/include/ -I../openssl-1.0.1e/include    -arch armv7 -arch armv7s -arch arm64 -pipe  -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -fmessage-length=0 -fvisibility=hidden -fembed-bitcode -miphoneos-version-min=8.0 -gdwarf-2 -mthumb -I/Library/iPhone/include -isysroot __BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS__BRU_IOS_VERSION__.sdk' LIBTOOL=__BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/usr/bin/libtool STRIP=__BRU_XCODE__/Platforms/iPhoneOS.platform/Developer/usr/bin/strip -disable-threads",
+
+        # On Windows build config 'Static Debug' or 'Static Release' in
+        # via VC10 vcproj. The vcproj has this same copy step here:
+        "Windows": "copy xerces-c-3.1.3\\src\\xercesc\\util\\Xerces_autoconf_config.msvc.hpp xerces-c-3.1.3\\src\\xercesc\\util\\Xerces_autoconf_config.hpp"
+    }
+}
+

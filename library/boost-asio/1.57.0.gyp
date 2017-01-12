@@ -54,15 +54,15 @@
 
         # does boost-asio require C++11? I didn't think so. But I couldnt get
         # cpp03/echo/async_tcp_echo_server.cpp to compile with clang 3.5,
-        # neither with -std=c++11 nor without. The cpp11/ variant compiles
-        # fine, but obviously requires -std=c++11
+        # neither with  nor without. The cpp11/ variant compiles
+        # fine, but obviously requires 
         #{
         #    "target_name": "boost-asio_example_async_tcp_echo_server",
         #    "type": "executable",
         #    # is not an easily automatable test: you can telnet to the port
         #    # but I'm unsure how to trigger and end of the test.
         #    #"test": {},
-        #    "cflags": [ "-std=c++11" ],
+        #    "cflags": [ "" ],
         #    "defines": [ "BOOST_ASIO_STANDALONE" ],
         #    "sources": [ "1.57.0/asio-boost-1.57.0/example/cpp11/echo/async_tcp_echo_server.cpp" ],
         #    "dependencies": [ "boost-asio" ]
