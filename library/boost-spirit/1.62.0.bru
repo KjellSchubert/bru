@@ -1,0 +1,47 @@
+{
+    "homepage": "http://www.boost.org/",
+    "url": "https://github.com/boostorg/spirit/archive/boost-1.62.0.tar.gz",
+    "module": "boost-spirit",
+    "version": "1.62.0",
+    "dependencies": {
+        "boost-algorithm": "1.62.0",
+        "boost-array": "1.62.0",
+        "boost-assert": "1.62.0",
+        "boost-concept_check": "1.62.0",
+        "boost-config": "1.62.0",
+        "boost-core": "1.62.0",
+        "boost-filesystem": "1.62.0",
+        "boost-foreach": "1.62.0",
+        "boost-function": "1.62.0",
+        "boost-function_types": "1.62.0",
+        "boost-fusion": "1.62.0",
+        "boost-integer": "1.62.0",
+        "boost-io": "1.62.0",
+        "boost-iostreams": "1.62.0",
+        "boost-iterator": "1.62.0",
+        "boost-lexical_cast": "1.62.0",
+        "boost-math": "1.62.0",
+        "boost-mpl": "1.62.0",
+        "boost-optional": "1.62.0",
+        "boost-phoenix": "1.62.0",
+        "boost-pool": "1.62.0",
+        "boost-predef": "1.62.0",
+        "boost-preprocessor": "1.62.0",
+        "boost-proto": "1.62.0",
+        "boost-range": "1.62.0",
+        "boost-regex": "1.62.0",
+        "boost-smart_ptr": "1.62.0",
+        "boost-static_assert": "1.62.0",
+        "boost-thread": "1.62.0",
+        "boost-throw_exception": "1.62.0",
+        "boost-unordered": "1.62.0",
+        "boost-variant": "1.62.0"
+
+        # technically boost-spirit does depend on these deps here, as in
+        # some of it #include files include files from these modules. But
+        # as it's an header-only library it can live without these deps.
+        # E.g. the boost-serialization dep is a serious problem otherwise 
+        # because it establishes a module dependency cycle.
+        #"boost-serialization": "1.62.0"
+    }
+}
