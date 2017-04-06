@@ -31,19 +31,8 @@
             ],
             # this disables building the example on iOS
             "conditions": [
-                ["OS=='iOS'",
-                    {
-                        "type": "none"
-                    }
-                ]
-            ],
-            # this disables building the example on iOS
-            "conditions": [
-                ["OS=='mac'",
-                    {
-                        "type": "none"
-                    }
-                ]
+                ["OS=='iOS'",{"type": "none"}],
+                ["OS=='mac'",{"type": "none"}]
             ]
         }
     ]
