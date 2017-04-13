@@ -4,11 +4,11 @@
             "target_name": "rcf",
             "type": "static_library",
             "include_dirs": [
-                "2.2.0.0/RCF-2.2.0.0/include"
+                "2.2.0.0p2/RCF-2.2.0.0/include"
             ],
             "direct_dependent_settings": {
                 "include_dirs": [
-                    "2.2.0.0/RCF-2.2.0.0/include"
+                    "2.2.0.0p2/RCF-2.2.0.0/include"
                 ]
             },
             "defines": [
@@ -21,7 +21,7 @@
                 # See how RCF.cpp includes a lot of cpp files, this makes
                 # precompiled headers superfluous. Alternatively we could
                 # compile file-by-file, but that's slower and more tedious.
-                "2.2.0.0/RCF-2.2.0.0/src/RCF/RCF.cpp"
+                "2.2.0.0p2/RCF-2.2.0.0/src/RCF/RCF.cpp"
             ],
             "conditions": [
                 ["OS=='win'", {
